@@ -217,8 +217,8 @@ export default function PointsView() {
                   <DialogHeader>
                     <DialogTitle>Complete Your Purchase</DialogTitle>
                     <DialogDescription>
-                      You&apos;re purchasing {pkg.name} - {pkg.points} voting points
-                      for {formatPrice(pkg.price)}
+                      You&apos;re purchasing {pkg.name} - {pkg.points} voting
+                      points for {formatPrice(pkg.price)}
                     </DialogDescription>
                   </DialogHeader>
 

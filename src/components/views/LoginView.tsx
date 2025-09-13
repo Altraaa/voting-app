@@ -70,7 +70,7 @@ const VoterLogin = () => {
       }
 
       toast.success("Login successful!");
-      router.push("/dashboard");
+      router.push("/");
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Something went wrong");
