@@ -10,7 +10,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const noLayoutRoutes = ["/login", "/register"];
+  const noLayoutRoutes = ["/login", "/register", "/payment/process"];
   const hideLayout = noLayoutRoutes.includes(pathname);
 
   return (
