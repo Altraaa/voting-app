@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -29,7 +30,7 @@ export function verifyToken(token: string) {
   }
 }
 
-export function setAuthCookie(token: string) {
+export function setAuthCookie(token: string, res: NextResponse) {
   const cookieStore = cookies();
   (cookieStore as any).set("session", token, {
     httpOnly: true,
