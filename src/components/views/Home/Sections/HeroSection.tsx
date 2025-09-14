@@ -7,7 +7,6 @@ export default function HeroSection() {
   return (
     <section className="relative py-28 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-card/50 to-background" />
-
       <div className="relative">
         <div className="max-w-4xl mx-auto text-center space-y-5 md:space-y-8">
           <Badge variant="secondary" className="text-sm px-4 py-2">
