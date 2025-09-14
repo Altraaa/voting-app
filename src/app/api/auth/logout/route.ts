@@ -1,7 +1,5 @@
-import { NextResponse } from "next/server";
-import { clearAuthCookie } from "@/lib/auth";
+import { logoutController } from "@/config/controllers/logoutController";
 
 export async function POST() {
-  clearAuthCookie();
-  return NextResponse.json({ message: "Logged out" });
+  return logoutController();
 }
