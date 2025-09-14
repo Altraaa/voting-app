@@ -1,0 +1,19 @@
+import { IVotes } from "./VotesModel";
+
+export interface IUsers {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  points: number;
+  role: string;
+  firtName: string;
+  lastName: string;
+  newsLetter: boolean;
+  phone: string;
+  terms: boolean;
+  votes: IVotes;
+  avatar_url: string;
+  created: string;
+  updated: string;
+}
