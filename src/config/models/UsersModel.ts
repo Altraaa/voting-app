@@ -7,7 +7,7 @@ export interface IUsers {
   password: string;
   points: number;
   role: string;
-  firtName: string;
+  firstName: string;
   lastName: string;
   newsLetter: boolean;
   phone: string;
