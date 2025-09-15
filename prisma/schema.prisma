@@ -9,22 +9,21 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  name       String
-  points     Int      @default(0)
-  created    DateTime @default(now())
-  updated    DateTime @updatedAt
-  role       Role     @default(USER)
-  firstName  String
-  lastName   String
-  newsLetter Boolean
-  phone      String
-  terms      Boolean
-  votes      Vote[]
-  password   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  email         String   @unique
+  name          String
+  id            String   @id @default(cuid())
+  points        Int      @default(0)
+  role          Role     @default(USER)
+  firstName     String?
+  lastName      String?
+  newsLetter    Boolean?
+  phone         String?
+  terms         Boolean?
+  votes         Vote[]
+  transactions  PointTransaction[]
+  password      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Category {
@@ -59,4 +58,16 @@ model Vote {
 enum Role {
   USER
   ADMIN
+}
+
+model PointTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  points      Int
+  amount      Int
+  status      String   @default("PENDING") 
+  midtransId  String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
