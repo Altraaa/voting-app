@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -31,19 +30,17 @@ export function verifyToken(token: string) {
 }
 
 export function setAuthCookie(token: string, res: NextResponse) {
-  const cookieStore = cookies();
-  (cookieStore as any).set("session", token, {
+  res.cookies.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 7, 
   });
 }
 
-export function clearAuthCookie() {
-  const cookieStore = cookies();
-  (cookieStore as any).delete("session");
+export function clearAuthCookie(res: NextResponse) {
+  res.cookies.delete("session");
 }
 
 export function requireAdmin(token: string) {

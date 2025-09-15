@@ -1,24 +1,17 @@
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { categoryController } from "@/config/controllers/categoryController";
 
 export async function GET() {
-  return NextResponse.json(await prisma.category.findMany());
+  return categoryController.getAll();
 }
 
 export async function POST(req: Request) {
-  const { name } = await req.json();
-  const category = await prisma.category.create({ data: { name } });
-  return NextResponse.json(category);
+  return categoryController.create(req);
 }
 
 export async function PUT(req: Request) {
-  const { id, name } = await req.json();
-  const category = await prisma.category.update({ where: { id }, data: { name } });
-  return NextResponse.json(category);
+  return categoryController.update(req);
 }
 
 export async function DELETE(req: Request) {
-  const { id } = await req.json();
-  await prisma.category.delete({ where: { id } });
-  return NextResponse.json({ message: "Category deleted" });
+  return categoryController.remove(req);
 }
