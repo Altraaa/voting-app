@@ -10,7 +10,7 @@ export const userController = {
   },
 
   async create(req: Request, token: string | undefined) {
-    const decoded = verifyToken(token || "");
+    const decoded = await verifyToken(token || "");
     if (!decoded || decoded.role !== Role.ADMIN) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -21,8 +21,8 @@ export const userController = {
   },
 
   async update(req: Request) {
-    const { id, name, role } = await req.json();
-    const user = await userService.update({ id, name, role });
+    const { id, firstName, lastName, name, email, terms, newsLetter, role } = await req.json();
+    const user = await userService.update({ id, firstName, lastName, name, email, terms, newsLetter, role });
     return NextResponse.json(user);
   },
 
