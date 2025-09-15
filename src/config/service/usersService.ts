@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const userService = {
   async getAll() {
     return prisma.user.findMany({
-      select: { id: true, email: true, name: true, points: true, role: true },
+      select: { id: true, firstName: true, lastName: true, email: true, name: true, points: true, role: true },
     });
   },
 
@@ -17,10 +17,10 @@ export const userService = {
     return prisma.user.create({ data });
   },
 
-  async update(data: { id: string; name: string; role: Role }) {
+  async update(data: { id: string; firstName: string; lastName: string; email: string; name: string; terms: boolean; newsLetter: boolean; role: Role }) {
     return prisma.user.update({
       where: { id: data.id },
-      data: { name: data.name, role: data.role },
+      data: { firstName: data.firstName, lastName: data.lastName, email: data.email, name: data.name, terms: data.terms, newsLetter: data.newsLetter, role: data.role },
     });
   },
 
