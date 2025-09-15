@@ -1,26 +1,126 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Updated color palette to warm brown theme */
+  --background: oklch(1 0 0); /* Pure white */
+  --foreground: oklch(0.3 0.02 60); /* Dark brown #4B3C2C */
+  --card: oklch(0.95 0.02 60); /* Light beige #F7E8D0 */
+  --card-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --popover: oklch(0.95 0.02 60); /* Light beige */
+  --popover-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --primary: oklch(0.5 0.05 60); /* Warm brown #7B5A3A */
+  --primary-foreground: oklch(1 0 0); /* White */
+  --secondary: oklch(0.8 0.03 60); /* Soft tan #D3BBA0 */
+  --secondary-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --muted: oklch(0.95 0.02 60); /* Light beige */
+  --muted-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --accent: oklch(0.8 0.03 60); /* Soft tan */
+  --accent-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.85 0.02 60); /* Light brown border #C2BBA0 */
+  --input: oklch(0.95 0.02 60); /* Light beige */
+  --ring: oklch(0.8 0.03 60); /* Soft tan */
+  --chart-1: oklch(0.5 0.05 60); /* Warm brown */
+  --chart-2: oklch(0.8 0.03 60); /* Soft tan */
+  --chart-3: oklch(0.3 0.02 60); /* Dark brown */
+  --chart-4: oklch(0.75 0.03 60); /* Medium tan #BFAF8E */
+  --chart-5: oklch(0.9 0.02 60); /* Very light beige #E5D7C1 */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.95 0.02 60); /* Light beige */
+  --sidebar-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --sidebar-primary: oklch(0.5 0.05 60); /* Warm brown */
+  --sidebar-primary-foreground: oklch(1 0 0); /* White */
+  --sidebar-accent: oklch(0.8 0.03 60); /* Soft tan */
+  --sidebar-accent-foreground: oklch(0.3 0.02 60); /* Dark brown */
+  --sidebar-border: oklch(0.85 0.02 60); /* Light brown border */
+  --sidebar-ring: oklch(0.8 0.03 60); /* Soft tan */
+}
+
+.dark {
+  --background: oklch(0.15 0.02 60); /* Dark brown background */
+  --foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --card: oklch(0.2 0.02 60); /* Darker brown cards */
+  --card-foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --popover: oklch(0.2 0.02 60); /* Darker brown */
+  --popover-foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --primary: oklch(0.8 0.03 60); /* Soft tan for primary in dark mode */
+  --primary-foreground: oklch(0.15 0.02 60); /* Dark brown text */
+  --secondary: oklch(0.25 0.02 60); /* Medium dark brown */
+  --secondary-foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --muted: oklch(0.25 0.02 60); /* Medium dark brown */
+  --muted-foreground: oklch(0.7 0.02 60); /* Medium light text */
+  --accent: oklch(0.25 0.02 60); /* Medium dark brown */
+  --accent-foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.25 0.02 60); /* Medium dark brown border */
+  --input: oklch(0.25 0.02 60); /* Medium dark brown */
+  --ring: oklch(0.4 0.03 60); /* Medium brown ring */
+  --chart-1: oklch(0.8 0.03 60); /* Soft tan */
+  --chart-2: oklch(0.6 0.04 60); /* Medium tan */
+  --chart-3: oklch(0.4 0.03 60); /* Medium brown */
+  --chart-4: oklch(0.7 0.03 60); /* Light tan */
+  --chart-5: oklch(0.5 0.04 60); /* Warm brown */
+  --sidebar: oklch(0.2 0.02 60); /* Darker brown sidebar */
+  --sidebar-foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --sidebar-primary: oklch(0.8 0.03 60); /* Soft tan */
+  --sidebar-primary-foreground: oklch(0.15 0.02 60); /* Dark brown text */
+  --sidebar-accent: oklch(0.25 0.02 60); /* Medium dark brown */
+  --sidebar-accent-foreground: oklch(0.95 0.02 60); /* Light beige text */
+  --sidebar-border: oklch(0.25 0.02 60); /* Medium dark brown border */
+  --sidebar-ring: oklch(0.4 0.03 60); /* Medium brown ring */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
 }
