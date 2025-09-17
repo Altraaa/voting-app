@@ -1,19 +1,15 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface LoginData {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
+import toast from "react-hot-toast";
+import { useLogin } from "@/config/hooks/useLogin";
+import { useAuthStore } from "@/config/stores/useAuthStores";
+import Link from "next/link";
 
 interface StatItemProps {
   number: string;
@@ -21,62 +17,30 @@ interface StatItemProps {
 }
 
 const VoterLogin = () => {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loginData, setLoginData] = useState<LoginData>({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
+  const { loginForm, setLoginForm } = useAuthStore();
+  const { login, isLoading } = useLogin();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setLoginData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setLoginForm({ [name]: type === "checkbox" ? checked : value });
   };
 
   const handleCheckboxChange = (checked: boolean) => {
-    setLoginData((prev) => ({
-      ...prev,
+    setLoginForm({
       rememberMe: checked,
-    }));
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!loginData.email || !loginData.password) {
+    if (!loginForm.email || !loginForm.password) {
       toast.error("Please fill in all fields!");
       return;
     }
 
-    try {
-      setLoading(true);
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginData.email,
-          password: loginData.password,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
-      toast.success("Login successful!");
-      router.push("/");
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+    login(loginForm);
   };
 
   const StatItem: React.FC<StatItemProps> = ({ number, label }) => (
@@ -138,7 +102,7 @@ const VoterLogin = () => {
                 type="email"
                 id="email"
                 name="email"
-                value={loginData.email}
+                value={loginForm.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email address"
                 required
@@ -152,7 +116,7 @@ const VoterLogin = () => {
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
-                  value={loginData.password}
+                  value={loginForm.password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
                   className="pr-10"
@@ -178,7 +142,7 @@ const VoterLogin = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="rememberMe"
-                  checked={loginData.rememberMe}
+                  checked={loginForm.rememberMe}
                   onCheckedChange={handleCheckboxChange}
                 />
                 <Label
@@ -195,11 +159,11 @@ const VoterLogin = () => {
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full bg-black hover:bg-gray-800 text-white py-3 sm:py-3.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0 mt-6"
               size="lg"
             >
-              {loading ? "Signing In..." : "Sign In"}
+              {isLoading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
 
@@ -232,10 +196,12 @@ const VoterLogin = () => {
           </div>
 
           <div className="text-center text-gray-600 text-sm pt-4">
-            Don’t have an account?{" "}
-            <span className="text-black font-semibold hover:underline cursor-pointer">
-              Create Account
-            </span>
+            Don&apos;t have an account?{" "}
+            <Link href="/register">
+              <span className="text-black font-semibold hover:underline cursor-pointer">
+                Create Account
+              </span>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,25 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import toast from "react-hot-toast";
-import { api } from "@/lib/api";
-
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  terms: boolean;
-  newsLetter: boolean;
-}
+import { useRegister } from "@/config/hooks/useRegister";
+import { useAuthStore } from "@/config/stores/useAuthStores";
+import { RegisterForm } from "@/config/types/authType";
+import { usePasswordStore } from "@/config/stores/usePasswordStores";
 
 interface StatItemProps {
   number: string;
@@ -27,74 +18,46 @@ interface StatItemProps {
 }
 
 const VoterRegistration = () => {
-  const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const [formData, setFormData] = useState<FormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    terms: false,
-    newsLetter: false,
-  });
+  const { registerForm, setRegisterForm } = useAuthStore();
+  const {
+    showPassword,
+    showConfirmPassword,
+    togglePassword,
+    toggleConfirmPassword,
+  } = usePasswordStore();
+  const { register, isLoading } = useRegister();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setRegisterForm({ [name]: type === "checkbox" ? checked : value });
   };
 
-  const handleCheckboxChange = (name: keyof FormData, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
+  const handleCheckboxChange = (name: keyof RegisterForm, checked: boolean) => {
+    setRegisterForm({ [name]: checked });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
+    if (registerForm.password !== registerForm.confirmPassword) {
       return toast.error("Passwords do not match!");
     }
-    if (formData.password.length < 8) {
+    if (registerForm.password.length < 8) {
       return toast.error("Password must be at least 8 characters long!");
     }
-    if (!formData.terms) {
+    if (!registerForm.terms) {
       return toast.error("Please accept the Terms of Service!");
     }
 
-    try {
-      setLoading(true);
-      await api("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
-          terms: formData.terms,
-          newsLetter: formData.newsLetter,
-          password: formData.password,
-        }),
-      });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { confirmPassword, ...dataToRegister } = registerForm;
 
-      toast.success("Registration successful!");
-      router.push("/login");
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
+    const finalData = {
+      ...dataToRegister,
+      name: `${registerForm.firstName} ${registerForm.lastName}`,
+    };
+
+    register(finalData);
   };
 
   const StatItem: React.FC<StatItemProps> = ({ number, label }) => (
@@ -158,7 +121,7 @@ const VoterRegistration = () => {
                   type="text"
                   id="firstName"
                   name="firstName"
-                  value={formData.firstName}
+                  value={registerForm.firstName}
                   onChange={handleInputChange}
                   placeholder="Enter your first name"
                   required
@@ -170,7 +133,7 @@ const VoterRegistration = () => {
                   type="text"
                   id="lastName"
                   name="lastName"
-                  value={formData.lastName}
+                  value={registerForm.lastName}
                   onChange={handleInputChange}
                   placeholder="Enter your last name"
                   required
@@ -184,7 +147,7 @@ const VoterRegistration = () => {
                 type="email"
                 id="email"
                 name="email"
-                value={formData.email}
+                value={registerForm.email}
                 onChange={handleInputChange}
                 placeholder="Enter your email address"
                 required
@@ -197,7 +160,7 @@ const VoterRegistration = () => {
                 type="tel"
                 id="phone"
                 name="phone"
-                value={formData.phone}
+                value={registerForm.phone}
                 onChange={handleInputChange}
                 placeholder="Enter your phone number"
                 required
@@ -212,7 +175,7 @@ const VoterRegistration = () => {
                     type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
-                    value={formData.password}
+                    value={registerForm.password}
                     onChange={handleInputChange}
                     placeholder="Create a secure password"
                     className="pr-10"
@@ -223,7 +186,7 @@ const VoterRegistration = () => {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={togglePassword} // Menggunakan togglePassword
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -240,7 +203,7 @@ const VoterRegistration = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     id="confirmPassword"
                     name="confirmPassword"
-                    value={formData.confirmPassword}
+                    value={registerForm.confirmPassword}
                     onChange={handleInputChange}
                     placeholder="Confirm your password"
                     className="pr-10"
@@ -251,7 +214,7 @@ const VoterRegistration = () => {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={toggleConfirmPassword} // Menggunakan toggleConfirmPassword
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -266,7 +229,7 @@ const VoterRegistration = () => {
             <div className="flex items-start space-x-2 pt-2">
               <Checkbox
                 id="terms"
-                checked={formData.terms}
+                checked={registerForm.terms}
                 onCheckedChange={(checked) =>
                   handleCheckboxChange("terms", checked as boolean)
                 }
@@ -293,7 +256,7 @@ const VoterRegistration = () => {
             <div className="flex items-start space-x-2">
               <Checkbox
                 id="newsLetter"
-                checked={formData.newsLetter}
+                checked={registerForm.newsLetter}
                 onCheckedChange={(checked) =>
                   handleCheckboxChange("newsLetter", checked as boolean)
                 }
@@ -312,11 +275,11 @@ const VoterRegistration = () => {
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full bg-black hover:bg-gray-800 text-white py-3 sm:py-3.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0 mt-6"
               size="lg"
             >
-              {loading ? "Processing..." : "Create Account"}
+              {isLoading ? "Processing..." : "Create Account"}
             </Button>
           </form>
         </div>
