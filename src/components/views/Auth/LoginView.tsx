@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { useLogin } from "@/config/hooks/useLogin";
 import { useAuthStore } from "@/config/stores/useAuthStores";
 import { toast } from "sonner";
-import LeftSection from "./Section/LeftSection";
-import LoginForm from "./Section/LoginFormSection";
+import LeftSection from "./Sections/LeftSection";
+import LoginForm from "./Sections/LoginFormSection";
 
 const LoginView = () => {
   const [showPassword, setShowPassword] = useState(false);

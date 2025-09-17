@@ -5,8 +5,8 @@ import { useAuthStore } from "@/config/stores/useAuthStores";
 import { usePasswordStore } from "@/config/stores/usePasswordStores";
 import { RegisterForm } from "@/config/types/authType";
 import { toast } from "sonner";
-import RegistrationForm from "./Section/RegisterFormSection";
-import LeftSection from "./Section/LeftSection";
+import RegistrationForm from "./Sections/RegisterFormSection";
+import LeftSection from "./Sections/LeftSection";
 
 const RegisterView = () => {
   const { registerForm, setRegisterForm } = useAuthStore();
