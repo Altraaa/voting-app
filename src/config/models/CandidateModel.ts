@@ -4,10 +4,11 @@ import { IVotes } from "./VotesModel";
 export interface ICandidate {
   id: string;
   categoryId: string;
-  category: ICategories;
+  votesId: string;
   name: string;
   description: string;
   photo_url: string;
+  category: ICategories;
   votes: IVotes[];
   created: string;
   updated: string;
