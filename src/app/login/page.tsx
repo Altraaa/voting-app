@@ -1,7 +1,7 @@
-import VoterLogin from "@/components/views/LoginView";
+import LoginView from "@/components/views/Auth/LoginView";
 
 export default function LoginPage() {
   return (
-    <VoterLogin />
+    <LoginView />
   )
 }
