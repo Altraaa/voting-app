@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { setAuthCookie } from "@/lib/auth";
-import { loginService } from "../service/loginService";
+import { loginService } from "../services/loginService";
 
 export async function loginController(req: Request) {
   try {
@@ -13,7 +13,7 @@ export async function loginController(req: Request) {
       name: user.name,
       role: user.role,
     });
-    
+
     setAuthCookie(token, res);
 
     return res;

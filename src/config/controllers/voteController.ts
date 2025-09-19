@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
-import { voteService } from "../service/voteService";
+import { voteService } from "../services/voteService";
 
 export const voteController = {
   async create(req: Request, token: string | undefined) {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { registerService } from "../service/registerService";
+import { registerService } from "../services/registerService";
 
 export async function registerController(req: Request) {
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { candidateService } from "../service/candidateService";
+import { candidateService } from "../services/candidateService";
 
 export const candidateController = {
   async getAll() {
