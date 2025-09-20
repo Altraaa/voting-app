@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { categoryService } from "../service/categoryService";
+import { categoryService } from "../services/categoryService";
 
 export const categoryController = {
   async getAll() {

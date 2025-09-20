@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
-import { userService } from "../service/usersService";
+import { userService } from "../services/usersService";
 import { Role } from "@/generated/prisma";
 
 export const userController = {
