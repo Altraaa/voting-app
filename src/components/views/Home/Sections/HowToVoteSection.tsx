@@ -3,7 +3,15 @@ import { Button } from "@/components/ui/button";
 import { CreditCard, Vote, Trophy, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-const steps = [
+type Step = {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  action: string;
+  href: string;
+}
+
+const steps: Step[] = [
   {
     icon: CreditCard,
     title: "Buy Voting Points",
@@ -26,7 +34,7 @@ const steps = [
     description:
       "Watch real-time results update instantly. Track your favorite candidates' progress live.",
     action: "View Leaderboard",
-    href: "#leaderboard",
+    href: "/",
   },
 ];
 
@@ -66,7 +74,7 @@ export default function HowToVoteSection() {
               </p>
 
               <Button variant="outline" asChild className="mt-4 bg-transparent">
-                <Link href={step.href}>
+                <Link href={step.href as any}>
                   {step.action}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
