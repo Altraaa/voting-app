@@ -1,5 +1,6 @@
 import React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Facebook } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,7 +116,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
           size="lg"
         >
-          <span className="text-blue-500 font-bold text-base mr-2">G</span>
+          <FcGoogle className="h-5 w-5" />
           Google
         </Button>
         <Button
@@ -124,7 +125,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
           size="lg"
         >
-          <span className="text-blue-600 font-bold text-base mr-2">f</span>
+          <Facebook />
           Facebook
         </Button>
       </div>

@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Klik Vote - Make Your Voice Heard",
+  title: "Seraphic - Make Your Voice Heard",
   description:
     "Participate in exciting voting competitions and support your favorite candidates",
 };
