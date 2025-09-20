@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  email         String   @unique
+  name          String
+  id            String   @id @default(cuid())
+  points        Int      @default(0)
+  role          Role     @default(USER)
+  firstName     String?
+  lastName      String?
+  newsLetter    Boolean?
+  phone         String?
+  terms         Boolean?
+  votes         Vote[]
+  transactions  PointTransaction[]
+  password      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Category {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  created    DateTime    @default(now())
+  updated    DateTime    @updatedAt
+  candidates Candidate[]
+}
+
+model Candidate {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  categoryId String
+  created    DateTime @default(now())
+  updated    DateTime @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id])
+  votes      Vote[]
+}
+
+model Vote {
+  id          String    @id @default(cuid())
+  userId      String
+  candidateId String
+  pointsUsed  Int
+  created     DateTime  @default(now())
+  updated     DateTime  @updatedAt
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model PointTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  points      Int
+  amount      Int
+  status      String   @default("PENDING") 
+  midtransId  String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
