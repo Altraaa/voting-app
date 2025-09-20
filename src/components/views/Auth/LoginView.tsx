@@ -1,9 +1,10 @@
+// views/LoginView.tsx
 "use client";
 import React, { useState } from "react";
 import { useLogin } from "@/config/hooks/useLogin";
 import { useAuthStore } from "@/config/stores/useAuthStores";
 import { toast } from "sonner";
-import LeftSection from "./Sections/LeftSection";
+import AuthLayout from "@/components/layouts/Auth";
 import LoginForm from "./Sections/LoginFormSection";
 
 const LoginView = () => {
@@ -34,24 +35,21 @@ const LoginView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-5">
-      <div className="flex max-w-6xl w-full bg-white rounded-xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[700px] flex-col lg:flex-row">
-        <LeftSection
-          title="Welcome Back"
-          description="Secure access to your democratic participation platform."
-        />
-
-        <LoginForm
-          loginForm={loginForm}
-          showPassword={showPassword}
-          isLoading={isLoading}
-          onInputChange={handleInputChange}
-          onCheckboxChange={handleCheckboxChange}
-          onTogglePassword={() => setShowPassword(!showPassword)}
-          onSubmit={handleSubmit}
-        />
-      </div>
-    </div>
+    <AuthLayout
+      title="Welcome Back"
+      description="Secure access to your democratic participation platform."
+      showStats={true}
+    >
+      <LoginForm
+        loginForm={loginForm}
+        showPassword={showPassword}
+        isLoading={isLoading}
+        onInputChange={handleInputChange}
+        onCheckboxChange={handleCheckboxChange}
+        onTogglePassword={() => setShowPassword(!showPassword)}
+        onSubmit={handleSubmit}
+      />
+    </AuthLayout>
   );
 };
 

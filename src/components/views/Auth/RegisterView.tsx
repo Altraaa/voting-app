@@ -5,8 +5,8 @@ import { useAuthStore } from "@/config/stores/useAuthStores";
 import { usePasswordStore } from "@/config/stores/usePasswordStores";
 import { RegisterForm } from "@/config/types/authType";
 import { toast } from "sonner";
+import AuthLayout from "@/components/layouts/Auth";
 import RegistrationForm from "./Sections/RegisterFormSection";
-import LeftSection from "./Sections/LeftSection";
 
 const RegisterView = () => {
   const { registerForm, setRegisterForm } = useAuthStore();
@@ -52,27 +52,23 @@ const RegisterView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-5">
-      <div className="flex max-w-6xl w-full bg-white rounded-xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[700px] flex-col lg:flex-row">
-        <LeftSection
-          title="Your Voice Matters"
-          description=" Join thousands of engaged citizens making their voices heard in the
-          democratic process."
-        />
-
-        <RegistrationForm
-          registerForm={registerForm}
-          showPassword={showPassword}
-          showConfirmPassword={showConfirmPassword}
-          isLoading={isLoading}
-          onInputChange={handleInputChange}
-          onCheckboxChange={handleCheckboxChange}
-          onTogglePassword={togglePassword}
-          onToggleConfirmPassword={toggleConfirmPassword}
-          onSubmit={handleSubmit}
-        />
-      </div>
-    </div>
+    <AuthLayout
+      title="Your Voice Matters"
+      description="Join thousands of engaged citizens making their voices heard in the democratic process."
+      showStats={true}
+    >
+      <RegistrationForm
+        registerForm={registerForm}
+        showPassword={showPassword}
+        showConfirmPassword={showConfirmPassword}
+        isLoading={isLoading}
+        onInputChange={handleInputChange}
+        onCheckboxChange={handleCheckboxChange}
+        onTogglePassword={togglePassword}
+        onToggleConfirmPassword={toggleConfirmPassword}
+        onSubmit={handleSubmit}
+      />
+    </AuthLayout>
   );
 };
 

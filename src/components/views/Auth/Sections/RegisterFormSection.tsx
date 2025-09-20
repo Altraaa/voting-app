@@ -21,7 +21,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
       <form onSubmit={onSubmit} className="space-y-4 lg:space-y-5">
         <div className="mb-6 lg:mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Create Your Account
           </h2>
           <p className="text-gray-600 text-sm">
@@ -190,10 +190,10 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-black hover:bg-gray-800 text-white py-3 sm:py-3.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0 mt-6"
+          className="w-full hover:bg-foreground text-white py-3 sm:py-3.5 text-sm font-semibold tracking-wider transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0 mt-6"
           size="lg"
         >
-          {isLoading ? "Processing..." : "Create Account"}
+          {isLoading ? "Processing..." : "Sign Up"}
         </Button>
       </form>
     </div>

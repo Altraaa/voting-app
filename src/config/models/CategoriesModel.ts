@@ -1,10 +1,12 @@
 import { ICandidate } from "./CandidateModel";
+import { IEvent } from "./EventModel";
 
 export interface ICategories {
   id: string;
   name: string;
-  candidate_count: number;
-  candiates: ICandidate;
+  eventId: string;
+  candidates: ICandidate[];
+  event: IEvent;
   created: string;
   updated: string;
 }

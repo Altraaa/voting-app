@@ -5,7 +5,7 @@ export const candidateService = {
     return prisma.candidate.findMany({ include: { category: true } });
   },
 
-  async create(data: { name: string; categoryId: string }) {
+  async create(data: { name: string; categoryId: string, description: string, photo_url: string }) {
     return prisma.candidate.create({ data });
   },
 

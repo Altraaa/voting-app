@@ -8,8 +8,8 @@ export const candidateController = {
   },
 
   async create(req: Request) {
-    const { name, categoryId } = await req.json();
-    const candidate = await candidateService.create({ name, categoryId });
+    const { name, categoryId, description, photo_url } = await req.json();
+    const candidate = await candidateService.create({ name, categoryId, description, photo_url });
     return NextResponse.json(candidate);
   },
 

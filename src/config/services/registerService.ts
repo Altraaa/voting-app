@@ -1,16 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createToken } from "@/lib/auth";
+import { RegisterPayload } from "../types/authType";
 
-export async function registerService(data: {
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-  phone?: string;
-  terms?: boolean;
-  newsLetter?: boolean;
-  password: string;
-}) {
+export async function registerService(data: RegisterPayload) {
   const { email, password, ...rest } = data;
 
   if (!email || !password) {
