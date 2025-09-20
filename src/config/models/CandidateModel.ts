@@ -3,13 +3,12 @@ import { IVotes } from "./VotesModel";
 
 export interface ICandidate {
   id: string;
-  categoryId: string;
-  votesId: string;
   name: string;
-  description: string;
-  photo_url: string;
+  description?: string; 
+  photo_url?: string;
+  categoryId: string;
+  created: Date;
+  updated: Date;
   category: ICategories;
   votes: IVotes[];
-  created: string;
-  updated: string;
 }
