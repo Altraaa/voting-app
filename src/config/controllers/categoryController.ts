@@ -1,3 +1,4 @@
+// controllers/categoryController.ts
 import { NextResponse } from "next/server";
 import { categoryService } from "../services/categoryService";
 
@@ -8,14 +9,14 @@ export const categoryController = {
   },
 
   async create(req: Request) {
-    const { name } = await req.json();
-    const category = await categoryService.create({ name });
+    const { name, eventId } = await req.json();
+    const category = await categoryService.create({ name, eventId });
     return NextResponse.json(category);
   },
 
   async update(req: Request) {
-    const { id, name } = await req.json();
-    const category = await categoryService.update({ id, name });
+    const { id, name, eventId } = await req.json();
+    const category = await categoryService.update({ id, name, eventId });
     return NextResponse.json(category);
   },
 
