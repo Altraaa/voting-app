@@ -195,6 +195,28 @@ export default function PrivacyView() {
             </Button>
           </div>
         </div>
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+          <a
+            href="#contact-content"
+            className="flex flex-col items-center text-primary hover:text-primary/80 transition-colors"
+          >
+            <span className="text-sm mb-2">Scroll Down</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 animate-bounce"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </a>
+        </div>
       </section>
 
       <div className="mx-auto px-4 md:px-20 py-16">

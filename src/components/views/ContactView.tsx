@@ -1,14 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Users, Headphones, Globe, Zap } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Send,
+  MessageCircle,
+  Users,
+  Headphones,
+  Globe,
+  Zap,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -24,24 +41,28 @@ export default function ContactView() {
     subject: "",
     message: "",
     category: "general",
-  })
+  });
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Reset form
     setFormData({
@@ -50,11 +71,13 @@ export default function ContactView() {
       subject: "",
       message: "",
       category: "general",
-    })
+    });
 
-    setIsSubmitting(false)
-    alert("Your message has been sent successfully! Our team will contact you soon.")
-  }
+    setIsSubmitting(false);
+    alert(
+      "Your message has been sent successfully! Our team will contact you soon."
+    );
+  };
 
   const contactInfo = [
     {
@@ -85,7 +108,7 @@ export default function ContactView() {
       value: "Monday - Friday: 9:00 AM - 5:00 PM EST",
       action: "#",
     },
-  ]
+  ];
 
   const supportCategories = [
     { value: "general", label: "General Questions" },
@@ -93,7 +116,7 @@ export default function ContactView() {
     { value: "billing", label: "Billing & Payments" },
     { value: "partnership", label: "Partnership" },
     { value: "feedback", label: "Feedback & Suggestions" },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,6 +135,28 @@ export default function ContactView() {
             Have questions or need help? Our customer service team is ready to
             assist you 24/7
           </p>
+        </div>
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+          <a
+            href="#contact-content"
+            className="flex flex-col items-center text-primary hover:text-primary/80 transition-colors"
+          >
+            <span className="text-sm mb-2">Scroll Down</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 animate-bounce"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </a>
         </div>
       </section>
 

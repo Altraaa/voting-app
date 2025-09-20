@@ -95,10 +95,35 @@ export default function HelpView() {
               <HelpCircle className="h-16 w-16 text-primary" />
             </div>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance">Help Center</h1>
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance">
+            Help Center
+          </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed text-pretty">
-            Find answers to your questions or contact our support team for further assistance
+            Find answers to your questions or contact our support team for
+            further assistance
           </p>
+        </div>
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+          <a
+            href="#contact-content"
+            className="flex flex-col items-center text-primary hover:text-primary/80 transition-colors"
+          >
+            <span className="text-sm mb-2">Scroll Down</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 animate-bounce"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </a>
         </div>
       </section>
 
@@ -131,7 +156,9 @@ export default function HelpView() {
                       {categories.map((category) => (
                         <Button
                           key={category}
-                          variant={selectedCategory === category ? "default" : "ghost"}
+                          variant={
+                            selectedCategory === category ? "default" : "ghost"
+                          }
                           size="sm"
                           onClick={() => setSelectedCategory(category)}
                           className="w-full justify-start text-sm"
@@ -157,7 +184,9 @@ export default function HelpView() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Email</p>
-                      <p className="text-sm text-muted-foreground">support@clickvote.com</p>
+                      <p className="text-sm text-muted-foreground">
+                        support@clickvote.com
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -166,7 +195,9 @@ export default function HelpView() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Phone</p>
-                      <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
+                      <p className="text-sm text-muted-foreground">
+                        +1 (555) 123-4567
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -175,7 +206,9 @@ export default function HelpView() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">Business Hours</p>
-                      <p className="text-sm text-muted-foreground">Mon - Fri: 9:00 AM - 5:00 PM EST</p>
+                      <p className="text-sm text-muted-foreground">
+                        Mon - Fri: 9:00 AM - 5:00 PM EST
+                      </p>
                     </div>
                   </div>
                   <Button className="w-full mt-4" asChild>
@@ -190,15 +223,21 @@ export default function HelpView() {
           <div className="lg:col-span-3">
             <Card className="shadow-sm">
               <CardHeader className="pb-6">
-                <CardTitle className="text-2xl">Frequently Asked Questions</CardTitle>
+                <CardTitle className="text-2xl">
+                  Frequently Asked Questions
+                </CardTitle>
                 <CardDescription className="text-base">
-                  {filteredFAQs.length} question{filteredFAQs.length !== 1 ? "s" : ""} found
+                  {filteredFAQs.length} question
+                  {filteredFAQs.length !== 1 ? "s" : ""} found
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {filteredFAQs.map((faq) => (
-                    <div key={faq.id} className="border rounded-xl overflow-hidden">
+                    <div
+                      key={faq.id}
+                      className="border rounded-xl overflow-hidden"
+                    >
                       <button
                         onClick={() => toggleExpanded(faq.id)}
                         className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-muted/50 transition-colors"
@@ -209,7 +248,9 @@ export default function HelpView() {
                               {faq.category}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-foreground leading-relaxed">{faq.question}</h3>
+                          <h3 className="font-semibold text-foreground leading-relaxed">
+                            {faq.question}
+                          </h3>
                         </div>
                         {expandedItems.includes(faq.id) ? (
                           <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
@@ -219,7 +260,9 @@ export default function HelpView() {
                       </button>
                       {expandedItems.includes(faq.id) && (
                         <div className="px-6 pb-4">
-                          <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {faq.answer}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -228,8 +271,12 @@ export default function HelpView() {
                   {filteredFAQs.length === 0 && (
                     <div className="text-center py-12">
                       <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-foreground mb-2">No questions found</h3>
-                      <p className="text-muted-foreground">Try changing your search keywords or category filter.</p>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        No questions found
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Try changing your search keywords or category filter.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -239,5 +286,5 @@ export default function HelpView() {
         </div>
       </div>
     </div>
-  )
+  );
 }
