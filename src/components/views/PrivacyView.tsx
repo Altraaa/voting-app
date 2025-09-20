@@ -339,7 +339,7 @@ export default function PrivacyView() {
                         Email
                       </h4>
                       <p className="text-muted-foreground">
-                        privacy@clickvote.com
+                        seraphicvsl@gmail.com
                       </p>
                     </div>
                     <div>
@@ -347,11 +347,11 @@ export default function PrivacyView() {
                         Address
                       </h4>
                       <p className="text-muted-foreground leading-relaxed">
-                        123 Privacy Street
+                        Kedundung Sari Street
                         <br />
-                        New York, NY 10001
+                        No. 1 Ubung Kaja 80116 North Denpasar, Bali
                         <br />
-                        United States
+                        Indonesia
                       </p>
                     </div>
                   </div>

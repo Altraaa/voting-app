@@ -84,21 +84,21 @@ export default function ContactView() {
       icon: Mail,
       title: "Email",
       description: "Send email for general inquiries",
-      value: "info@clickvote.com",
-      action: "mailto:info@clickvote.com",
+      value: "seraphicvsl@gmail.com",
+      action: "mailto:seraphicvsl@gmail.com",
     },
     {
       icon: Phone,
       title: "Phone",
       description: "Call for direct assistance",
-      value: "+1 (555) 123-4567",
-      action: "tel:+15551234567",
+      value: "+6288219320121",
+      action: "tel:+6288219320121",
     },
     {
       icon: MapPin,
       title: "Address",
       description: "Our headquarters",
-      value: "123 Main Street, New York, NY 10001",
+      value: "Kedundung Sari Street, No. 1 Ubung Kaja 80116 North Denpasar, Bali, Indonesia",
       action: "#",
     },
     {
@@ -229,7 +229,7 @@ export default function ContactView() {
                   asChild
                 >
                   <a
-                    href="https://wa.me/15551234567"
+                    href="https://wa.me/6288219320121"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-2"
@@ -245,7 +245,7 @@ export default function ContactView() {
                   asChild
                 >
                   <a
-                    href="mailto:support@clickvote.com"
+                    href="mailto:seraphicvsl@gmail.com"
                     className="flex items-center space-x-2"
                   >
                     <Mail className="h-4 w-4" />

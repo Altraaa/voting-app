@@ -185,7 +185,7 @@ export default function HelpView() {
                     <div className="flex-1">
                       <p className="font-medium text-sm">Email</p>
                       <p className="text-sm text-muted-foreground">
-                        support@clickvote.com
+                        seraphicvsl@gmail.com
                       </p>
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default function HelpView() {
                     <div className="flex-1">
                       <p className="font-medium text-sm">Phone</p>
                       <p className="text-sm text-muted-foreground">
-                        +1 (555) 123-4567
+                        +6288219320121
                       </p>
                     </div>
                   </div>
