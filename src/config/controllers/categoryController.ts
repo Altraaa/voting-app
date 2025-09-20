@@ -1,4 +1,3 @@
-// controllers/categoryController.ts
 import { NextResponse } from "next/server";
 import { categoryService } from "../services/categoryService";
 
