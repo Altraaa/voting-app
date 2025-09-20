@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Vote className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-primary">Naravista</span>
+              <span className="text-xl font-bold text-primary">Seraphic</span>
             </div>
             <p className="text-sm text-muted-foreground">
               The most trusted platform for real-time voting with transparent
