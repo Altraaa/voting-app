@@ -105,7 +105,7 @@ export default function HelpView() {
         </div>
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
           <a
-            href="#contact-content"
+            href="#help-content"
             className="flex flex-col items-center text-primary hover:text-primary/80 transition-colors"
           >
             <span className="text-sm mb-2">Scroll Down</span>
@@ -127,7 +127,7 @@ export default function HelpView() {
         </div>
       </section>
 
-      <div className="mx-auto px-4 md:px-20 py-16">
+      <div id="help-content" className="mx-auto px-4 md:px-20 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Search and Filter Sidebar */}
           <div className="lg:col-span-2">

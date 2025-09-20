@@ -160,7 +160,7 @@ export default function ContactView() {
         </div>
       </section>
 
-      <div className="mx-auto md:px-20 px-4 py-16">
+      <div id="contact-content" className="mx-auto md:px-20 px-4 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Contact Information Sidebar */}
           <div className="lg:col-span-2 space-y-6">

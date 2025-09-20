@@ -197,7 +197,7 @@ export default function PrivacyView() {
         </div>
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
           <a
-            href="#contact-content"
+            href="#privacy-content"
             className="flex flex-col items-center text-primary hover:text-primary/80 transition-colors"
           >
             <span className="text-sm mb-2">Scroll Down</span>
@@ -219,7 +219,7 @@ export default function PrivacyView() {
         </div>
       </section>
 
-      <div className="mx-auto px-4 md:px-20 py-16">
+      <div id="privacy-content" className="mx-auto px-4 md:px-20 py-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar Navigation */}
