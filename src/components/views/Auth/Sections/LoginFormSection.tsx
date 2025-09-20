@@ -19,8 +19,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
       <div className="mb-6 lg:mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2">
-          Sign In
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+          Login
         </h2>
         <p className="text-gray-600 text-sm">
           Enter your credentials to access your account
@@ -86,7 +86,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               Remember me
             </Label>
           </div>
-          <span className="text-sm text-gray-600 hover:text-black cursor-pointer hover:underline">
+          <span className="text-sm text-gray-600 hover:text-primary cursor-pointer hover:underline">
             Forgot password?
           </span>
         </div>
@@ -94,7 +94,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-black hover:bg-gray-800 text-white py-3 sm:py-3.5 text-sm font-semibold uppercase tracking-wider transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0 mt-6"
+          className="w-full hover:bg-foreground text-white py-3 sm:py-3.5 text-sm font-semibold tracking-wider transition-all duration-300 ease-in-out hover:-translate-y-0.5 active:translate-y-0 mt-6"
           size="lg"
         >
           {isLoading ? "Signing In..." : "Sign In"}
@@ -132,7 +132,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       <div className="text-center text-gray-600 text-sm pt-4">
         Don&apos;t have an account?{" "}
         <Link href="/register">
-          <span className="text-black font-semibold hover:underline cursor-pointer">
+          <span className="text-primary font-semibold hover:underline cursor-pointer">
             Create Account
           </span>
         </Link>
