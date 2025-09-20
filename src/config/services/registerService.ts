@@ -5,7 +5,7 @@ export async function registerService(data: {
   email: string;
   firstName?: string;
   lastName?: string;
-  name?: string;
+  name: string;
   phone?: string;
   terms?: boolean;
   newsLetter?: boolean;
