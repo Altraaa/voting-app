@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { EventMemberCreatePayload } from "../types/eventMemberType";
 
 export const eventMemberService = {
   async getAll() {
@@ -19,7 +20,7 @@ export const eventMemberService = {
     });
   },
 
-  async create(data: { userId: string; eventId: string }) {
+  async create(data: EventMemberCreatePayload) {
     return prisma.eventMember.create({ data });
   },
 
