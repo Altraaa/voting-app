@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PackageHistoryCreatePayload } from "../types/packageHistoryType";
 
 export const packageHistoryService = {
   async getAll() {
@@ -19,12 +20,7 @@ export const packageHistoryService = {
     });
   },
 
-  async create(data: {
-    userId: string;
-    packageId: string;
-    pointsReceived: number;
-    validUntil: Date;
-  }) {
+  async create(data: PackageHistoryCreatePayload) {
     return prisma.packageHistory.create({
       data: {
         ...data,
