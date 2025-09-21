@@ -22,7 +22,8 @@ export const CategoriesRoute = {
     }),
   remove: (id: string): Promise<ICategories> =>
     ApiRequest({
-      url: `categories/${id}`,
+      url: "categories",
       method: "DELETE",
+      body: { id },
     }),
 };

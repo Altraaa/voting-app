@@ -1,5 +1,5 @@
-import { Role } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { UsersCreatePayload, UsersUpdatePayload } from "../types/usersType";
 
 export const userService = {
   async getAll() {
@@ -8,16 +8,11 @@ export const userService = {
     });
   },
 
-  async create(data: {
-    email: string;
-    name: string;
-    password: string;
-    role: Role;
-  }) {
+  async create(data: UsersCreatePayload) {
     return prisma.user.create({ data });
   },
 
-  async update(data: { id: string; name: string; role: Role }) {
+  async update(data: UsersUpdatePayload) {
     return prisma.user.update({
       where: { id: data.id },
       data: { name: data.name, role: data.role },

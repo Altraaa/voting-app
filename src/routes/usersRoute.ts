@@ -2,7 +2,7 @@ import { IUsers } from "@/config/models/UsersModel";
 import { UsersCreatePayload } from "@/config/types/usersType";
 import { ApiRequest } from "@/lib/api";
 
-export const usersRoute = {
+export const UsersRoute = {
   getAll: (): Promise<IUsers> =>
     ApiRequest({
       url: "users",
@@ -22,7 +22,8 @@ export const usersRoute = {
     }),
   remove: (id: string): Promise<IUsers> =>
     ApiRequest({
-      url: `users/${id}`,
+      url: "users",
       method: "DELETE",
+      body: { id },
     }),
 };

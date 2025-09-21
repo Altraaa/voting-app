@@ -2,7 +2,7 @@ import { ICandidate } from "@/config/models/CandidateModel";
 import { CandidatesCreatePayload, CandidatesUpdatePayload } from "@/config/types/candidatesType";
 import { ApiRequest } from "@/lib/api";
 
-export const candidateRoute = {
+export const CandidateRoute = {
   getAll: (): Promise<ICandidate> =>
     ApiRequest({
       url: "candidates",
@@ -22,7 +22,8 @@ export const candidateRoute = {
     }),
   remove: (id: string): Promise<ICandidate> =>
     ApiRequest({
-      url: `candidates/${id}`,
+      url: "candidates",
       method: "DELETE",
+      body: { id },
     }),
 };

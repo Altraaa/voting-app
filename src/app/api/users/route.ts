@@ -17,4 +17,4 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   return userController.remove(req);
-}
+}  

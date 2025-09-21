@@ -1,3 +1,4 @@
+import { Role } from "@/generated/prisma";
 import { IVotes } from "./VotesModel";
 
 export interface IUsers {
@@ -6,7 +7,7 @@ export interface IUsers {
   name: string;
   password: string;
   points: number;
-  role: string;
+  role?: Role;
   firstName: string;
   lastName: string;
   newsLetter: boolean;

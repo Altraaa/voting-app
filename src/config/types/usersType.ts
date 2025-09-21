@@ -1,8 +1,18 @@
 import { IUsers } from "../models/UsersModel";
 
-export type UsersCreatePayload = Pick<
+export type UsersBasePayload = Pick<
   IUsers,
-  "email" | "name" | "password" | "role"
+  | "email"
+  | "password"
+  | "firstName"
+  | "role"
+  | "lastName"
+  | "phone"
+  | "terms"
+  | "newsLetter"
+  | "name"
 >;
+
+export type UsersCreatePayload = UsersBasePayload;
 
 export type UsersUpdatePayload = Pick<IUsers, "id" | "name" | "role">;
