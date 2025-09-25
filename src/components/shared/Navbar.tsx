@@ -27,10 +27,10 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/category"
+              href="/event"
               className="text-sm font-medium text-foreground hover:text-primary transition-all duration-200 hover:scale-105"
             >
-              Categories
+              All Events
             </Link>
             <Link
               href="/points"

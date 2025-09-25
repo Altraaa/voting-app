@@ -30,10 +30,10 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/category"
+                  href="/event"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Categories
+                  All Events
                 </Link>
               </li>
               <li>
