@@ -1,11 +1,17 @@
 import { ICandidate } from "@/config/models/CandidateModel";
 import { CandidatesCreatePayload, CandidatesUpdatePayload } from "@/config/types/candidatesType";
+import { CandidateDetailResponse } from "@/config/types/responseType";
 import { ApiRequest } from "@/lib/api";
 
 export const CandidateRoute = {
-  getAll: (): Promise<ICandidate> =>
+  getAll: (): Promise<ICandidate[]> =>
     ApiRequest({
       url: "candidates",
+      method: "GET",
+    }),
+  getById: (id: string): Promise<CandidateDetailResponse> =>
+    ApiRequest({
+      url: `candidates/${id}`,
       method: "GET",
     }),
   create: (data: CandidatesCreatePayload): Promise<ICandidate> =>
