@@ -34,6 +34,8 @@ model Event {
   id          String      @id @default(cuid())
   name        String
   description String?
+  photo_url   String?
+  status      StatusEvent
   startDate   DateTime
   endDate     DateTime
   isActive    Boolean     @default(true)
@@ -46,6 +48,7 @@ model Event {
 model Category {
   id         String      @id @default(cuid())
   name       String
+  photo_url  String?
   eventId    String
   created    DateTime    @default(now())
   updated    DateTime    @updatedAt
@@ -144,6 +147,12 @@ enum PaymentStatus {
   success
   failed
   pending
+}
+
+enum StatusEvent {
+  live
+  upcoming
+  ended
 }
 
 enum SupportType {

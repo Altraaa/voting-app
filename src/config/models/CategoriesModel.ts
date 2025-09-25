@@ -4,6 +4,7 @@ import { IEvent } from "./EventModel";
 export interface ICategories {
   id: string;
   name: string;
+  photo_url?: string;
   eventId: string;
   candidates: ICandidate[];
   event: IEvent;
