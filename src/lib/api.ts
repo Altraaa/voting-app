@@ -11,27 +11,37 @@ export async function ApiRequest<T>({
   body?: unknown;
   headers?: Record<string, string>;
 }): Promise<T> {
-  const res = await fetch(`${API_URL}${url}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: "include",
-  });
-
-  const text = await res.text();
-  let data: any;
   try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error(text || "Invalid response from server");
-  }
+    const res = await fetch(`${API_URL}${url}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: "include",
+    });
 
-  if (!res.ok) {
-    throw new Error(data.error || "Something went wrong");
-  }
+    const text = await res.text();
+    let data: any;
 
-  return data as T;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(text || "Invalid JSON response from server");
+    }
+
+    if (!res.ok) {
+      const errorMessage =
+        data.error || data.message || data.details || "Something went wrong";
+      throw new Error(errorMessage);
+    }
+
+    return data as T;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Network error occurred");
+  }
 }
