@@ -4,6 +4,10 @@ export async function GET() {
   return candidateController.getAll();
 }
 
+export async function GET_BY_ID(id: string) {
+  return candidateController.getById(id);
+}
+
 export async function POST(req: Request) {
   return candidateController.create(req);
 }
