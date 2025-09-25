@@ -25,6 +25,7 @@ import {
   Crown,
   Gift,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Point packages data
 const pointPackages = [
@@ -100,6 +101,7 @@ const paymentMethods = [
 ];
 
 export default function PointsView() {
+  const router = useRouter();
   const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentPoints] = useState(10); // Mock current user points
@@ -110,6 +112,9 @@ export default function PointsView() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsProcessing(false);
     setSelectedPayment("");
+
+    router.push("/payment");
+
     // In real app, redirect to payment gateway or show success message
   };
 
