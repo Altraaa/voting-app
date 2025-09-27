@@ -1,20 +1,21 @@
 import { ICategories } from "@/config/models/CategoriesModel";
 import { CandidatesCreatePayload, CandidatesUpdatePayload } from "@/config/types/candidatesType";
+import { CategoriesCreatePayload, CategoriesUpdatePayload } from "@/config/types/categoriesType";
 import { ApiRequest } from "@/lib/api";
 
 export const CategoriesRoute = {
-  getAll: (): Promise<ICategories> =>
+  getAll: (): Promise<ICategories[]> =>
     ApiRequest({
       url: "categories",
       method: "GET",
     }),
-  create: (data: CandidatesCreatePayload): Promise<ICategories> =>
+  create: (data: CategoriesCreatePayload): Promise<ICategories> =>
     ApiRequest({
       url: "categories",
       method: "POST",
       body: data,
     }),
-  update: (data: CandidatesUpdatePayload): Promise<ICategories> =>
+  update: (data: CategoriesUpdatePayload): Promise<ICategories> =>
     ApiRequest({
       url: "categories",
       method: "PUT",
