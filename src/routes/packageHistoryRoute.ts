@@ -3,7 +3,7 @@ import { PackageHistoryCreatePayload } from "@/config/types/packageHistoryType";
 import { ApiRequest } from "@/lib/api";
 
 export const PackageHistoryRoute = {
-  getAll: (): Promise<IPackagePurchase> =>
+  getAll: (): Promise<IPackagePurchase[]> =>
     ApiRequest({
       url: "package/history",
       method: "GET",
