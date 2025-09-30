@@ -1,11 +1,19 @@
 import { IEvent } from "@/config/models/EventModel";
-import { EventCreatePayload, EventUpdatePayload } from "@/config/types/eventType";
+import {
+  EventCreatePayload,
+  EventUpdatePayload,
+} from "@/config/types/eventType";
 import { ApiRequest } from "@/lib/api";
 
 export const EventRoute = {
   getAll: (): Promise<IEvent> =>
     ApiRequest({
       url: "event",
+      method: "GET",
+    }),
+  getById: (id: string): Promise<IEvent> =>
+    ApiRequest({
+      url: `event/${id}`,
       method: "GET",
     }),
   create: (data: EventCreatePayload): Promise<IEvent> =>
@@ -27,4 +35,3 @@ export const EventRoute = {
       body: { id },
     }),
 };
-

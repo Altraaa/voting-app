@@ -8,6 +8,11 @@ export const UsersRoute = {
       url: "users",
       method: "GET",
     }),
+  getById: (id: string): Promise<IUsers> =>
+    ApiRequest({
+      url: `users/${id}`,
+      method: "GET",
+    }),
   create: (data: UsersCreatePayload): Promise<IUsers> =>
     ApiRequest({
       url: "users",

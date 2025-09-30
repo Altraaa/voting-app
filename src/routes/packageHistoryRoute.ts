@@ -1,5 +1,5 @@
 import { IPackagePurchase } from "@/config/models/PackageHistoryModel";
-import { PackageHistoryCreatePayload } from "@/config/types/packageHistoryType";
+import { PackageHistoryCreatePayload, PackageHistoryUpdatePayload } from "@/config/types/packageHistoryType";
 import { ApiRequest } from "@/lib/api";
 
 export const PackageHistoryRoute = {
@@ -20,14 +20,11 @@ export const PackageHistoryRoute = {
       method: "POST",
       body: data,
     }),
-  update: (
-    id: string,
-    data: Partial<{ isActive: boolean }>
-  ): Promise<IPackagePurchase> =>
+  update: (data: PackageHistoryUpdatePayload): Promise<IPackagePurchase> =>
     ApiRequest({
       url: "package/history",
       method: "PUT",
-      body: { id, ...data },
+      body: { data },
     }),
   remove: (id: string): Promise<IPackagePurchase> =>
     ApiRequest({
