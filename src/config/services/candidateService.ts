@@ -6,10 +6,18 @@ export const candidateService = {
   },
 
   async getById(id: string) {
-    return prisma.candidate.findUnique({ where: { id }, include: { category: true } });
+    return prisma.candidate.findUnique({
+      where: { id },
+      include: { category: true },
+    });
   },
 
-  async create(data: { name: string; categoryId: string, description: string, photo_url: string }) {
+  async create(data: {
+    name: string;
+    categoryId: string;
+    description: string;
+    photo_url: string;
+  }) {
     return prisma.candidate.create({ data });
   },
 

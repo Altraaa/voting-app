@@ -1,5 +1,4 @@
 import { ICategories } from "@/config/models/CategoriesModel";
-import { CandidatesCreatePayload, CandidatesUpdatePayload } from "@/config/types/candidatesType";
 import { CategoriesCreatePayload, CategoriesUpdatePayload } from "@/config/types/categoriesType";
 import { ApiRequest } from "@/lib/api";
 
@@ -8,6 +7,11 @@ export const CategoriesRoute = {
     ApiRequest({
       url: "categories",
       method: "GET",
+    }),
+  getById: (id: string): Promise<ICategories> =>
+    ApiRequest({
+      url: `categories/${id}`,
+      method: "GET"
     }),
   create: (data: CategoriesCreatePayload): Promise<ICategories> =>
     ApiRequest({

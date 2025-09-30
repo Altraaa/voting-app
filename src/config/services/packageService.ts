@@ -6,6 +6,12 @@ export const packageService = {
     return prisma.package.findMany();
   },
 
+  async getById(id: string) {
+    return prisma.package.findUnique({
+      where: {id}
+    });
+  },
+
   async create(data: PackageCreatePayload) {
     return prisma.package.create({ data });
   },

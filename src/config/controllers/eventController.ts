@@ -7,6 +7,11 @@ export const eventController = {
     return NextResponse.json(events);
   },
 
+  async getById(id: string) {
+    const event = await eventService.getById(id);
+    return NextResponse.json(event);
+  },
+
   async create(req: Request) {
     const data = await req.json();
     const event = await eventService.create(data);

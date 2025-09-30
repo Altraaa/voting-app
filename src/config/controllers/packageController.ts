@@ -7,6 +7,11 @@ export const packageController = {
     return NextResponse.json(packages);
   },
 
+  async getById(id: string) {
+    const pkg = await packageService.getById(id);
+    return NextResponse.json(pkg)
+  },
+
   async create(req: Request) {
     const data = await req.json();
     const pkg = await packageService.create(data);

@@ -7,6 +7,11 @@ export const categoryController = {
     return NextResponse.json(categories);
   },
 
+  async getById(id: string) {
+    const category = await categoryService.getById(id);
+    return NextResponse.json(category);
+  },
+
   async create(req: Request) {
     const { name, eventId } = await req.json();
     const category = await categoryService.create({ name, eventId });
