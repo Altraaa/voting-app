@@ -4,6 +4,10 @@ export async function GET() {
   return categoryController.getAll();
 }
 
+export async function GET_BY_ID(id: string) {
+  return categoryController.getById(id);
+}
+
 export async function POST(req: Request) {
   return categoryController.create(req);
 }
