@@ -8,6 +8,7 @@ import { CANDIDATE_QUERY_KEYS } from "./candidateQueryKey";
 import { useApiMutation } from "@/config/constants/useApiMutate";
 import { CandidateRoute } from "@/routes/candidateRoute";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/config/utils/ErrorHandler";
 
 const invalidateCandidateQueries = (queryClient: QueryClient) => {
   return queryClient.invalidateQueries({
@@ -28,7 +29,7 @@ export const useCandidateMutations = () => {
       onError: (error) => {
         toast.error("Gagal membuat kandidat", {
           description:
-            error.message || "Terjadi kesalahan saat membuat kandidat",
+            getErrorMessage(error) || "Terjadi kesalahan saat membuat kandidat",
         });
       },
     }
@@ -48,7 +49,7 @@ export const useCandidateMutations = () => {
       onError: (error) => {
         toast.error("Gagal memperbarui kandidat", {
           description:
-            error.message || "Terjadi kesalahan saat memperbarui kandidat",
+            getErrorMessage(error) || "Terjadi kesalahan saat memperbarui kandidat",
         });
       },
     }
@@ -67,7 +68,7 @@ export const useCandidateMutations = () => {
       onError: (error) => {
         toast.error("Gagal menghapus kandidat", {
           description:
-            error.message || "Terjadi kesalahan saat menghapus kandidat",
+            getErrorMessage(error) || "Terjadi kesalahan saat menghapus kandidat",
         });
       },
     }

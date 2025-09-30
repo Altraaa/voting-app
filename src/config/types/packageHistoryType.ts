@@ -6,7 +6,5 @@ export type PackageHistoryBasePayload = Pick<
 >;
 
 export type PackageHistoryCreatePayload = PackageHistoryBasePayload;
-// export type PackageHistoryUpdatePayload = Pick<
-//   IPackagePurchase,
-//   "id" | "userId" | "packageId" | "pointsReceived" | "validUntil"
-// >;
+export type PackageHistoryUpdatePayload = Partial<PackageHistoryBasePayload> &
+  Pick<IPackagePurchase, "id">;
