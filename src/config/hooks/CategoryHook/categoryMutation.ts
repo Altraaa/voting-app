@@ -5,9 +5,10 @@ import { CategoriesRoute } from "@/routes/categoriesRoute";
 import { QueryClient, useQueryClient } from "@tanstack/react-query"
 import { CATEGORY_QUERY_KEYS } from "./categoryQueryKey";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/config/utils/ErrorHandler";
 
-const invalidateCategoryQueries = (QueryClient: QueryClient) => {
-    return QueryClient.invalidateQueries({
+const invalidateCategoryQueries = (queryClient: QueryClient) => {
+    return queryClient.invalidateQueries({
         queryKey: CATEGORY_QUERY_KEYS.all,
     });
 }
@@ -25,7 +26,7 @@ export const useCategoryMutations = () => {
             onError: (error) => {
                 toast.error("Gagal membuat kategori", {
                     description:
-                        error.message || "Terjadi kesalahan saat membuat kategori",
+                        getErrorMessage(error) || "Terjadi kesalahan saat membuat kategori",
                 });
             },
         }
@@ -44,7 +45,7 @@ export const useCategoryMutations = () => {
             onError: (error) => {
                 toast.error("Gagal memperbarui kategori", {
                     description:
-                        error.message || "Terjadi kesalahan saat memperbarui kategori"
+                        getErrorMessage(error) || "Terjadi kesalahan saat memperbarui kategori"
                 });
             },
         }
@@ -63,7 +64,7 @@ export const useCategoryMutations = () => {
             onError: (error) => {
                 toast.error("Gagal menghapus kategori", {
                     description:
-                        error.message || "Terjadi kesalahan saat menghapus kategori",
+                        getErrorMessage(error) || "Terjadi kesalahan saat menghapus kategori",
                 });
             },
         }
