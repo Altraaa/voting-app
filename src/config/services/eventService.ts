@@ -8,6 +8,13 @@ export const eventService = {
     });
   },
 
+  async getById(id: string) {
+    return prisma.event.findUnique({
+      where: { id },
+      include: { categories: true },
+    });
+  },
+
   async create(data: EventCreatePayload) {
     return prisma.event.create({ data });
   },

@@ -2,7 +2,14 @@ import { prisma } from "@/lib/prisma";
 
 export const categoryService = {
   async getAll() {
-    return prisma.category.findMany({ include: { event: true } });
+    return prisma.category.findMany({ include: { candidates: true } });
+  },
+
+  async getById(id: string) {
+    return prisma.category.findUnique({
+      where: { id },
+      include: { candidates: true },
+    });
   },
 
   async create(data: { name: string; eventId: string }) {

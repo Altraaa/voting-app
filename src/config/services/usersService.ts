@@ -8,6 +8,13 @@ export const userService = {
     });
   },
 
+  async getById(id: string) {
+    return prisma.user.findUnique({
+      where: {id},
+      select: { id: true, email: true, name: true, points: true, role: true }
+    })
+  },
+
   async create(data: UsersCreatePayload) {
     return prisma.user.create({ data });
   },
