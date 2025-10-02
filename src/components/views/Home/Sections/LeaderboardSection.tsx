@@ -1,3 +1,4 @@
+// components/LeaderboardSection.tsx
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +8,15 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, TrendingUp, Users, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useEvent } from "@/config/hooks/EventHook/useEvent";
+import { useCandidates } from "@/config/hooks/CandidateHook/useCandidate";
+import { useCategories } from "@/config/hooks/CategoryHook/useCategory";
 
 type Candidate = {
   id: string;
   name: string;
   votes: number;
+  photo_url?: string;
 };
 
 type Category = {
@@ -27,116 +32,94 @@ type EventLeaderboard = {
   categories: Category[];
 };
 
-const events: EventLeaderboard[] = [
-  {
-    id: "indo-music-awards-2025",
-    title: "Indo Music Awards 2025",
-    trending: true,
-    categories: [
-      {
-        id: "best-singer",
-        title: "Best Singer",
-        candidates: [
-          { id: "raisa", name: "Raisa", votes: 4850 },
-          { id: "agnzmo", name: "Agnez Mo", votes: 3185 },
-          { id: "mahalini", name: "Mahalini", votes: 2110 },
-        ],
-      },
-      {
-        id: "best-band",
-        title: "Best Band",
-        candidates: [
-          { id: "noah", name: "NOAH", votes: 2640 },
-          { id: "sheila", name: "Sheila on 7", votes: 2310 },
-          { id: "kotak", name: "Kotak", votes: 1890 },
-        ],
-      },
-      {
-        id: "rising-star",
-        title: "Rising Star",
-        candidates: [
-          { id: "lyodra", name: "Lyodra", votes: 1980 },
-          { id: "tiarap", name: "Tiara Andini", votes: 1765 },
-          { id: "marion", name: "Marion Jola", votes: 1520 },
-        ],
-      },
-    ],
-  },
-  {
-    id: "culinary-fest-2025",
-    title: "Culinary Fest Favorites",
-    trending: false,
-    categories: [
-      {
-        id: "main-dish",
-        title: "Main Dish",
-        candidates: [
-          { id: "rendang", name: "Rendang", votes: 3890 },
-          { id: "nasi-goreng", name: "Nasi Goreng", votes: 2055 },
-          { id: "rawon", name: "Rawon", votes: 1680 },
-        ],
-      },
-      {
-        id: "street-food",
-        title: "Street Food",
-        candidates: [
-          { id: "sate", name: "Sate Ayam", votes: 3215 },
-          { id: "pempek", name: "Pempek", votes: 2470 },
-          { id: "siomay", name: "Siomay", votes: 1410 },
-        ],
-      },
-      {
-        id: "dessert",
-        title: "Dessert",
-        candidates: [
-          { id: "es-teler", name: "Es Teler", votes: 1320 },
-          { id: "klepon", name: "Klepon", votes: 1190 },
-          { id: "serabi", name: "Serabi", votes: 990 },
-        ],
-      },
-    ],
-  },
-  {
-    id: "film-awards-2025",
-    title: "Best Indonesian Movie 2025",
-    trending: true,
-    categories: [
-      {
-        id: "best-movie",
-        title: "Best Movie",
-        candidates: [
-          { id: "pengabdi2", name: "Pengabdi Setan 2", votes: 2895 },
-          { id: "laskar-pelangi", name: "Laskar Pelangi", votes: 1980 },
-          { id: "yowis-ben", name: "Yowis Ben", votes: 1520 },
-        ],
-      },
-      {
-        id: "best-actor",
-        title: "Best Actor",
-        candidates: [
-          { id: "iqbaal", name: "Iqbaal Ramadhan", votes: 2130 },
-          { id: "revaldo", name: "Revaldo", votes: 1760 },
-          { id: "reza", name: "Reza Rahadian", votes: 1640 },
-        ],
-      },
-      {
-        id: "best-director",
-        title: "Best Director",
-        candidates: [
-          { id: "joko-anj", name: "Joko Anwar", votes: 1895 },
-          { id: "hanung", name: "Hanung Bramantyo", votes: 1555 },
-          { id: "rizal-mantovani", name: "Rizal Mantovani", votes: 1380 },
-        ],
-      },
-    ],
-  },
-];
-
-// function formatNumber(n: number) {
-//   return n.toLocaleString();
-// }
-
 export default function LeaderboardSection() {
+  const { queries: eventQueries } = useEvent();
+  const { queries: categoryQueries } = useCategories();
+  const { queries: candidateQueries } = useCandidates();
+
+  const { data: events = [], isLoading: eventsLoading } =
+    eventQueries.useGetAllEvents();
+  const { data: categories = [], isLoading: categoriesLoading } =
+    categoryQueries.useGetAllCategories();
+  const { data: candidates = [], isLoading: candidatesLoading } =
+    candidateQueries.useGetAllCandidates();
+
+  // Process data untuk leaderboard
+  const getLeaderboardData = (): EventLeaderboard[] => {
+    if (eventsLoading || categoriesLoading || candidatesLoading) {
+      return [];
+    }
+
+    return events
+      .slice(0, 3)
+      .map((event, index) => {
+        // Ambil kategori untuk event ini
+        const eventCategories = categories.filter(
+          (cat) => cat.eventId === event.id
+        );
+
+        // Process setiap kategori dengan kandidatnya
+        const processedCategories: Category[] = eventCategories
+          .map((category) => {
+            // Ambil kandidat untuk kategori ini
+            const categoryCandidates = candidates.filter(
+              (candidate) => candidate.categoryId === category.id
+            );
+
+            // Urutkan berdasarkan votes (descending) dan ambil top 3
+            const topCandidates = categoryCandidates
+              .sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0))
+              .slice(0, 3)
+              .map((candidate) => ({
+                id: candidate.id,
+                name: candidate.name,
+                votes: candidate.votes?.length || 0,
+                photo_url: candidate.photo_url,
+              }));
+
+            return {
+              id: category.id,
+              title: category.name,
+              candidates: topCandidates,
+            };
+          })
+          .filter((cat) => cat.candidates.length > 0); // Hanya kategori yang punya kandidat
+
+        return {
+          id: event.id,
+          title: event.name || `Event ${index + 1}`,
+          trending: index < 2, // 2 event pertama trending
+          categories: processedCategories,
+        };
+      })
+      .filter((event) => event.categories.length > 0); // Hanya event yang punya kategori
+  };
+
+  const leaderboardEvents = getLeaderboardData();
+
+  if (eventsLoading || categoriesLoading || candidatesLoading) {
+    return (
+      <section className="py-20 px-4 lg:px-20 bg-card/30">
+        <div className="text-center space-y-4 mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-balance">
+            Event <span className="text-primary">Leaderboards</span>
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Loading leaderboards...
+          </p>
+        </div>
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 rounded mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (leaderboardEvents.length === 0) {
+    return null; // Tidak render jika tidak ada data
+  }
+
   return (
     <section className="py-20 px-4 lg:px-20 bg-card/30">
       <div className="text-center space-y-4 mb-10">
@@ -149,10 +132,10 @@ export default function LeaderboardSection() {
         </p>
       </div>
 
-      <Tabs defaultValue={events[0]?.id} className="w-full">
+      <Tabs defaultValue={leaderboardEvents[0]?.id} className="w-full">
         <div className="flex items-center justify-between gap-4 mb-8">
           <TabsList className="flex flex-wrap">
-            {events.map((ev, idx) => (
+            {leaderboardEvents.map((ev, idx) => (
               <TabsTrigger key={ev.id} value={ev.id} className="text-sm">
                 <div className="flex items-center gap-2">
                   <span>{ev.title}</span>
@@ -177,14 +160,14 @@ export default function LeaderboardSection() {
           </TabsList>
 
           <Button variant="outline" className="bg-transparent" asChild>
-            <Link href="/">
+            <Link href="/events">
               View All Events
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
 
-        {events.map((ev) => {
+        {leaderboardEvents.map((ev) => {
           return (
             <TabsContent key={ev.id} value={ev.id}>
               {/* Category chooser */}
@@ -210,7 +193,7 @@ export default function LeaderboardSection() {
                       className="bg-transparent"
                       asChild
                     >
-                      <Link href="/">
+                      <Link href={`/events/${ev.id}`}>
                         View Event
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
@@ -271,7 +254,7 @@ export default function LeaderboardSection() {
                                   </div>
 
                                   <Button asChild className="w-full">
-                                    <Link href="/">
+                                    <Link href={`/vote?candidate=${c.id}`}>
                                       Vote Now
                                     </Link>
                                   </Button>
@@ -283,8 +266,8 @@ export default function LeaderboardSection() {
 
                         <div className="text-center">
                           <Button variant="outline" size="lg" asChild>
-                            <Link href="/">
-                              View Event Details
+                            <Link href={`/categories/${cat.id}`}>
+                              View Category Details
                               <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                           </Button>

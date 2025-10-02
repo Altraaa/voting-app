@@ -1,3 +1,4 @@
+// components/PointsView.tsx
 "use client";
 
 import { useState } from "react";
@@ -24,72 +25,11 @@ import {
   Zap,
   Crown,
   Gift,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-// Point packages data
-const pointPackages = [
-  {
-    id: 1,
-    name: "Starter Pack",
-    points: 5,
-    price: 5000,
-    originalPrice: null,
-    popular: false,
-    icon: Star,
-    description: "Perfect for trying out the platform",
-    features: ["5 voting points", "Valid for 30 days", "Basic support"],
-  },
-  {
-    id: 2,
-    name: "Popular Pack",
-    points: 15,
-    price: 12000,
-    originalPrice: 15000,
-    popular: true,
-    icon: Zap,
-    description: "Most chosen by our users",
-    features: [
-      "15 voting points",
-      "Valid for 60 days",
-      "Priority support",
-      "20% bonus points",
-    ],
-  },
-  {
-    id: 3,
-    name: "Power Pack",
-    points: 30,
-    price: 20000,
-    originalPrice: 30000,
-    popular: false,
-    icon: Crown,
-    description: "For active voters",
-    features: [
-      "30 voting points",
-      "Valid for 90 days",
-      "Premium support",
-      "33% bonus points",
-    ],
-  },
-  {
-    id: 4,
-    name: "Ultimate Pack",
-    points: 100,
-    price: 50000,
-    originalPrice: 100000,
-    popular: false,
-    icon: Gift,
-    description: "Best value for heavy users",
-    features: [
-      "100 voting points",
-      "Valid for 180 days",
-      "VIP support",
-      "50% bonus points",
-      "Early access to new categories",
-    ],
-  },
-];
+import { usePackage } from "@/config/hooks/PackageHook/usePackage";
+import { IPackage } from "@/config/models/PackageModel";
 
 // Payment methods
 const paymentMethods = [
@@ -100,22 +40,86 @@ const paymentMethods = [
   { id: "credit", name: "Credit Card", icon: CreditCard },
 ];
 
+// Map support type to display text
+const getSupportTypeText = (supportType: string) => {
+  switch (supportType) {
+    case "BASIC":
+      return "Basic support";
+    case "PRIORITY":
+      return "Priority support";
+    case "PREMIUM":
+      return "Premium support";
+    case "VIP":
+      return "VIP support";
+    default:
+      return "Basic support";
+  }
+};
+
+// Map package to icon
+const getPackageIcon = (pkg: IPackage, index: number) => {
+  if (pkg.name.toLowerCase().includes("popular")) return Zap;
+  if (
+    pkg.name.toLowerCase().includes("power") ||
+    pkg.name.toLowerCase().includes("premium")
+  )
+    return Crown;
+  if (
+    pkg.name.toLowerCase().includes("ultimate") ||
+    pkg.name.toLowerCase().includes("vip")
+  )
+    return Gift;
+  if (index === 0) return Star;
+  return Star;
+};
+
+// Generate features based on package data
+const generateFeatures = (pkg: IPackage): string[] => {
+  const features = [
+    `${pkg.points} voting points`,
+    `Valid for ${pkg.validityDays} days`,
+    getSupportTypeText(pkg.supportType),
+  ];
+
+  if (pkg.bonusPercentage && pkg.bonusPercentage > 0) {
+    features.push(`${pkg.bonusPercentage}% bonus points`);
+  }
+
+  if (pkg.earlyAccess) {
+    features.push("Early access to new categories");
+  }
+
+  return features;
+};
+
 export default function PointsView() {
   const router = useRouter();
   const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentPoints] = useState(10); // Mock current user points
+  const [selectedPackage, setSelectedPackage] = useState<IPackage | null>(null);
 
-  const handlePurchase = async () => {
+  const { queries: packageQueries } = usePackage();
+  const { data: packages = [], isLoading: packagesLoading } =
+    packageQueries.useGetAllPackages();
+
+  const handlePurchase = async (pkg: IPackage) => {
+    if (!selectedPayment) return;
+
     setIsProcessing(true);
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsProcessing(false);
-    setSelectedPayment("");
 
-    router.push("/payment");
+    try {
+      // Simulate API call to create payment
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // In real app, redirect to payment gateway or show success message
+      // Redirect to payment page with package and payment method
+      router.push(`/payment?package=${pkg.id}&method=${selectedPayment}`);
+    } catch (error) {
+      console.error("Purchase error:", error);
+    } finally {
+      setIsProcessing(false);
+      setSelectedPayment("");
+      setSelectedPackage(null);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -126,8 +130,28 @@ export default function PointsView() {
     }).format(price);
   };
 
+  // Filter only active packages and sort by price
+  const activePackages = packages
+    .filter((pkg) => pkg.isActive)
+    .sort((a, b) => a.price - b.price);
+
+  if (packagesLoading) {
+    return (
+      <div className="px-20 py-28">
+        <div className="text-center space-y-4 mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-balance">
+            Buy Voting <span className="text-primary">Points</span>
+          </h1>
+          <div className="flex justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="px-20 py-28">
+    <div className="px-4 lg:px-20 py-28">
       <div className="text-center space-y-4 mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-balance">
           Buy Voting <span className="text-primary">Points</span>
@@ -146,7 +170,7 @@ export default function PointsView() {
         <div className="flex items-center justify-center gap-2">
           <Star className="w-6 h-6 text-primary" />
           <span className="text-3xl font-bold text-primary">
-            {currentPoints}
+            10
           </span>
           <span className="text-lg text-muted-foreground">voting points</span>
         </div>
@@ -154,141 +178,163 @@ export default function PointsView() {
 
       {/* Point Packages */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {pointPackages.map((pkg) => (
-          <Card
-            key={pkg.id}
-            className={`relative overflow-hidden hover:shadow-lg transition-all ${
-              pkg.popular ? "ring-2 ring-primary scale-105" : ""
-            }`}
-          >
-            {pkg.popular && (
-              <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center py-2 text-sm font-medium">
-                Most Popular
-              </div>
-            )}
+        {activePackages.map((pkg, index) => {
+          const PackageIcon = getPackageIcon(pkg, index);
+          const features = generateFeatures(pkg);
+          const isPopular = index === 1; // Second package is popular
 
-            <CardHeader
-              className={`text-center ${pkg.popular ? "pt-12" : "pt-6"}`}
+          return (
+            <Card
+              key={pkg.id}
+              className={`relative overflow-hidden hover:shadow-lg transition-all ${
+                isPopular ? "ring-2 ring-primary scale-105" : ""
+              }`}
             >
-              <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <pkg.icon className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle className="text-xl">{pkg.name}</CardTitle>
-              <p className="text-sm text-muted-foreground text-pretty">
-                {pkg.description}
-              </p>
-            </CardHeader>
+              {isPopular && (
+                <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center py-2 text-sm font-medium">
+                  Most Popular
+                </div>
+              )}
 
-            <CardContent className="text-center space-y-4">
-              <div>
-                <div className="text-3xl font-bold text-primary">
-                  {pkg.points}
+              <CardHeader
+                className={`text-center ${isPopular ? "pt-12" : "pt-6"}`}
+              >
+                <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <PackageIcon className="w-6 h-6 text-primary" />
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  voting points
-                </div>
-              </div>
+                <CardTitle className="text-xl">{pkg.name}</CardTitle>
+                <p className="text-sm text-muted-foreground text-pretty">
+                  {pkg.description}
+                </p>
+              </CardHeader>
 
-              <div>
-                <div className="text-2xl font-bold">
-                  {formatPrice(pkg.price)}
-                </div>
-                {pkg.originalPrice && (
-                  <div className="text-sm text-muted-foreground line-through">
-                    {formatPrice(pkg.originalPrice)}
+              <CardContent className="text-center space-y-4">
+                <div>
+                  <div className="text-3xl font-bold text-primary">
+                    {pkg.points}
                   </div>
-                )}
-              </div>
+                  <div className="text-sm text-muted-foreground">
+                    voting points
+                  </div>
+                </div>
 
-              <ul className="space-y-2 text-sm text-left">
-                {pkg.features.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    className="w-full"
-                    variant={pkg.popular ? "default" : "outline"}
-                  >
-                    Select Package
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Complete Your Purchase</DialogTitle>
-                    <DialogDescription>
-                      You&apos;re purchasing {pkg.name} - {pkg.points} voting
-                      points for {formatPrice(pkg.price)}
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="space-y-6">
-                    <div className="bg-card rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Package Details</h4>
-                      <div className="flex justify-between items-center">
-                        <span>{pkg.name}</span>
-                        <span className="font-bold">
-                          {formatPrice(pkg.price)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {pkg.points} voting points
-                      </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {formatPrice(pkg.price)}
+                  </div>
+                  {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                    <div className="text-sm text-muted-foreground line-through">
+                      {formatPrice(pkg.originalPrice)}
                     </div>
+                  )}
+                </div>
 
-                    <div>
-                      <h4 className="font-semibold mb-3">Payment Method</h4>
-                      <RadioGroup
-                        value={selectedPayment}
-                        onValueChange={setSelectedPayment}
-                      >
-                        {paymentMethods.map((method) => (
-                          <div
-                            key={method.id}
-                            className="flex items-center space-x-2"
-                          >
-                            <RadioGroupItem value={method.id} id={method.id} />
-                            <Label
-                              htmlFor={method.id}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <method.icon className="w-4 h-4" />
-                              {method.name}
-                            </Label>
+                <ul className="space-y-2 text-sm text-left">
+                  {features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      className="w-full"
+                      variant={isPopular ? "default" : "outline"}
+                      onClick={() => setSelectedPackage(pkg)}
+                    >
+                      Select Package
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Complete Your Purchase</DialogTitle>
+                      <DialogDescription>
+                        You&apos;re purchasing {pkg.name} - {pkg.points} voting
+                        points for {formatPrice(pkg.price)}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6">
+                      <div className="bg-card rounded-lg p-4">
+                        <h4 className="font-semibold mb-2">Package Details</h4>
+                        <div className="flex justify-between items-center">
+                          <span>{pkg.name}</span>
+                          <span className="font-bold">
+                            {formatPrice(pkg.price)}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {pkg.points} voting points
+                        </div>
+                        {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                          <div className="text-sm text-muted-foreground line-through">
+                            Original: {formatPrice(pkg.originalPrice)}
                           </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  </div>
+                        )}
+                      </div>
 
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedPayment("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handlePurchase}
-                      disabled={!selectedPayment || isProcessing}
-                    >
-                      {isProcessing
-                        ? "Processing..."
-                        : `Pay ${formatPrice(pkg.price)}`}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
-        ))}
+                      <div>
+                        <h4 className="font-semibold mb-3">Payment Method</h4>
+                        <RadioGroup
+                          value={selectedPayment}
+                          onValueChange={setSelectedPayment}
+                        >
+                          {paymentMethods.map((method) => (
+                            <div
+                              key={method.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <RadioGroupItem
+                                value={method.id}
+                                id={method.id}
+                              />
+                              <Label
+                                htmlFor={method.id}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <method.icon className="w-4 h-4" />
+                                {method.name}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedPayment("");
+                          setSelectedPackage(null);
+                        }}
+                        disabled={isProcessing}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => handlePurchase(pkg)}
+                        disabled={!selectedPayment || isProcessing}
+                      >
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          `Pay ${formatPrice(pkg.price)}`
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* FAQ Section */}
