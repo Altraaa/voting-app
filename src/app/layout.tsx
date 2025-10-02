@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import MainLayout from "@/components/layouts/MainLayout";
 import QueryProvider from "@/providers/queryProvider";
 import { Toaster } from "sonner";
 
@@ -22,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <QueryProvider>
-          <MainLayout>{children}</MainLayout>
+          {children}
           <Toaster richColors position="bottom-right" />
         </QueryProvider>
       </body>
