@@ -1,14 +1,20 @@
 import { IEvent } from "@/config/models/EventModel";
 import {
   EventCreatePayload,
+  EventSimpleData,
   EventUpdatePayload,
 } from "@/config/types/eventType";
 import { ApiRequest } from "@/lib/api";
 
 export const EventRoute = {
-  getAll: (): Promise<IEvent> =>
+  getAll: (): Promise<IEvent[]> =>
     ApiRequest({
       url: "event",
+      method: "GET",
+    }),
+  getAllSimple: (): Promise<EventSimpleData[]> =>
+    ApiRequest({
+      url: "event/simple",
       method: "GET",
     }),
   getById: (id: string): Promise<IEvent> =>

@@ -59,7 +59,7 @@ export default function AdminEventView() {
   const { queries, mutations } = useEvent();
   const { uploadSingleMutation, deleteSingleMutation } = useUploadMutations();
 
-  const { data: events = [], isLoading } = queries.useGetAllSimpleEvents();
+  const { data: events = [], isLoading } = queries.useGetAllEvents();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

@@ -181,7 +181,6 @@ export default function AdminCategoryView() {
 
       setIsCreateDialogOpen(false);
       resetForm();
-      toast.success("Kategori berhasil dibuat");
     } catch (error) {
       console.error("Create category error:", error);
       toast.error("Gagal membuat kategori");
@@ -218,7 +217,6 @@ export default function AdminCategoryView() {
 
       setIsEditDialogOpen(false);
       resetForm();
-      toast.success("Kategori berhasil diperbarui");
     } catch (error) {
       console.error("Update category error:", error);
       toast.error("Gagal memperbarui kategori");
@@ -240,7 +238,6 @@ export default function AdminCategoryView() {
 
       setIsDeleteDialogOpen(false);
       setSelectedCategory(null);
-      toast.success("Kategori berhasil dihapus");
     } catch (error) {
       console.error("Delete category error:", error);
       toast.error("Gagal menghapus kategori");
