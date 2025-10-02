@@ -6,7 +6,7 @@ import {
 import { ApiRequest } from "@/lib/api";
 
 export const PackageRoute = {
-  getAll: (): Promise<IPackage> =>
+  getAll: (): Promise<IPackage[]> =>
     ApiRequest({
       url: "package",
       method: "GET",
