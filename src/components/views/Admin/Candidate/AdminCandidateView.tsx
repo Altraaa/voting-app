@@ -1,8 +1,13 @@
 "use client";
 
-import type React from "react";
+import { useUploadMutations } from "@/config/hooks/UploadImageHook/uploadImageMutation";
+import { extractPathFromUrl } from "@/config/utils/extractUrl";
+import { useCandidates } from "@/config/hooks/CandidateHook/useCandidate";
+import { useCategoryQueries } from "@/config/hooks/CategoryHook/categoryQueries";
+import { ICandidate } from "@/config/models/CandidateModel";
+import { toast } from "sonner";
 
-import { useState } from "react";
+// Icons
 import {
   Search,
   Plus,
@@ -13,6 +18,8 @@ import {
   Eye,
   X,
 } from "lucide-react";
+
+// UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,7 +33,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -50,134 +56,261 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Candidate, initialCandidates } from "./MockData";
+import { useCandidateFormStore } from "@/config/stores/useCandidateStores";
+import { useSearchStore } from "@/config/stores/useSearchStores";
+import { useDialogStore } from "@/config/stores/useDialogStores";
 
 export default function AdminCandidateView() {
-  const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
-    null
-  );
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const { queries: candidateQueries, mutations } = useCandidates();
+  const { uploadSingleMutation, deleteSingleMutation } = useUploadMutations();
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useCategoryQueries.useGetAllCategories();
+  const { data: candidates = [], isLoading: candidatesLoading } =
+    candidateQueries.useGetAllCandidates();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    bio: "",
-    event: "",
-    category: "",
-    status: "active" as "active" | "inactive" | "winner",
-    image: "",
-  });
+  // Multiple stores untuk concern yang berbeda
+  const {
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    isViewDialogOpen,
+    selectedId,
+    openCreateDialog,
+    openEditDialog,
+    openDeleteDialog,
+    openViewDialog,
+    closeCreateDialog,
+    closeEditDialog,
+    closeDeleteDialog,
+    closeViewDialog,
+    setSelectedId,
+  } = useDialogStore();
 
-  const handleCreate = () => {
-    const newCandidate: Candidate = {
-      id: Math.max(...candidates.map((c) => c.id)) + 1,
-      name: formData.name,
-      email: formData.email,
-      bio: formData.bio,
-      event: formData.event,
-      category: formData.category,
-      status: formData.status,
-      votes: 0,
-      image: imagePreview || "/placeholder.svg?height=100&width=100",
-    };
-    setCandidates([...candidates, newCandidate]);
-    setIsCreateDialogOpen(false);
-    resetForm();
-  };
+  const {
+    formData,
+    selectedFile,
+    imagePreview,
+    selectedCandidate,
+    setFormData,
+    setSelectedFile,
+    setImagePreview,
+    resetForm,
+    initializeEditForm,
+    setSelectedCandidate,
+  } = useCandidateFormStore();
 
-  const handleEdit = () => {
-    if (!selectedCandidate) return;
-    setCandidates(
-      candidates.map((candidate) =>
-        candidate.id === selectedCandidate.id
-          ? {
-              ...candidate,
-              name: formData.name,
-              email: formData.email,
-              bio: formData.bio,
-              event: formData.event,
-              category: formData.category,
-              status: formData.status,
-              image: imagePreview || candidate.image,
-            }
-          : candidate
-      )
-    );
-    setIsEditDialogOpen(false);
-    resetForm();
-  };
+  const { searchQuery, setSearchQuery } = useSearchStore();
 
-  const handleDelete = () => {
-    if (!selectedCandidate) return;
-    setCandidates(
-      candidates.filter((candidate) => candidate.id !== selectedCandidate.id)
-    );
-    setIsDeleteDialogOpen(false);
-    setSelectedCandidate(null);
-  };
-
-  const openEditDialog = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setFormData({
-      name: candidate.name,
-      email: candidate.email,
-      bio: candidate.bio,
-      event: candidate.event,
-      category: candidate.category,
-      status: candidate.status,
-      image: candidate.image || "",
-    });
-    setImagePreview(candidate.image || "");
-    setIsEditDialogOpen(true);
-  };
-
-  const openViewDialog = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setIsViewDialogOpen(true);
-  };
-
-  const openDeleteDialog = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      email: "",
-      bio: "",
-      event: "",
-      category: "",
-      status: "active",
-      image: "",
-    });
-    setImagePreview("");
-    setSelectedCandidate(null);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handler functions
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Format file tidak valid", {
+        description: "Hanya file JPG, PNG, dan WEBP yang diperbolehkan",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File terlalu besar", {
+        description: "Maksimal ukuran file adalah 2MB",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setImagePreview("");
+  };
+
+  const handleImageUpload = async (): Promise<string> => {
+    if (!selectedFile) {
+      return "";
+    }
+
+    try {
+      const result = await uploadSingleMutation.mutateAsync({
+        file: selectedFile,
+        folder: "candidates",
+      });
+
+      if (result.success && result.url) {
+        return result.url;
+      } else {
+        throw new Error(result.error || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw new Error("Gagal upload gambar");
     }
   };
 
+  const handleImageDelete = async (photoUrl: string): Promise<void> => {
+    const path = extractPathFromUrl(photoUrl);
+    if (path) {
+      try {
+        await deleteSingleMutation.mutateAsync({ path });
+      } catch (error) {
+        console.error("Delete image error:", error);
+      }
+    }
+  };
+
+  // Create Candidate Handler
+  const handleCreate = async () => {
+    try {
+      if (!formData.name || !formData.description || !formData.categoryId) {
+        toast.error("Data tidak lengkap", {
+          description: "Nama, deskripsi, dan kategori harus diisi",
+        });
+        return;
+      }
+
+      let photoUrl = "";
+
+      if (selectedFile) {
+        photoUrl = await handleImageUpload();
+      }
+
+      await mutations.createMutation.mutateAsync({
+        name: formData.name,
+        description: formData.description,
+        photo_url: photoUrl,
+        categoryId: formData.categoryId,
+      });
+
+      closeCreateDialog();
+      resetForm();
+    } catch (error) {
+      console.error("Create candidate error:", error);
+    }
+  };
+
+  // Edit Candidate Handler
+  const handleEdit = async () => {
+    if (!selectedCandidate) return;
+
+    try {
+      let photoUrl = formData.photo_url;
+      let shouldDeleteOldImage = false;
+
+      if (selectedFile) {
+        const newPhotoUrl = await handleImageUpload();
+        photoUrl = newPhotoUrl;
+        shouldDeleteOldImage = true;
+      }
+
+      await mutations.updateMutation.mutateAsync({
+        id: selectedCandidate.id,
+        name: formData.name,
+        description: formData.description,
+        photo_url: photoUrl,
+        categoryId: formData.categoryId,
+      });
+
+      if (shouldDeleteOldImage && selectedCandidate.photo_url) {
+        await handleImageDelete(selectedCandidate.photo_url);
+      }
+
+      closeEditDialog();
+      resetForm();
+    } catch (error) {
+      console.error("Update candidate error:", error);
+    }
+  };
+
+  // Delete Candidate Handler
+  const handleDelete = async () => {
+    if (!selectedCandidate) return;
+
+    try {
+      if (selectedCandidate.photo_url) {
+        await handleImageDelete(selectedCandidate.photo_url);
+      }
+
+      await mutations.removeMutation.mutateAsync(selectedCandidate.id);
+
+      closeDeleteDialog();
+      setSelectedCandidate(null);
+    } catch (error) {
+      console.error("Delete candidate error:", error);
+    }
+  };
+
+  // Helper functions untuk open dialog dengan candidate data
+  const handleOpenEditDialog = (candidate: ICandidate) => {
+    setSelectedId(candidate.id);
+    initializeEditForm(candidate);
+    openEditDialog(candidate.id);
+  };
+
+  const handleOpenViewDialog = (candidate: ICandidate) => {
+    setSelectedId(candidate.id);
+    setSelectedCandidate(candidate);
+    openViewDialog(candidate.id);
+  };
+
+  const handleOpenDeleteDialog = (candidate: ICandidate) => {
+    setSelectedId(candidate.id);
+    setSelectedCandidate(candidate);
+    openDeleteDialog(candidate.id);
+  };
+
+  const handleOpenCreateDialog = () => {
+    resetForm();
+    openCreateDialog();
+  };
+
+  const handleCloseCreateDialog = () => {
+    closeCreateDialog();
+    resetForm();
+  };
+
+  const handleCloseEditDialog = () => {
+    closeEditDialog();
+    resetForm();
+  };
+
+  // Filter candidates berdasarkan search query
   const filteredCandidates = candidates.filter(
     (candidate) =>
       candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      candidate.event.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      candidate.category.toLowerCase().includes(searchQuery.toLowerCase())
+      candidate.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      candidate.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Get category name by ID
+  const getCategoryNameById = (categoryId: string) => {
+    const category = categories.find((category) => category.id === categoryId);
+    return category ? category.name : "Unknown Category";
+  };
+
+  // Get event name dari category
+  const getEventNameByCategoryId = (categoryId: string) => {
+    const category = categories.find((category) => category.id === categoryId);
+    return category ? category.event?.name || "Unknown Event" : "Unknown Event";
+  };
+
+  // Loading state
+  if (candidatesLoading || categoriesLoading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <p>Loading candidates...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -193,15 +326,22 @@ export default function AdminCandidateView() {
           </div>
           <Button
             className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => {
-              resetForm();
-              setIsCreateDialogOpen(true);
-            }}
+            onClick={handleOpenCreateDialog}
+            disabled={categories.length === 0}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Candidate
           </Button>
         </div>
+
+        {categories.length === 0 && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-800">
+              Tidak ada kategori yang tersedia. Silahkan buat kategori terlebih
+              dahulu sebelum membuat kandidat.
+            </p>
+          </div>
+        )}
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
@@ -229,7 +369,7 @@ export default function AdminCandidateView() {
                   Candidate
                 </TableHead>
                 <TableHead className="font-medium text-gray-700">
-                  Email
+                  Description
                 </TableHead>
                 <TableHead className="font-medium text-gray-700">
                   Event
@@ -239,9 +379,6 @@ export default function AdminCandidateView() {
                 </TableHead>
                 <TableHead className="font-medium text-gray-700">
                   Votes
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Status
                 </TableHead>
                 <TableHead className="font-medium text-gray-700 w-12"></TableHead>
               </TableRow>
@@ -253,7 +390,7 @@ export default function AdminCandidateView() {
                     <div className="flex items-center gap-3">
                       <Avatar className="w-10 h-10">
                         <AvatarImage
-                          src={candidate.image || "/placeholder.svg"}
+                          src={candidate.photo_url || "/placeholder.svg"}
                         />
                         <AvatarFallback>
                           {candidate.name
@@ -262,51 +399,20 @@ export default function AdminCandidateView() {
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div className="font-medium">{candidate.name}</div>
-                        <div className="text-sm text-gray-600 truncate max-w-xs">
-                          {candidate.bio}
-                        </div>
-                      </div>
+                      <div className="font-medium">{candidate.name}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-gray-600">
-                    {candidate.email}
+                  <TableCell className="text-gray-600 max-w-xs truncate">
+                    {candidate.description}
                   </TableCell>
                   <TableCell className="text-gray-600">
-                    {candidate.event}
+                    {getEventNameByCategoryId(candidate.categoryId)}
                   </TableCell>
                   <TableCell className="text-gray-600">
-                    {candidate.category}
+                    {getCategoryNameById(candidate.categoryId)}
                   </TableCell>
                   <TableCell className="text-gray-600 font-medium">
-                    {candidate.votes}
-                  </TableCell>
-                  <TableCell>
-                    {candidate.status === "active" && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-100 text-green-700"
-                      >
-                        Active
-                      </Badge>
-                    )}
-                    {candidate.status === "inactive" && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-gray-100 text-gray-700"
-                      >
-                        Inactive
-                      </Badge>
-                    )}
-                    {candidate.status === "winner" && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-yellow-100 text-yellow-700"
-                      >
-                        Winner
-                      </Badge>
-                    )}
+                    {candidate.votes?.length || 0}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -317,13 +423,13 @@ export default function AdminCandidateView() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => openViewDialog(candidate)}
+                          onClick={() => handleOpenViewDialog(candidate)}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => openEditDialog(candidate)}
+                          onClick={() => handleOpenEditDialog(candidate)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
@@ -331,7 +437,7 @@ export default function AdminCandidateView() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => openDeleteDialog(candidate)}
+                          onClick={() => handleOpenDeleteDialog(candidate)}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
@@ -346,8 +452,8 @@ export default function AdminCandidateView() {
         </CardContent>
       </Card>
 
-      {/* Create Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      {/* CREATE DIALOG */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={handleCloseCreateDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add New Candidate</DialogTitle>
@@ -357,130 +463,106 @@ export default function AdminCandidateView() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Full Name</Label>
+              <Label htmlFor="create-name">Full Name *</Label>
               <Input
                 id="create-name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ name: e.target.value })}
                 placeholder="Enter candidate name"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-email">Email</Label>
-              <Input
-                id="create-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                placeholder="candidate@example.com"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="create-bio">Biography</Label>
+              <Label htmlFor="create-description">Description *</Label>
               <Textarea
-                id="create-bio"
-                value={formData.bio}
-                onChange={(e) =>
-                  setFormData({ ...formData, bio: e.target.value })
-                }
-                placeholder="Enter candidate biography"
+                id="create-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ description: e.target.value })}
+                placeholder="Enter candidate description"
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-event">Event</Label>
-                <Input
-                  id="create-event"
-                  value={formData.event}
-                  onChange={(e) =>
-                    setFormData({ ...formData, event: e.target.value })
-                  }
-                  placeholder="Event name"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="create-category">Category</Label>
-                <Input
-                  id="create-category"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  placeholder="Category name"
-                />
-              </div>
-            </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-status">Status</Label>
+              <Label htmlFor="create-category">Category *</Label>
               <Select
-                value={formData.status}
-                onValueChange={(value: any) =>
-                  setFormData({ ...formData, status: value })
-                }
+                value={formData.categoryId}
+                onValueChange={(value) => setFormData({ categoryId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="winner">Winner</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+            {/* Image Upload Section */}
             <div className="grid gap-2">
               <Label htmlFor="create-image">Profile Photo</Label>
               <div className="flex items-center gap-4">
                 <Input
                   id="create-image"
                   type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageSelect}
                   className="flex-1"
+                  disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage src={imagePreview || "/placeholder.svg"} />
+                      <AvatarImage src={imagePreview} />
                       <AvatarFallback>Preview</AvatarFallback>
                     </Avatar>
                     <Button
                       size="icon"
                       variant="destructive"
                       className="absolute -top-2 -right-2 w-6 h-6"
-                      onClick={() => setImagePreview("")}
+                      onClick={handleRemoveImage}
+                      type="button"
                     >
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
                 )}
               </div>
+              {uploadSingleMutation.isPending && (
+                <p className="text-sm text-gray-500">Uploading image...</p>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsCreateDialogOpen(false)}
+              onClick={handleCloseCreateDialog}
+              disabled={mutations.createMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               className="bg-purple-600 hover:bg-purple-700"
               onClick={handleCreate}
+              disabled={
+                mutations.createMutation.isPending ||
+                uploadSingleMutation.isPending ||
+                !formData.name ||
+                !formData.description ||
+                !formData.categoryId
+              }
             >
-              Add Candidate
+              {mutations.createMutation.isPending
+                ? "Creating..."
+                : "Add Candidate"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* EDIT DIALOG */}
+      <Dialog open={isEditDialogOpen} onOpenChange={handleCloseEditDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Candidate</DialogTitle>
@@ -488,79 +570,39 @@ export default function AdminCandidateView() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Full Name</Label>
+              <Label htmlFor="edit-name">Full Name *</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ name: e.target.value })}
                 placeholder="Enter candidate name"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                placeholder="candidate@example.com"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-bio">Biography</Label>
+              <Label htmlFor="edit-description">Description *</Label>
               <Textarea
-                id="edit-bio"
-                value={formData.bio}
-                onChange={(e) =>
-                  setFormData({ ...formData, bio: e.target.value })
-                }
-                placeholder="Enter candidate biography"
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ description: e.target.value })}
+                placeholder="Enter candidate description"
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-event">Event</Label>
-                <Input
-                  id="edit-event"
-                  value={formData.event}
-                  onChange={(e) =>
-                    setFormData({ ...formData, event: e.target.value })
-                  }
-                  placeholder="Event name"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-category">Category</Label>
-                <Input
-                  id="edit-category"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  placeholder="Category name"
-                />
-              </div>
-            </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-status">Status</Label>
+              <Label htmlFor="edit-category">Category *</Label>
               <Select
-                value={formData.status}
-                onValueChange={(value: any) =>
-                  setFormData({ ...formData, status: value })
-                }
+                value={formData.categoryId}
+                onValueChange={(value) => setFormData({ categoryId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="winner">Winner</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -570,48 +612,63 @@ export default function AdminCandidateView() {
                 <Input
                   id="edit-image"
                   type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageSelect}
                   className="flex-1"
+                  disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage src={imagePreview || "/placeholder.svg"} />
+                      <AvatarImage src={imagePreview} />
                       <AvatarFallback>Preview</AvatarFallback>
                     </Avatar>
                     <Button
                       size="icon"
                       variant="destructive"
                       className="absolute -top-2 -right-2 w-6 h-6"
-                      onClick={() => setImagePreview("")}
+                      onClick={handleRemoveImage}
+                      type="button"
                     >
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
                 )}
               </div>
+              {uploadSingleMutation.isPending && (
+                <p className="text-sm text-gray-500">Uploading image...</p>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
+              onClick={handleCloseEditDialog}
+              disabled={mutations.updateMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               className="bg-purple-600 hover:bg-purple-700"
               onClick={handleEdit}
+              disabled={
+                mutations.updateMutation.isPending ||
+                uploadSingleMutation.isPending ||
+                !formData.name ||
+                !formData.description ||
+                !formData.categoryId
+              }
             >
-              Save Changes
+              {mutations.updateMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* View Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+      {/* VIEW DIALOG */}
+      <Dialog open={isViewDialogOpen} onOpenChange={closeViewDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Candidate Details</DialogTitle>
@@ -621,12 +678,12 @@ export default function AdminCandidateView() {
               <div className="flex justify-center">
                 <Avatar className="w-32 h-32">
                   <AvatarImage
-                    src={selectedCandidate.image || "/placeholder.svg"}
+                    src={selectedCandidate.photo_url || "/placeholder.svg"}
                   />
                   <AvatarFallback className="text-2xl">
                     {selectedCandidate.name
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: any) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
@@ -639,76 +696,56 @@ export default function AdminCandidateView() {
                   </p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Email</Label>
-                  <p className="mt-1">{selectedCandidate.email}</p>
-                </div>
-                <div>
-                  <Label className="text-gray-600">Biography</Label>
-                  <p className="mt-1">{selectedCandidate.bio}</p>
+                  <Label className="text-gray-600">Description</Label>
+                  <p className="mt-1">{selectedCandidate.description}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-600">Event</Label>
-                    <p className="mt-1">{selectedCandidate.event}</p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Category</Label>
-                    <p className="mt-1">{selectedCandidate.category}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Total Votes</Label>
-                    <p className="text-2xl font-semibold mt-1">
-                      {selectedCandidate.votes}
+                    <p className="mt-1">
+                      {getEventNameByCategoryId(selectedCandidate.categoryId)}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Status</Label>
-                    <div className="mt-1">
-                      {selectedCandidate.status === "active" && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-100 text-green-700"
-                        >
-                          Active
-                        </Badge>
-                      )}
-                      {selectedCandidate.status === "inactive" && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-gray-100 text-gray-700"
-                        >
-                          Inactive
-                        </Badge>
-                      )}
-                      {selectedCandidate.status === "winner" && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-yellow-100 text-yellow-700"
-                        >
-                          Winner
-                        </Badge>
-                      )}
-                    </div>
+                    <Label className="text-gray-600">Category</Label>
+                    <p className="mt-1">
+                      {getCategoryNameById(selectedCandidate.categoryId)}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-gray-600">Total Votes</Label>
+                  <p className="text-2xl font-semibold mt-1">
+                    {selectedCandidate.votes?.length || 0}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Created At</Label>
+                    <p className="mt-1">
+                      {new Date(selectedCandidate.created).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Last Updated</Label>
+                    <p className="mt-1">
+                      {new Date(selectedCandidate.updated).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsViewDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={closeViewDialog}>
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={closeDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Candidate</DialogTitle>
@@ -720,12 +757,17 @@ export default function AdminCandidateView() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
+              onClick={closeDeleteDialog}
+              disabled={mutations.removeMutation.isPending}
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={mutations.removeMutation.isPending}
+            >
+              {mutations.removeMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -6,6 +6,10 @@ export const categoryService = {
     return prisma.category.findMany({ include: { candidates: true } });
   },
 
+  async getAllSimple() {
+    return prisma.category.findMany({ select: { id: true, name: true } });
+  },
+
   async getById(id: string) {
     return prisma.category.findUnique({
       where: { id },

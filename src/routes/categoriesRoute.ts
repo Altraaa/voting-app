@@ -8,6 +8,11 @@ export const CategoriesRoute = {
       url: "categories",
       method: "GET",
     }),
+  getAllSimple: (): Promise<ICategories[]> =>
+    ApiRequest({
+      url: "categories/simple",
+      method: "GET",
+  }),
   getById: (id: string): Promise<ICategories> =>
     ApiRequest({
       url: `categories/${id}`,

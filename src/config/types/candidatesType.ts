@@ -1,7 +1,7 @@
 import { ICandidate } from "../models/CandidateModel";
 
-export type CandidatesCreatePayload = Pick<ICandidate, "name" | "categoryId">;
-export type CandidatesUpdatePayload = Pick<
-  ICandidate,
-  "id" | "name" | "categoryId"
->;
+export type CandidatesBasePayload = Pick<ICandidate, "name" | "categoryId" | "description" | "photo_url">;
+
+export type CandidatesCreatePayload = CandidatesBasePayload;
+
+export type CandidatesUpdatePayload = Partial<CandidatesBasePayload> & Pick<ICandidate, "id">;

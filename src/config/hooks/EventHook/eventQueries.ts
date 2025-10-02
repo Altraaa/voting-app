@@ -2,6 +2,7 @@ import { useApiQuery } from "@/config/constants/useApiQuery";
 import { EVENT_QUERY_KEYS } from "./eventQueryKey";
 import { EventRoute } from "@/routes/eventRoute";
 import { IEvent } from "@/config/models/EventModel";
+import { EventSimpleData } from "@/config/types/eventType";
 
 export const useEventQueries = {
   useGetAllEvents: (filters?: string) =>
@@ -10,7 +11,7 @@ export const useEventQueries = {
     ),
 
   useGetAllSimpleEvents: (filters?: string) =>
-    useApiQuery<IEvent[]>(
+    useApiQuery<EventSimpleData[]>(
       EVENT_QUERY_KEYS.simpleList(filters),
       () => EventRoute.getAllSimple()
     ),

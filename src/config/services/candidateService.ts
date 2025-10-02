@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { CandidatesCreatePayload, CandidatesUpdatePayload } from "../types/candidatesType";
 
 export const candidateService = {
   async getAll() {
@@ -12,16 +13,11 @@ export const candidateService = {
     });
   },
 
-  async create(data: {
-    name: string;
-    categoryId: string;
-    description: string;
-    photo_url: string;
-  }) {
+  async create(data: CandidatesCreatePayload) {
     return prisma.candidate.create({ data });
   },
 
-  async update(data: { id: string; name: string; categoryId: string }) {
+  async update(data: CandidatesUpdatePayload) {
     return prisma.candidate.update({
       where: { id: data.id },
       data: { name: data.name, categoryId: data.categoryId },
