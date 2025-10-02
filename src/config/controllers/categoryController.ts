@@ -7,6 +7,11 @@ export const categoryController = {
     return NextResponse.json(categories);
   },
 
+  async getAllSimple() {
+    const categories = await categoryService.getAllSimple();
+    return NextResponse.json(categories);
+  },
+
   async getById(id: string) {
     const category = await categoryService.getById(id);
     return NextResponse.json(category);

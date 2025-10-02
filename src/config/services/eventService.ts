@@ -8,6 +8,12 @@ export const eventService = {
     });
   },
 
+  async getAllSimple() {
+    return prisma.event.findMany({
+      select: { id: true, name: true },
+    });
+  },
+
   async getById(id: string) {
     return prisma.event.findUnique({
       where: { id },
@@ -16,12 +22,17 @@ export const eventService = {
   },
 
   async create(data: EventCreatePayload) {
-    return prisma.event.create({ data });
+    const eventData = {
+      ...data,
+      startDate: new Date(data.startDate),
+      endDate: new Date(data.endDate),
+    };
+    return prisma.event.create({ data: eventData });
   },
 
-  async update(id: string, data: EventUpdatePayload) {
+  async update(data: EventUpdatePayload) {
     return prisma.event.update({
-      where: { id },
+      where: { id: data.id },
       data,
     });
   },
