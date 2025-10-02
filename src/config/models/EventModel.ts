@@ -4,8 +4,8 @@ import { ICategories } from "./CategoriesModel";
 export interface IEvent {
   id: string;
   name: string;
-  description?: string;
-  photo_url?: string;
+  description: string;
+  photo_url: string;
   status: StatusEvent;
   startDate: string;
   endDate: string;
