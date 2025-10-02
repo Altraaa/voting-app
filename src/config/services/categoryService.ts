@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { CategoriesCreatePayload, CategoriesUpdatePayload } from "../types/categoriesType";
 
 export const categoryService = {
   async getAll() {
@@ -12,14 +13,14 @@ export const categoryService = {
     });
   },
 
-  async create(data: { name: string; eventId: string }) {
+  async create(data: CategoriesCreatePayload) {
     return prisma.category.create({ data });
   },
 
-  async update(data: { id: string; name: string; eventId: string }) {
+  async update(data: CategoriesUpdatePayload) {
     return prisma.category.update({
       where: { id: data.id },
-      data: { name: data.name, eventId: data.eventId },
+      data,
     });
   },
 

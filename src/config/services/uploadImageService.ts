@@ -1,72 +1,114 @@
-import { deleteImage, uploadImage } from "@/lib/upload";
-import { UploadResult } from "../types/uploadType";
+import { writeFile, unlink, mkdir } from "fs/promises";
+import { existsSync } from "fs";
+import path from "path";
+import { UploadResult } from "@/config/types/uploadType";
 
-export class UploadService {
-  static async uploadImage(file: File, folder?: string): Promise<UploadResult> {
-    try {
-      if (!file) {
-        return {
-          success: false,
-          error: "No file provided",
-        };
-      }
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
-      const result = await uploadImage(file, folder);
+/**
+ * Upload file to local filesystem
+ */
+export async function uploadImage(
+  file: File,
+  folder?: string
+): Promise<UploadResult> {
+  try {
+    if (!file) {
+      return { success: false, error: "No file provided" };
+    }
 
-      return result;
-    } catch (error) {
-      console.error("[UploadService] Upload error:", error);
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Upload failed",
+        error: "Invalid file type. Only JPG, PNG, and WEBP allowed.",
       };
     }
-  }
 
-  static async deleteImage(path: string): Promise<boolean> {
-    try {
-      if (!path) {
-        console.error("[UploadService] No path provided");
-        return false;
-      }
-
-      const success = await deleteImage(path);
-      return success;
-    } catch (error) {
-      console.error("[UploadService] Delete error:", error);
-      return false;
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return { success: false, error: "File size too large. Max 2MB." };
     }
-  }
 
-  static async uploadMultipleImages(
-    files: File[],
-    folder?: string
-  ): Promise<UploadResult[]> {
-    try {
-      const uploadPromises = files.map((file) =>
-        this.uploadImage(file, folder)
-      );
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 9);
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${timestamp}-${randomString}.${fileExt}`;
 
-      const results = await Promise.all(uploadPromises);
-      return results;
-    } catch (error) {
-      console.error("[UploadService] Multiple upload error:", error);
-      return files.map(() => ({
-        success: false,
-        error: "Upload failed",
-      }));
+    const targetDir = folder ? path.join(UPLOAD_DIR, folder) : UPLOAD_DIR;
+
+    if (!existsSync(targetDir)) {
+      await mkdir(targetDir, { recursive: true });
     }
+
+    const filePath = path.join(targetDir, fileName);
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    await writeFile(filePath, buffer);
+
+    const publicUrl = `/uploads/${folder ? `${folder}/` : ""}${fileName}`;
+    const storagePath = `${folder ? `${folder}/` : ""}${fileName}`;
+
+    return {
+      success: true,
+      url: publicUrl,
+      path: storagePath,
+    };
+  } catch (error) {
+    console.error("Upload error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Upload failed",
+    };
   }
+}
 
-  static async deleteMultipleImages(paths: string[]): Promise<boolean> {
-    try {
-      const deletePromises = paths.map((path) => this.deleteImage(path));
-      const results = await Promise.all(deletePromises);
+/**
+ * Delete file from local filesystem
+ */
+export async function deleteImage(filePath: string): Promise<boolean> {
+  try {
+    const cleanPath = filePath.trim();
+    const fullPath = path.join(UPLOAD_DIR, cleanPath);
 
-      return results.every((result) => result === true);
-    } catch (error) {
-      console.error("[UploadService] Multiple delete error:", error);
-      return false;
+    if (existsSync(fullPath)) {
+      await unlink(fullPath);
+      return true;
     }
+
+    console.warn(`File not found: ${fullPath}`);
+    
+    const alternativePath = path.join(process.cwd(), 'public', cleanPath);
+    if (existsSync(alternativePath)) {
+      await unlink(alternativePath);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Delete error:", error);
+    return false;
+  }
+}
+
+/**
+ * Extract path from URL
+ */
+export function extractPathFromUrl(url: string): string | null {
+  try {
+    if (url.startsWith("/uploads/")) {
+      return url.replace("/uploads/", "");
+    }
+
+    const urlObj = new URL(url);
+    const pathMatch = urlObj.pathname.match(/\/uploads\/(.+)/);
+    return pathMatch ? pathMatch[1] : null;
+  } catch {
+    if (url.startsWith("/uploads/")) {
+      return url.replace("/uploads/", "");
+    }
+    return null;
   }
 }

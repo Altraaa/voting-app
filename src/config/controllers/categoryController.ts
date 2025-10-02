@@ -13,14 +13,14 @@ export const categoryController = {
   },
 
   async create(req: Request) {
-    const { name, eventId } = await req.json();
-    const category = await categoryService.create({ name, eventId });
+    const data = await req.json();
+    const category = await categoryService.create(data);
     return NextResponse.json(category);
   },
 
   async update(req: Request) {
-    const { id, name, eventId } = await req.json();
-    const category = await categoryService.update({ id, name, eventId });
+    const data = await req.json();
+    const category = await categoryService.update(data);
     return NextResponse.json(category);
   },
 
