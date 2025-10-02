@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UploadService } from "../services/uploadImageService";
+import { deleteImage, uploadImage } from "../services/uploadImageService";
 
 export class UploadController {
   static async uploadImage(request: NextRequest): Promise<NextResponse> {
@@ -10,32 +10,29 @@ export class UploadController {
 
       if (!file) {
         return NextResponse.json(
-          { error: "No file provided" },
+          { success: false, error: "No file provided" },
           { status: 400 }
         );
       }
 
-      const result = await UploadService.uploadImage(file, folder);
+      const result = await uploadImage(file, folder);
 
       if (!result.success) {
         return NextResponse.json(
-          { error: result.error || "Upload failed" },
+          { success: false, error: result.error },
           { status: 400 }
         );
       }
 
-      return NextResponse.json(
-        {
-          success: true,
-          url: result.url,
-          path: result.path,
-        },
-        { status: 200 }
-      );
+      return NextResponse.json({
+        success: true,
+        url: result.url,
+        path: result.path,
+      });
     } catch (error) {
       console.error("[UploadController] Upload error:", error);
       return NextResponse.json(
-        { error: "Internal server error" },
+        { success: false, error: "Internal server error" },
         { status: 500 }
       );
     }
@@ -43,30 +40,36 @@ export class UploadController {
 
   static async deleteImage(request: NextRequest): Promise<NextResponse> {
     try {
-      const { searchParams } = new URL(request.url);
-      const path = searchParams.get("path");
+      const body = await request.json();
+      const { path } = body;
 
       if (!path) {
         return NextResponse.json(
-          { error: "No path provided" },
+          { success: false, error: "No path provided" },
           { status: 400 }
         );
       }
 
-      const success = await UploadService.deleteImage(path);
+      const decodedPath = decodeURIComponent(path);
+
+      const success = await deleteImage(decodedPath);
 
       if (!success) {
         return NextResponse.json(
-          { error: "Failed to delete image" },
-          { status: 400 }
+          { success: false, error: "Failed to delete image or file not found" },
+          { status: 404 }
         );
       }
 
-      return NextResponse.json({ success: true }, { status: 200 });
+      return NextResponse.json({ success: true });
     } catch (error) {
       console.error("[UploadController] Delete error:", error);
       return NextResponse.json(
-        { error: "Internal server error" },
+        {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Internal server error",
+        },
         { status: 500 }
       );
     }
@@ -82,38 +85,22 @@ export class UploadController {
 
       if (!files || files.length === 0) {
         return NextResponse.json(
-          { error: "No files provided" },
+          { success: false, error: "No files provided" },
           { status: 400 }
         );
       }
 
-      const results = await UploadService.uploadMultipleImages(files, folder);
+      const uploadPromises = files.map((file) => uploadImage(file, folder));
+      const results = await Promise.all(uploadPromises);
 
-      const failedUploads = results.filter((r) => !r.success);
-      if (failedUploads.length > 0) {
-        return NextResponse.json(
-          {
-            error: "Some uploads failed",
-            results,
-          },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          success: true,
-          results: results.map((r) => ({
-            url: r.url,
-            path: r.path,
-          })),
-        },
-        { status: 200 }
-      );
+      return NextResponse.json({
+        success: results.every((r) => r.success),
+        results,
+      });
     } catch (error) {
       console.error("[UploadController] Multiple upload error:", error);
       return NextResponse.json(
-        { error: "Internal server error" },
+        { success: false, error: "Internal server error" },
         { status: 500 }
       );
     }
@@ -128,25 +115,20 @@ export class UploadController {
 
       if (!paths || !Array.isArray(paths) || paths.length === 0) {
         return NextResponse.json(
-          { error: "No paths provided" },
+          { success: false, error: "No paths provided" },
           { status: 400 }
         );
       }
 
-      const success = await UploadService.deleteMultipleImages(paths);
+      const deletePromises = paths.map((path) => deleteImage(path));
+      const results = await Promise.all(deletePromises);
+      const success = results.every((r) => r === true);
 
-      if (!success) {
-        return NextResponse.json(
-          { error: "Failed to delete some images" },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json({ success: true }, { status: 200 });
+      return NextResponse.json({ success });
     } catch (error) {
       console.error("[UploadController] Multiple delete error:", error);
       return NextResponse.json(
-        { error: "Internal server error" },
+        { success: false, error: "Internal server error" },
         { status: 500 }
       );
     }
