@@ -1,3 +1,4 @@
+// lib/api.ts
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/";
 
 export async function ApiRequest<T>({
@@ -5,20 +6,28 @@ export async function ApiRequest<T>({
   method = "GET",
   body,
   headers = {},
+  isFormData = false,
 }: {
   url: string;
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   body?: unknown;
   headers?: Record<string, string>;
+  isFormData?: boolean;
 }): Promise<T> {
   try {
     const res = await fetch(`${API_URL}${url}`, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        ...headers,
-      },
-      body: body ? JSON.stringify(body) : undefined,
+      headers: isFormData
+        ? headers
+        : {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+      body: body
+        ? isFormData
+          ? (body as FormData)
+          : JSON.stringify(body)
+        : undefined,
       credentials: "include",
     });
 
@@ -32,16 +41,14 @@ export async function ApiRequest<T>({
     }
 
     if (!res.ok) {
-      const errorMessage =
-        data.error || data.message || data.details || "Something went wrong";
-      throw new Error(errorMessage);
+      throw new Error(
+        data.error || data.message || data.details || "Something went wrong"
+      );
     }
 
     return data as T;
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
+    if (error instanceof Error) throw error;
     throw new Error("Network error occurred");
   }
 }
