@@ -1,8 +1,8 @@
 import { ICategories } from "../models/CategoriesModel";
 
-export type CategoriesBasePayload = Omit<
+export type CategoriesBasePayload = Pick<
   ICategories,
-  "id" | "created" | "updated" | "event" | "candidates"
+  "name" | "photo_url" | "eventId"
 >;
 export type CategoriesCreatePayload = CategoriesBasePayload;
-export type CategoriesUpdatePayload = Pick<ICategories, "id" | "name">;
+export type CategoriesUpdatePayload = CategoriesBasePayload & Pick<ICategories, "id" >;
