@@ -1,15 +1,20 @@
 import { prisma } from "@/lib/prisma";
-import { CandidatesCreatePayload, CandidatesUpdatePayload } from "../types/candidatesType";
+import {
+  CandidatesCreatePayload,
+  CandidatesUpdatePayload,
+} from "../types/candidatesType";
 
 export const candidateService = {
   async getAll() {
-    return prisma.candidate.findMany({ include: { category: true } });
+    return prisma.candidate.findMany({
+      include: { category: true, votes: true },
+    });
   },
 
   async getById(id: string) {
     return prisma.candidate.findUnique({
       where: { id },
-      include: { category: true },
+      include: { category: true, votes: true },
     });
   },
 
