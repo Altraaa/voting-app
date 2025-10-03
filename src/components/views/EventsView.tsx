@@ -14,103 +14,79 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
+import { StatusEvent } from "@/generated/prisma";
+import { IEvent } from "@/config/models/EventModel";
+import { useEventQueries } from "@/config/hooks/EventHook/eventQueries";
 
 type Status = "Live" | "Upcoming" | "Ended";
 
-type Candidate = {
-  id: string | number;
-  name: string;
-  votes: number;
+const mapStatus = (status: StatusEvent): Status => {
+  switch (status) {
+    case "live":
+      return "Live";
+    case "upcoming":
+      return "Upcoming";
+    case "ended":
+      return "Ended";
+    default:
+      return "Upcoming";
+  }
 };
 
-type Category = {
-  id: string | number;
-  title: string;
-  candidates?: Candidate[];
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
-type EventInfo = {
-  id: string;
-  title: string;
-  description: string;
-  status: Status;
-  endsAtLabel: string;
-  participants: number;
-  categoriesCount: number;
-  trending?: boolean;
-  categories?: Category[];
-};
+const getEventStatusLabel = (event: IEvent): string => {
+  const now = new Date();
+  const startDate = new Date(event.startDate);
+  const endDate = new Date(event.endDate);
 
-const EVENTS: EventInfo[] = [
-  {
-    id: "indo-music-awards-2025",
-    title: "Indo Music Awards 2025",
-    description:
-      "Vote your favorite artists across Best Singer, Best Band, and more. Real-time, secure, and transparent.",
-    status: "Live",
-    endsAtLabel: "Ends Sep 30, 2025",
-    participants: 24,
-    categoriesCount: 6,
-    trending: true,
-    categories: [
-      { id: "best-singer", title: "Best Singer" },
-      { id: "best-band", title: "Best Band" },
-      { id: "rising-star", title: "Rising Star" },
-    ],
-  },
-  {
-    id: "culinary-fest-2025",
-    title: "Culinary Fest Favorites",
-    description:
-      "Discover Indonesia's favorite dishes. Vote and see results instantly across multiple food categories.",
-    status: "Upcoming",
-    endsAtLabel: "Starts Oct 12, 2025",
-    participants: 18,
-    categoriesCount: 5,
-    categories: [
-      { id: "main-dish", title: "Main Dish" },
-      { id: "street-food", title: "Street Food" },
-      { id: "dessert", title: "Dessert" },
-    ],
-  },
-  {
-    id: "film-awards-2025",
-    title: "Best Indonesian Movie 2025",
-    description:
-      "Support your favorite films and creators. Vote for best movie, actor, and director.",
-    status: "Live",
-    endsAtLabel: "Ends Nov 15, 2025",
-    participants: 15,
-    categoriesCount: 4,
-    trending: true,
-    categories: [
-      { id: "best-movie", title: "Best Movie" },
-      { id: "best-actor", title: "Best Actor" },
-      { id: "best-director", title: "Best Director" },
-    ],
-  },
-  {
-    id: "tech-awards-2025",
-    title: "Tech Product Awards 2025",
-    description: "Vote the most innovative products and startups of the year.",
-    status: "Ended",
-    endsAtLabel: "Ended Aug 02, 2025",
-    participants: 30,
-    categoriesCount: 7,
-    categories: [
-      { id: "best-startup", title: "Best Startup" },
-      { id: "best-app", title: "Best App" },
-      { id: "best-gadget", title: "Best Gadget" },
-    ],
-  },
-];
+  if (event.status === "ended" || endDate < now) {
+    return `Ended ${formatDate(event.endDate)}`;
+  } else if (event.status === "live" || (startDate <= now && endDate >= now)) {
+    return `Ends ${formatDate(event.endDate)}`;
+  } else {
+    return `Starts ${formatDate(event.startDate)}`;
+  }
+};
 
 export default function EventsView() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | Status>("all");
 
+  const {
+    data: eventsData,
+    isLoading,
+    error,
+  } = useEventQueries.useGetAllEvents();
+
+  const events = useMemo(() => {
+    if (!eventsData) return [];
+
+    return eventsData.map((event) => ({
+      id: event.id,
+      title: event.name,
+      description: event.description,
+      status: mapStatus(event.status),
+      endsAtLabel: getEventStatusLabel(event),
+      participants: event.user?.length || 0,
+      categoriesCount: event.categories?.length || 0,
+      categories: event.categories?.map((category) => ({
+        id: category.id,
+        title: category.name,
+      })),
+      // trending bisa ditambahkan berdasarkan logic bisnis
+    }));
+  }, [eventsData]);
+
   const filtered = useMemo(() => {
-    let list = [...EVENTS];
+    let list = [...events];
     if (tab !== "all") list = list.filter((e) => e.status === tab);
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -121,7 +97,25 @@ export default function EventsView() {
       );
     }
     return list;
-  }, [query, tab]);
+  }, [query, tab, events]);
+
+  if (isLoading) {
+    return (
+      <main className="py-28 px-4 lg:px-20">
+        <div className="text-center">Loading events...</div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="py-28 px-4 lg:px-20">
+        <div className="text-center text-red-500">
+          Error loading events: {error.message}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="py-28 px-4 lg:px-20">
@@ -176,11 +170,7 @@ export default function EventsView() {
                 ) : (
                   <Badge variant="secondary">{ev.status}</Badge>
                 )}
-                {ev.trending && (
-                  <Badge variant="secondary" className="px-2 py-0.5 text-xs">
-                    <TrendingUp className="w-3 h-3 mr-1" /> Trending
-                  </Badge>
-                )}
+                {/* Trending badge bisa diimplementasikan berdasarkan logic bisnis */}
                 <div className="inline-flex items-center gap-2 text-sm text-muted-foreground ml-auto">
                   <CalendarClock className="w-4 h-4" />
                   {ev.endsAtLabel}
@@ -198,7 +188,7 @@ export default function EventsView() {
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  {ev.participants} candidates
+                  {ev.participants} participants
                 </div>
                 <div className="flex items-center gap-2">
                   <Trophy className="w-4 h-4" />
@@ -217,16 +207,25 @@ export default function EventsView() {
                         {c.title}
                       </Badge>
                     ))}
+                    {ev.categories.length > 4 && (
+                      <Badge variant="outline">
+                        +{ev.categories.length - 4} more
+                      </Badge>
+                    )}
                   </div>
                 </div>
               )}
 
               <div className="flex gap-3">
                 <Button asChild>
-                  <Link href={`/category`}>Browse Categories</Link>
+                    <Link href={`/event/${ev.id}/category`}>View Event</Link>
                 </Button>
                 <Button variant="outline" className="bg-transparent" asChild>
-                  <Link href={`/`}>View Event</Link>
+                  <Link
+                    href={`/event/${ev.id}/category/${ev.categories[0].id}`}
+                  >
+                    Browse Categories
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -234,7 +233,6 @@ export default function EventsView() {
         ))}
       </div>
 
-      {/* Empty state */}
       {filtered.length === 0 && (
         <div className="text-center py-20 text-muted-foreground">
           No events match your filters.

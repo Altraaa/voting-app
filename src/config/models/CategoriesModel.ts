@@ -7,6 +7,7 @@ export interface ICategories {
   photo_url?: string;
   eventId: string;
   candidates: ICandidate[];
+  _count: { candidates: number }; 
   event: IEvent;
   created: string;
   updated: string;

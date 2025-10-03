@@ -4,7 +4,29 @@ import { EventCreatePayload, EventUpdatePayload } from "../types/eventType";
 export const eventService = {
   async getAll() {
     return prisma.event.findMany({
-      include: { categories: true, users: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        photo_url: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        isActive: true,
+        categories: {
+          select: {
+            id: true,
+            name: true,
+            photo_url: true,
+            _count: {
+              select: {
+                candidates: true,
+              },
+            },
+          },
+        },
+        users: true,
+      },
     });
   },
 
@@ -17,7 +39,28 @@ export const eventService = {
   async getById(id: string) {
     return prisma.event.findUnique({
       where: { id },
-      include: { categories: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        photo_url: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        isActive: true,
+        categories: {
+          select: {
+            id: true,
+            name: true,
+            photo_url: true,
+            _count: {
+              select: {
+                candidates: true,
+              },
+            },
+          },
+        },
+      },
     });
   },
 

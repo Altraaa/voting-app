@@ -1,9 +1,23 @@
 import { prisma } from "@/lib/prisma";
-import { CategoriesCreatePayload, CategoriesUpdatePayload } from "../types/categoriesType";
+import {
+  CategoriesCreatePayload,
+  CategoriesUpdatePayload,
+} from "../types/categoriesType";
 
 export const categoryService = {
   async getAll() {
-    return prisma.category.findMany({ include: { candidates: true } });
+    return prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        photo_url: true,
+        eventId: true,
+        _count: {
+          select: { candidates: true },
+        },
+        candidates: true,
+      },
+    });
   },
 
   async getAllSimple() {
@@ -13,7 +27,16 @@ export const categoryService = {
   async getById(id: string) {
     return prisma.category.findUnique({
       where: { id },
-      include: { candidates: true },
+      select: {
+        id: true,
+        name: true,
+        photo_url: true,
+        eventId: true,
+        _count: {
+          select: { candidates: true },
+        },
+        candidates: true,
+      },
     });
   },
 
