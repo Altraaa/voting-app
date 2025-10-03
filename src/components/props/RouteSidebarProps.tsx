@@ -16,7 +16,7 @@ export const navigation: NavigationType[] = [
   { name: "Categories", href: "/admin/categories", icon: FolderOpen },
   { name: "Candidates", href: "/admin/candidates", icon: UserCheck },
   { name: "Packages", href: "/admin/packages", icon: Package },
-  { name: "Package History", href: "/admin/package/history", icon: History },
+  { name: "Package History", href: "/admin/packages/history", icon: History },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
