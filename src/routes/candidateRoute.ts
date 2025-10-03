@@ -1,5 +1,8 @@
 import { ICandidate } from "@/config/models/CandidateModel";
-import { CandidatesCreatePayload, CandidatesUpdatePayload } from "@/config/types/candidatesType";
+import {
+  CandidatesCreatePayload,
+  CandidatesUpdatePayload,
+} from "@/config/types/candidatesType";
 import { CandidateDetailResponse } from "@/config/types/responseType";
 import { ApiRequest } from "@/lib/api";
 
