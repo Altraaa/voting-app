@@ -5,10 +5,6 @@ export async function GET() {
   return userController.getAll();
 }
 
-export async function GET_BY_ID(id: string) {
-  return userController.getById(id);
-}
-
 export async function POST(req: Request) {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;

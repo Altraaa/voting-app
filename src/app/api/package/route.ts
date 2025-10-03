@@ -4,10 +4,6 @@ export async function GET() {
   return packageController.getAll();
 }
 
-export async function GET_BY_ID(id: string) {
-  return packageController.getById(id);
-}
-
 export async function POST(req: Request) {
   return packageController.create(req);
 }

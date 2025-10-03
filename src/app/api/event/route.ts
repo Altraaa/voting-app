@@ -4,10 +4,6 @@ export async function GET() {
   return eventController.getAll();
 }
 
-export async function GET_BY_ID(id: string) {
-  return eventController.getById(id);
-}
-
 export async function POST(req: Request) {
   return eventController.create(req);
 }
