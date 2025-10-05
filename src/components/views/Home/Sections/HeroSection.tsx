@@ -26,7 +26,7 @@ export default function HeroSection() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button size="lg" className="px-8 py-6" asChild>
-              <Link href="/category">
+              <Link href="/event">
                 Start Voting Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

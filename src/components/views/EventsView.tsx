@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import {
-  Users,
+  // Users,
   CalendarClock,
   Trophy,
   ArrowRight,
-  TrendingUp,
+  // TrendingUp,
+  Users2Icon,
 } from "lucide-react";
 import { StatusEvent } from "@/generated/prisma";
 import { IEvent } from "@/config/models/EventModel";
@@ -75,13 +76,17 @@ export default function EventsView() {
       description: event.description,
       status: mapStatus(event.status),
       endsAtLabel: getEventStatusLabel(event),
-      participants: event.user?.length || 0,
+      participants: event.users?.length || 0,
       categoriesCount: event.categories?.length || 0,
+      candidateCount:
+        event.categories?.reduce(
+          (total, category) => total + (category._count?.candidates || 0),
+          0
+        ) || 0,
       categories: event.categories?.map((category) => ({
         id: category.id,
         title: category.name,
       })),
-      // trending bisa ditambahkan berdasarkan logic bisnis
     }));
   }, [eventsData]);
 
@@ -111,7 +116,7 @@ export default function EventsView() {
     return (
       <main className="py-28 px-4 lg:px-20">
         <div className="text-center text-red-500">
-          Error loading events: {error.message}
+          Error loading events: something went wrong
         </div>
       </main>
     );
@@ -129,7 +134,6 @@ export default function EventsView() {
         </p>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 justify-between mb-8">
         <div className="flex-1">
           <Input
@@ -142,7 +146,7 @@ export default function EventsView() {
 
         <Tabs
           value={tab}
-          onValueChange={(v) => setTab(v as any)}
+          onValueChange={(v) => setTab(v as Status)}
           className="md:w-auto w-full"
         >
           <TabsList className="w-full md:w-auto grid grid-cols-4">
@@ -154,7 +158,6 @@ export default function EventsView() {
         </Tabs>
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filtered.map((ev) => (
           <Card
@@ -187,8 +190,8 @@ export default function EventsView() {
 
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  {ev.participants} participants
+                  <Users2Icon className="w-4 h-4" />
+                  {ev.candidateCount} candidates
                 </div>
                 <div className="flex items-center gap-2">
                   <Trophy className="w-4 h-4" />
@@ -218,7 +221,7 @@ export default function EventsView() {
 
               <div className="flex gap-3">
                 <Button asChild>
-                    <Link href={`/event/${ev.id}/category`}>View Event</Link>
+                  <Link href={`/event/${ev.id}/category`}>View Event</Link>
                 </Button>
                 <Button variant="outline" className="bg-transparent" asChild>
                   <Link
