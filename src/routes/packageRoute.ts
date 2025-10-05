@@ -11,23 +11,27 @@ export const PackageRoute = {
       url: "package",
       method: "GET",
     }),
+
   getById: (id: string): Promise<IPackage> =>
     ApiRequest({
       url: `package/${id}`,
       method: "GET",
     }),
+
   create: (data: PackageCreatePayload): Promise<IPackage> =>
     ApiRequest({
       url: "package",
       method: "POST",
       body: data,
     }),
+
   update: (data: PackageUpdatePayload): Promise<IPackage> =>
     ApiRequest({
       url: "package",
       method: "PUT",
       body: data,
     }),
+    
   remove: (id: string): Promise<IPackage> =>
     ApiRequest({
       url: "package",

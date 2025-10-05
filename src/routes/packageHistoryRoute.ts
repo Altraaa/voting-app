@@ -8,24 +8,28 @@ export const PackageHistoryRoute = {
       url: "package/history",
       method: "GET",
     }),
+
   getByUser: (userId: string): Promise<IPackagePurchase> =>
     ApiRequest({
       url: `package/history/by-user`,
       method: "GET",
       body: { userId },
   }),
+
   create: (data: PackageHistoryCreatePayload): Promise<IPackagePurchase> =>
     ApiRequest({
       url: "package/history",
       method: "POST",
       body: data,
     }),
+
   update: (data: PackageHistoryUpdatePayload): Promise<IPackagePurchase> =>
     ApiRequest({
       url: "package/history",
       method: "PUT",
       body: { data },
     }),
+    
   remove: (id: string): Promise<IPackagePurchase> =>
     ApiRequest({
       url: "package/history",
