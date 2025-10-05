@@ -8,4 +8,6 @@ export const CANDIDATE_QUERY_KEYS = {
     ] as const,
   details: () => [...CANDIDATE_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...CANDIDATE_QUERY_KEYS.details(), id] as const,
+  byCategory: (categoryId: string) =>
+    [...CANDIDATE_QUERY_KEYS.all, "by-category", categoryId] as const,
 };
