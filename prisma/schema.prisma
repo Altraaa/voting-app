@@ -9,39 +9,67 @@ datasource db {
 }
 
 model User {
-  email         String   @unique
-  name          String
-  id            String   @id @default(cuid())
-  points        Int      @default(0)
-  role          Role     @default(USER)
-  firstName     String?
-  lastName      String?
-  newsLetter    Boolean?
-  phone         String?
-  terms         Boolean?
-  votes         Vote[]
-  transactions  PointTransaction[]
-  password      String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String
+  points     Int      @default(0)
+  created    DateTime @default(now())
+  updated    DateTime @updatedAt
+  role       Role     @default(USER)
+  firstName  String
+  lastName   String
+  newsLetter Boolean
+  phone      String
+  terms      Boolean
+  avatar_url String?
+  votes      Vote[]
+  password   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  packages   PackageHistory[]
+  events     EventMember[]
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  photo_url   String?
+  status      StatusEvent
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  categories  Category[]
+  users       EventMember[]
 }
 
 model Category {
   id         String      @id @default(cuid())
-  name       String      @unique
+  name       String
+  photo_url  String?
+  eventId    String
   created    DateTime    @default(now())
   updated    DateTime    @updatedAt
+  event      Event       @relation(fields: [eventId], references: [id])
   candidates Candidate[]
+
+  @@unique([name, eventId])
 }
 
 model Candidate {
-  id         String   @id @default(cuid())
-  name       String   @unique
-  categoryId String
-  created    DateTime @default(now())
-  updated    DateTime @updatedAt
-  category   Category @relation(fields: [categoryId], references: [id])
-  votes      Vote[]
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  photo_url   String?
+  categoryId  String
+  created     DateTime @default(now())
+  updated     DateTime @updatedAt
+  category    Category @relation(fields: [categoryId], references: [id])
+  votes       Vote[]
+
+  @@unique([name, categoryId])
 }
 
 model Vote {
@@ -55,19 +83,81 @@ model Vote {
   user        User      @relation(fields: [userId], references: [id])
 }
 
+model Package {
+  id              String        @id @default(cuid())
+  name            String
+  description     String?
+  points          Int
+  price           Int
+  originalPrice   Int?
+  validityDays    Int
+  supportType     SupportType
+  bonusPercentage Int?
+  earlyAccess     Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  PackageHistories    PackageHistory[]
+}
+
+model PointVotes {
+  id              String  @id @default(cuid())
+  userId          String
+  packageId       String
+  points          Int
+  amount          Int
+  payment_status  PaymentStatus
+  createdAt       DateTime @default(now())
+}
+
+model PackageHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  packageId     String
+  purchaseDate  DateTime @default(now())
+  pointsReceived Int
+  validUntil    DateTime
+  isActive      Boolean  @default(true)
+  user          User     @relation(fields: [userId], references: [id])
+  package       Package  @relation(fields: [packageId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, packageId, purchaseDate])
+}
+
+model EventMember {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, eventId])
+}
+
 enum Role {
   USER
   ADMIN
 }
 
-model PointTransaction {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  points      Int
-  amount      Int
-  status      String   @default("PENDING") 
-  midtransId  String?  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum PaymentStatus {
+  success
+  failed
+  pending
+}
+
+enum StatusEvent {
+  live
+  upcoming
+  ended
+}
+
+enum SupportType {
+  BASIC
+  PRIORITY
+  PREMIUM
+  VIP
 }

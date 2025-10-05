@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
-import { pointsService } from "../service/pointsService";
+import { pointsService } from "../services/pointsService";
 
 export const pointsController = {
   async add(req: Request, token: string | undefined) {

@@ -1,125 +1,183 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, Clock, TrendingUp, ArrowRight } from "lucide-react";
+import { Users, Clock, TrendingUp, ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { StatusEvent } from "@/generated/prisma";
+import { useEventQueries } from "@/config/hooks/EventHook/eventQueries";
 
-const categories = [
-  {
-    id: 1,
-    title: "Best Indonesian Singer 2024",
-    description: "Vote for your favorite Indonesian singer of the year",
-    totalVotes: 15420,
-    participants: 8,
-    trending: true,
-    status: "active",
-    endDate: "2024-12-31",
-    image: "/placeholder-v04zn.png",
-  },
-  {
-    id: 2,
-    title: "Favorite Indonesian Food",
-    description: "Choose the most beloved traditional Indonesian dish",
-    totalVotes: 12890,
-    participants: 12,
-    trending: false,
-    status: "active",
-    endDate: "2024-12-25",
-    image: "/placeholder-ncrma.png",
-  },
-  {
-    id: 3,
-    title: "Best Indonesian Movie 2024",
-    description: "Vote for the most outstanding Indonesian film this year",
-    totalVotes: 9650,
-    participants: 6,
-    trending: true,
-    status: "active",
-    endDate: "2024-12-30",
-    image: "/placeholder-q4fvm.png",
-  },
-  {
-    id: 4,
-    title: "Most Beautiful Indonesian Tourist Destination",
-    description: "Select the most stunning tourist spot in Indonesia",
-    totalVotes: 8340,
-    participants: 15,
-    trending: false,
-    status: "active",
-    endDate: "2025-01-15",
-    image: "/placeholder-qrzyf.png",
-  },
-  {
-    id: 5,
-    title: "Best Indonesian Football Player",
-    description: "Vote for the top Indonesian football talent",
-    totalVotes: 7220,
-    participants: 10,
-    trending: false,
-    status: "active",
-    endDate: "2024-12-28",
-    image: "/placeholder-s7ukp.png",
-  },
-  {
-    id: 6,
-    title: "Favorite Indonesian YouTuber",
-    description: "Choose your favorite Indonesian content creator",
-    totalVotes: 11500,
-    participants: 20,
-    trending: true,
-    status: "active",
-    endDate: "2025-01-10",
-    image: "/youtuber-content-creator-setup.jpg",
-  },
-];
+// Map StatusEvent ke status yang lebih user-friendly
+const mapStatus = (status: StatusEvent): string => {
+  switch (status) {
+    case "live":
+      return "Live";
+    case "upcoming":
+      return "Upcoming";
+    case "ended":
+      return "Ended";
+    default:
+      return "Upcoming";
+  }
+};
+
+// Format date untuk tampilan
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+// Hitung progress voting (ini contoh, sesuaikan dengan logika bisnis Anda)
+const calculateProgress = (category: any) => {
+  // Di sini Anda perlu menyesuaikan dengan data voting yang sebenarnya
+  // Untuk sekarang kita gunakan random sebagai placeholder
+  return Math.floor(Math.random() * 40 + 20);
+};
 
 export default function CategoryView() {
+  const params = useParams();
+  const eventId = params.id as string;
+
+  // Fetch data event berdasarkan ID
+  const {
+    data: eventData,
+    isLoading,
+    error,
+  } = useEventQueries.useGetEventById(eventId);
+
+  if (isLoading) {
+    return (
+      <div className="px-4 lg:px-20 py-32">
+        <div className="text-center">Loading event details...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="px-4 lg:px-20 py-32">
+        <div className="text-center text-red-500">
+          Error loading event: {error.message}
+        </div>
+      </div>
+    );
+  }
+
+  if (!eventData) {
+    return (
+      <div className="px-4 lg:px-20 py-32">
+        <div className="text-center">Event not found</div>
+      </div>
+    );
+  }
+
+  const event = eventData;
+
   return (
-    <div className="px-20 py-28">
+    <div className="px-4 lg:px-20 py-32">
+      {/* Event Header Section */}
+      <div className="mb-12">
+        <div className="relative h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden mb-6">
+          <Image
+            src={event.photo_url || "/placeholder.svg"}
+            alt={event.name}
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute bottom-6 left-6 right-6 text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge className="bg-primary text-primary-foreground">
+                {mapStatus(event.status)}
+              </Badge>
+              {event.status === "live" && (
+                <Badge className="bg-green-500 text-white">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  Live Now
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3">
+              {event.name}
+            </h1>
+            <p className="text-lg md:text-xl text-white/90 max-w-3xl">
+              {event.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Event Info */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+            <Calendar className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Start Date</p>
+              <p className="font-semibold">{formatDate(event.startDate)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+            <Clock className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">End Date</p>
+              <p className="font-semibold">{formatDate(event.endDate)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+            <Users className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Categories</p>
+              <p className="font-semibold">
+                {event.categories?.length || 0} Categories
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Categories Section */}
       <div className="text-center space-y-4 mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-balance">
+        <h2 className="text-3xl md:text-4xl font-bold text-balance">
           Voting <span className="text-primary">Categories</span>
-        </h1>
+        </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-          Explore all available voting categories. Cast your votes and see
-          real-time results.
+          Explore all available voting categories in this event. Cast your votes
+          and see real-time results.
         </p>
       </div>
 
+      {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category) => (
+        {event.categories?.map((category) => (
           <Card
             key={category.id}
             className="overflow-hidden hover:shadow-lg transition-shadow"
           >
-            <div className="relative">
+            <div className="relative h-48">
               <Image
-                src={category.image || "/placeholder.svg"}
-                alt={category.title}
+                src={category.photo_url || "/placeholder.svg"}
+                alt={category.name}
                 fill
-                className="w-full h-48 object-cover"
+                className="object-cover"
               />
               <div className="absolute top-4 right-4 flex gap-2">
-                {category.trending && (
-                  <Badge className="bg-primary text-primary-foreground">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Trending
-                  </Badge>
-                )}
-                <Badge variant="secondary">
-                  {category.status === "active" ? "Active" : "Ended"}
-                </Badge>
+                <Badge variant="secondary">{mapStatus(event.status)}</Badge>
               </div>
             </div>
 
             <CardHeader>
               <CardTitle className="text-lg text-balance leading-tight">
-                {category.title}
+                {category.name}
               </CardTitle>
               <p className="text-sm text-muted-foreground text-pretty">
-                {category.description}
+                Vote for your favorite in this category
               </p>
             </CardHeader>
 
@@ -127,31 +185,29 @@ export default function CategoryView() {
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  {category.totalVotes.toLocaleString()} votes
+                  {Math.floor(Math.random() * 10000 + 5000).toLocaleString()}{" "}
+                  votes
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  Ends {new Date(category.endDate).toLocaleDateString()}
+                  Ends {formatDate(event.endDate)}
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">
-                    {category.participants} candidates
+                   {category._count.candidates} candidates
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {Math.floor(Math.random() * 40 + 20)}% leading
+                    {calculateProgress(category)}% leading
                   </span>
                 </div>
-                <Progress
-                  value={Math.floor(Math.random() * 40 + 20)}
-                  className="h-2"
-                />
+                <Progress value={calculateProgress(category)} className="h-2" />
               </div>
 
               <Button asChild className="w-full">
-                <Link href={`/category/${category.id}`}>
+                <Link href={`/event/${eventId}/category/${category.id}`}>
                   View & Vote
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -160,6 +216,12 @@ export default function CategoryView() {
           </Card>
         ))}
       </div>
+
+      {(!event.categories || event.categories.length === 0) && (
+        <div className="text-center py-20 text-muted-foreground">
+          No categories available for this event yet.
+        </div>
+      )}
     </div>
   );
 }

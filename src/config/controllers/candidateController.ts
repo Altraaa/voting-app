@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { candidateService } from "../service/candidateService";
+import { candidateService } from "../services/candidateService";
 
 export const candidateController = {
   async getAll() {
@@ -7,9 +7,14 @@ export const candidateController = {
     return NextResponse.json(candidates);
   },
 
+  async getById(id: string) {
+    const candidate = await candidateService.getById(id);
+    return NextResponse.json(candidate);
+  },
+
   async create(req: Request) {
-    const { name, categoryId } = await req.json();
-    const candidate = await candidateService.create({ name, categoryId });
+    const { name, categoryId, description, photo_url } = await req.json();
+    const candidate = await candidateService.create({ name, categoryId, description, photo_url });
     return NextResponse.json(candidate);
   },
 

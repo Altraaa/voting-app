@@ -1,7 +1,5 @@
-import VoterRegistration from "@/components/views/RegisterView";
+import RegisterView from "@/components/views/Auth/RegisterView";
 
 export default function RegisterPage() {
-  return (
-    <VoterRegistration />
-  )
+  return <RegisterView />;
 }

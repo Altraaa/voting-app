@@ -15,7 +15,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-2">
             <Vote className="h-8 w-8 text-primary" />
             <Link href="/" className="text-2xl font-bold text-primary">
-              Klik Vote
+              Seraphic
             </Link>
           </div>
 
@@ -27,10 +27,10 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/category"
+              href="/event"
               className="text-sm font-medium text-foreground hover:text-primary transition-all duration-200 hover:scale-105"
             >
-              Categories
+              All Events
             </Link>
             <Link
               href="/points"
