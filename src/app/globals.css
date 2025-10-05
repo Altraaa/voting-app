@@ -133,4 +133,14 @@
     visibility: hidden;
     display: none;
   }
+
+  /* Prevent horizontal scroll */
+  .sidebar-container {
+    overflow-x: hidden;
+  }
+
+  /* Ensure smooth transitions */
+  .sidebar-transition {
+    transition: all 0.3s ease-in-out;
+  }
 }

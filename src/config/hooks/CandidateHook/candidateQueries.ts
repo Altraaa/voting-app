@@ -10,9 +10,16 @@ export const useCandidateQueries = {
     ),
 
   useGetCandidateById: (id: string) =>
-    useApiQuery<CandidateDetailResponse> (
+    useApiQuery<CandidateDetailResponse>(
       CANDIDATE_QUERY_KEYS.detail(id),
       () => CandidateRoute.getById(id),
       { enabled: !!id }
+    ),
+
+  useGetCandidatesByCategoryId: (categoryId: string) =>
+    useApiQuery<CandidateResponse>(
+      CANDIDATE_QUERY_KEYS.byCategory(categoryId),
+      () => CandidateRoute.getByCategoryId(categoryId),
+      { enabled: !!categoryId }
     ),
 };

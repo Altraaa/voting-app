@@ -12,23 +12,33 @@ export const CandidateRoute = {
       url: "candidates",
       method: "GET",
     }),
+
   getById: (id: string): Promise<CandidateDetailResponse> =>
     ApiRequest({
       url: `candidates/${id}`,
       method: "GET",
     }),
+
+  getByCategoryId: (categoryId: string): Promise<ICandidate[]> =>
+    ApiRequest({
+      url: `candidates/category/${categoryId}`,
+      method: "GET",
+    }),
+
   create: (data: CandidatesCreatePayload): Promise<ICandidate> =>
     ApiRequest({
       url: "candidates",
       method: "POST",
       body: data,
     }),
+
   update: (data: CandidatesUpdatePayload): Promise<ICandidate> =>
     ApiRequest({
       url: "candidates",
       method: "PUT",
       body: data,
     }),
+
   remove: (id: string): Promise<ICandidate> =>
     ApiRequest({
       url: "candidates",

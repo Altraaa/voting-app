@@ -12,6 +12,11 @@ export const candidateController = {
     return NextResponse.json(candidate);
   },
 
+  async getByCategorId(categoryId: string) {
+    const candidates = await candidateService.getByCategorId(categoryId);
+    return NextResponse.json(candidates);
+  },
+
   async create(req: Request) {
     const { name, categoryId, description, photo_url } = await req.json();
     const candidate = await candidateService.create({ name, categoryId, description, photo_url });

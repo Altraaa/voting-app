@@ -15,4 +15,6 @@ export type UsersBasePayload = Pick<
 
 export type UsersCreatePayload = UsersBasePayload;
 
-export type UsersUpdatePayload = Pick<IUsers, "id" | "name" | "role">;
+export type UsersUpdatePayload = Partial<UsersBasePayload> & Pick<IUsers, "id">;
+
+export type UsersUpdateProfilePayload = Partial<UsersBasePayload>;

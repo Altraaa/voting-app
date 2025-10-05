@@ -8,18 +8,21 @@ export const EventMemberRoute = {
       url: "event/member",
       method: "GET",
     }),
+
   getByEvent: (eventId: string): Promise<IEventMember> =>
     ApiRequest({
       url: "event/member/by-event",
       method: "GET",
       body: { eventId },
     }),
+
   create: (data: EventMemberCreatePayload): Promise<IEventMember> =>
     ApiRequest({
       url: "event/member",
       method: "POST",
       body: data,
     }),
+
   removeByUserAndEvent: (
     userId: string,
     eventId: string
@@ -29,6 +32,7 @@ export const EventMemberRoute = {
       method: "DELETE",
       body: { userId, eventId },
     }),
+    
   remove: (id: string): Promise<IEventMember> =>
     ApiRequest({
       url: "event/member",

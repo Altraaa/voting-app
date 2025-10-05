@@ -15,7 +15,6 @@ export const categoryService = {
         _count: {
           select: { candidates: true },
         },
-        candidates: true,
       },
     });
   },
@@ -35,7 +34,6 @@ export const categoryService = {
         _count: {
           select: { candidates: true },
         },
-        candidates: true,
       },
     });
   },
