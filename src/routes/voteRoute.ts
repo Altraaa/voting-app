@@ -8,6 +8,7 @@ export const VoteRoute = {
       url: "votes",
       method: "GET",
     }),
+    
   create: (data: VoteCreatePayload): Promise<IVotes> =>
     ApiRequest({
       url: "votes",

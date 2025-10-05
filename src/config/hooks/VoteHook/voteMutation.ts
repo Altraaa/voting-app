@@ -5,10 +5,18 @@ import { VoteRoute } from "@/routes/voteRoute";
 import { VOTE_QUERY_KEYS } from "./voteQueryKey";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { USER_QUERY_KEYS } from "../UsersHook/usersQueryKey";
+import { CATEGORY_QUERY_KEYS } from "../CategoryHook/categoryQueryKey";
 
 const invalidateVoteQueries = (queryClient: QueryClient) => {
-  return queryClient.invalidateQueries({
+  queryClient.invalidateQueries({
     queryKey: VOTE_QUERY_KEYS.all,
+  });
+  queryClient.invalidateQueries({
+    queryKey: CATEGORY_QUERY_KEYS.all,
+  });
+  queryClient.invalidateQueries({
+    queryKey: USER_QUERY_KEYS.profile(),
   });
 };
 
