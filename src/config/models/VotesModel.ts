@@ -5,7 +5,7 @@ export interface IVotes {
   id: string;
   userId: string;
   candidateId: string;
-  pointUsed: number;
+  pointsUsed: number;
   user: IUsers;
   candidate: ICandidate;
   created: string;
