@@ -1,6 +1,6 @@
 import { IEvent } from "../models/EventModel";
 
-export type EventBasePayload = Omit<IEvent, "id" | "createdAt" | "updatedAt" | "categories"| "user">;
+export type EventBasePayload = Omit<IEvent, "id" | "createdAt" | "updatedAt" | "categories"| "users">;
 
 export type EventSimpleData = Pick<IEvent, "id" | "name">;
 

@@ -10,7 +10,7 @@ export interface IEvent {
   startDate: string;
   endDate: string;
   isActive: boolean;
-  _count: { candidates: number };
+  _count?: { candidates: number };
   categories: ICategories[];
   users: EventMember[];
   createdAt: string;

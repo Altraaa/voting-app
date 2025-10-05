@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Vote, Trophy, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Route } from "next";
 
 const steps = [
   {
@@ -66,7 +67,7 @@ export default function HowToVoteSection() {
               </p>
 
               <Button variant="outline" asChild className="mt-4 bg-transparent">
-                <Link href={step.href}>
+                <Link href={step.href as Route}>
                   {step.action}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
