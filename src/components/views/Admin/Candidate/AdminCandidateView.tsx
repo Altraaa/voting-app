@@ -68,13 +68,11 @@ export default function AdminCandidateView() {
   const { data: candidates = [], isLoading: candidatesLoading } =
     candidateQueries.useGetAllCandidates();
 
-  // Multiple stores untuk concern yang berbeda
   const {
     isCreateDialogOpen,
     isEditDialogOpen,
     isDeleteDialogOpen,
     isViewDialogOpen,
-    selectedId,
     openCreateDialog,
     openEditDialog,
     openDeleteDialog,
@@ -317,15 +315,15 @@ export default function AdminCandidateView() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-foreground">
               Candidate Management
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-muted-foreground mt-1">
               Manage candidates participating in voting events
             </p>
           </div>
           <Button
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={handleOpenCreateDialog}
             disabled={categories.length === 0}
           >
@@ -345,98 +343,112 @@ export default function AdminCandidateView() {
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search candidates..."
-              className="pl-10 bg-white border-gray-200"
+              className="pl-10 bg-background border-border"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline">
+          <Button variant="outline" className="border-border hover:bg-muted">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
         </div>
       </div>
 
-      <Card className="border-gray-200">
-        <CardContent className="p-0">
+      <Card className="border-border bg-card">
+        <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-medium text-gray-700">
+              <TableRow className="bg-muted hover:bg-muted">
+                <TableHead className="font-medium text-card-foreground">
                   Candidate
                 </TableHead>
-                <TableHead className="font-medium text-gray-700">
+                <TableHead className="font-medium text-card-foreground">
                   Description
                 </TableHead>
-                <TableHead className="font-medium text-gray-700">
+                <TableHead className="font-medium text-card-foreground">
                   Event
                 </TableHead>
-                <TableHead className="font-medium text-gray-700">
+                <TableHead className="font-medium text-card-foreground">
                   Category
                 </TableHead>
-                <TableHead className="font-medium text-gray-700">
+                <TableHead className="font-medium text-card-foreground">
                   Votes
                 </TableHead>
-                <TableHead className="font-medium text-gray-700 w-12"></TableHead>
+                <TableHead className="font-medium text-card-foreground w-12"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCandidates.map((candidate) => (
-                <TableRow key={candidate.id} className="hover:bg-gray-50">
+                <TableRow
+                  key={candidate.id}
+                  className="hover:bg-muted/50 border-border"
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10">
+                      <Avatar className="w-10 h-10 border border-border">
                         <AvatarImage
                           src={candidate.photo_url || "/placeholder.svg"}
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-secondary text-secondary-foreground">
                           {candidate.name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="font-medium">{candidate.name}</div>
+                      <div className="font-medium text-card-foreground">
+                        {candidate.name}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-gray-600 max-w-xs truncate">
+                  <TableCell className="text-muted-foreground max-w-xs truncate">
                     {candidate.description}
                   </TableCell>
-                  <TableCell className="text-gray-600">
+                  <TableCell className="text-muted-foreground">
                     {getEventNameByCategoryId(candidate.categoryId)}
                   </TableCell>
-                  <TableCell className="text-gray-600">
+                  <TableCell className="text-muted-foreground">
                     {getCategoryNameById(candidate.categoryId)}
                   </TableCell>
-                  <TableCell className="text-gray-600 font-medium">
+                  <TableCell className="text-muted-foreground font-medium">
                     {candidate.votes?.length || 0}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8">
-                          <MoreHorizontal className="w-4 h-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 hover:bg-muted"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-card border-border"
+                      >
                         <DropdownMenuItem
                           onClick={() => handleOpenViewDialog(candidate)}
+                          className="text-card-foreground hover:bg-muted cursor-pointer"
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleOpenEditDialog(candidate)}
+                          className="text-card-foreground hover:bg-muted cursor-pointer"
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator className="bg-border" />
                         <DropdownMenuItem
-                          className="text-red-600"
+                          className="text-destructive hover:bg-destructive/10 cursor-pointer"
                           onClick={() => handleOpenDeleteDialog(candidate)}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
@@ -454,45 +466,62 @@ export default function AdminCandidateView() {
 
       {/* CREATE DIALOG */}
       <Dialog open={isCreateDialogOpen} onOpenChange={handleCloseCreateDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Add New Candidate</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Add New Candidate
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Register a new candidate for voting events
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Full Name *</Label>
+              <Label htmlFor="create-name" className="text-card-foreground">
+                Full Name *
+              </Label>
               <Input
                 id="create-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ name: e.target.value })}
                 placeholder="Enter candidate name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-description">Description *</Label>
+              <Label
+                htmlFor="create-description"
+                className="text-card-foreground"
+              >
+                Description *
+              </Label>
               <Textarea
                 id="create-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ description: e.target.value })}
                 placeholder="Enter candidate description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-category">Category *</Label>
+              <Label htmlFor="create-category" className="text-card-foreground">
+                Category *
+              </Label>
               <Select
                 value={formData.categoryId}
                 onValueChange={(value) => setFormData({ categoryId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem
+                      key={category.id}
+                      value={category.id}
+                      className="text-card-foreground hover:bg-muted focus:bg-muted"
+                    >
                       {category.name}
                     </SelectItem>
                   ))}
@@ -501,21 +530,25 @@ export default function AdminCandidateView() {
             </div>
             {/* Image Upload Section */}
             <div className="grid gap-2">
-              <Label htmlFor="create-image">Profile Photo</Label>
+              <Label htmlFor="create-image" className="text-card-foreground">
+                Profile Photo
+              </Label>
               <div className="flex items-center gap-4">
                 <Input
                   id="create-image"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageSelect}
-                  className="flex-1"
+                  className="flex-1 bg-background border-border text-foreground"
                   disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
-                    <Avatar className="w-20 h-20">
+                    <Avatar className="w-20 h-20 border border-border">
                       <AvatarImage src={imagePreview} />
-                      <AvatarFallback>Preview</AvatarFallback>
+                      <AvatarFallback className="bg-secondary text-secondary-foreground">
+                        Preview
+                      </AvatarFallback>
                     </Avatar>
                     <Button
                       size="icon"
@@ -530,7 +563,9 @@ export default function AdminCandidateView() {
                 )}
               </div>
               {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
+                <p className="text-sm text-muted-foreground">
+                  Uploading image...
+                </p>
               )}
             </div>
           </div>
@@ -539,11 +574,12 @@ export default function AdminCandidateView() {
               variant="outline"
               onClick={handleCloseCreateDialog}
               disabled={mutations.createMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleCreate}
               disabled={
                 mutations.createMutation.isPending ||
@@ -563,43 +599,62 @@ export default function AdminCandidateView() {
 
       {/* EDIT DIALOG */}
       <Dialog open={isEditDialogOpen} onOpenChange={handleCloseEditDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Edit Candidate</DialogTitle>
-            <DialogDescription>Update candidate information</DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Edit Candidate
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update candidate information
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Full Name *</Label>
+              <Label htmlFor="edit-name" className="text-card-foreground">
+                Full Name *
+              </Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ name: e.target.value })}
                 placeholder="Enter candidate name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description *</Label>
+              <Label
+                htmlFor="edit-description"
+                className="text-card-foreground"
+              >
+                Description *
+              </Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ description: e.target.value })}
                 placeholder="Enter candidate description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-category">Category *</Label>
+              <Label htmlFor="edit-category" className="text-card-foreground">
+                Category *
+              </Label>
               <Select
                 value={formData.categoryId}
                 onValueChange={(value) => setFormData({ categoryId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem
+                      key={category.id}
+                      value={category.id}
+                      className="text-card-foreground hover:bg-muted focus:bg-muted"
+                    >
                       {category.name}
                     </SelectItem>
                   ))}
@@ -607,21 +662,25 @@ export default function AdminCandidateView() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-image">Profile Photo</Label>
+              <Label htmlFor="edit-image" className="text-card-foreground">
+                Profile Photo
+              </Label>
               <div className="flex items-center gap-4">
                 <Input
                   id="edit-image"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageSelect}
-                  className="flex-1"
+                  className="flex-1 bg-background border-border text-foreground"
                   disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
-                    <Avatar className="w-20 h-20">
+                    <Avatar className="w-20 h-20 border border-border">
                       <AvatarImage src={imagePreview} />
-                      <AvatarFallback>Preview</AvatarFallback>
+                      <AvatarFallback className="bg-secondary text-secondary-foreground">
+                        Preview
+                      </AvatarFallback>
                     </Avatar>
                     <Button
                       size="icon"
@@ -636,7 +695,9 @@ export default function AdminCandidateView() {
                 )}
               </div>
               {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
+                <p className="text-sm text-muted-foreground">
+                  Uploading image...
+                </p>
               )}
             </div>
           </div>
@@ -645,11 +706,12 @@ export default function AdminCandidateView() {
               variant="outline"
               onClick={handleCloseEditDialog}
               disabled={mutations.updateMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleEdit}
               disabled={
                 mutations.updateMutation.isPending ||
@@ -669,18 +731,20 @@ export default function AdminCandidateView() {
 
       {/* VIEW DIALOG */}
       <Dialog open={isViewDialogOpen} onOpenChange={closeViewDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Candidate Details</DialogTitle>
+            <DialogTitle className="text-card-foreground">
+              Candidate Details
+            </DialogTitle>
           </DialogHeader>
           {selectedCandidate && (
             <div className="grid gap-6 py-4">
               <div className="flex justify-center">
-                <Avatar className="w-32 h-32">
+                <Avatar className="w-32 h-32 border border-border">
                   <AvatarImage
                     src={selectedCandidate.photo_url || "/placeholder.svg"}
                   />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-2xl bg-secondary text-secondary-foreground">
                     {selectedCandidate.name
                       .split(" ")
                       .map((n: any) => n[0])
@@ -690,45 +754,49 @@ export default function AdminCandidateView() {
               </div>
               <div className="grid gap-4">
                 <div>
-                  <Label className="text-gray-600">Full Name</Label>
-                  <p className="text-lg font-medium mt-1">
+                  <Label className="text-muted-foreground">Full Name</Label>
+                  <p className="text-lg font-medium mt-1 text-card-foreground">
                     {selectedCandidate.name}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Description</Label>
-                  <p className="mt-1">{selectedCandidate.description}</p>
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="mt-1 text-card-foreground">
+                    {selectedCandidate.description}
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Event</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Event</Label>
+                    <p className="mt-1 text-card-foreground">
                       {getEventNameByCategoryId(selectedCandidate.categoryId)}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Category</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Category</Label>
+                    <p className="mt-1 text-card-foreground">
                       {getCategoryNameById(selectedCandidate.categoryId)}
                     </p>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Total Votes</Label>
-                  <p className="text-2xl font-semibold mt-1">
+                  <Label className="text-muted-foreground">Total Votes</Label>
+                  <p className="text-2xl font-semibold mt-1 text-card-foreground">
                     {selectedCandidate.votes?.length || 0}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Created At</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Created At</Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedCandidate.created).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Last Updated</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">
+                      Last Updated
+                    </Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedCandidate.updated).toLocaleDateString()}
                     </p>
                   </div>
@@ -737,7 +805,11 @@ export default function AdminCandidateView() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={closeViewDialog}>
+            <Button
+              variant="outline"
+              onClick={closeViewDialog}
+              className="border-border hover:bg-muted"
+            >
               Close
             </Button>
           </DialogFooter>
@@ -746,10 +818,12 @@ export default function AdminCandidateView() {
 
       {/* DELETE CONFIRMATION DIALOG */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={closeDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Delete Candidate</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Delete Candidate
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Are you sure you want to delete &ldquo;{selectedCandidate?.name}
               &ldquo;? This action cannot be undone.
             </DialogDescription>
@@ -759,6 +833,7 @@ export default function AdminCandidateView() {
               variant="outline"
               onClick={closeDeleteDialog}
               disabled={mutations.removeMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>

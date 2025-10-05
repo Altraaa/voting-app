@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import {
   Search,
   Plus,
@@ -8,13 +10,21 @@ import {
   Edit,
   Trash2,
   Eye,
-  Coins,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -38,106 +48,265 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePackage } from "@/config/hooks/PackageHook/usePackage";
-import { useDialogStore } from "@/config/stores/useDialogStores";
-import { usePackageFormStore } from "@/config/stores/usePackageStores";
-import { SupportType } from "@/generated/prisma";
+import { IEvent } from "@/config/models/EventModel";
+import { toast } from "sonner";
+import { useEvent } from "@/config/hooks/EventHook/useEvent";
+import { useUploadMutations } from "@/config/hooks/UploadImageHook/uploadImageMutation";
+import { StatusEvent } from "@/generated/prisma";
+import { extractPathFromUrl } from "@/config/utils/extractUrl";
 
-export default function AdminPackageView() {
-  const { queries, mutations } = usePackage();
-  const { data: packagesData, isLoading } = queries.useGetAllPackages();
-  
-  const {
-    isCreateDialogOpen,
-    isEditDialogOpen,
-    isDeleteDialogOpen,
-    isViewDialogOpen,
-    selectedId,
-    openCreateDialog,
-    closeCreateDialog,
-    openEditDialog,
-    closeEditDialog,
-    openDeleteDialog,
-    closeDeleteDialog,
-    openViewDialog,
-    closeViewDialog,
-  } = useDialogStore();
+export default function AdminEventView() {
+  const { queries, mutations } = useEvent();
+  const { uploadSingleMutation, deleteSingleMutation } = useUploadMutations();
 
-  const {
-    formData,
-    searchQuery,
-    setFormData,
-    setSearchQuery,
-    resetForm,
-  } = usePackageFormStore();
+  const { data: events = [], isLoading } = queries.useGetAllEvents();
 
-  const packages = packagesData || [];
-  const selectedPackage = packages.find((pkg) => pkg.id === selectedId);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<IEvent | null>(null);
 
-  const { data: selectedPackageDetail } = queries.useGetPackageById(
-    selectedId || ""
-  );
+  // State untuk upload - disederhanakan
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
-  const handleCreate = () => {
-    mutations.createMutation.mutate(formData, {
-      onSuccess: () => {
-        closeCreateDialog();
-        resetForm();
-      },
-    });
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    photo_url: string;
+    status: StatusEvent;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  }>({
+    name: "",
+    description: "",
+    photo_url: "",
+    status: StatusEvent.upcoming,
+    startDate: "",
+    endDate: "",
+    isActive: true,
+  });
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Format file tidak valid", {
+        description: "Hanya file JPG, PNG, dan WEBP yang diperbolehkan",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File terlalu besar", {
+        description: "Maksimal ukuran file adalah 2MB",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleEdit = () => {
-    if (!selectedId) return;
-    mutations.updateMutation.mutate(
-      {
-        id: selectedId,
-        ...formData,
-      },
-      {
-        onSuccess: () => {
-          closeEditDialog();
-          resetForm();
-        },
+  // Remove image preview
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setImagePreview("");
+  };
+
+  // Upload image handler yang lebih sederhana
+  const handleImageUpload = async (): Promise<string> => {
+    if (!selectedFile) {
+      return "";
+    }
+
+    try {
+      const result = await uploadSingleMutation.mutateAsync({
+        file: selectedFile,
+        folder: "events",
+      });
+
+      if (result.success && result.url) {
+        return result.url;
+      } else {
+        throw new Error(result.error || "Upload failed");
       }
-    );
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw new Error("Gagal upload gambar");
+    }
   };
 
-  const handleDelete = () => {
-    if (!selectedId) return;
-    mutations.removeMutation.mutate(selectedId, {
-      onSuccess: () => {
-        closeDeleteDialog();
-      },
-    });
+  // Delete image handler
+  const handleImageDelete = async (photoUrl: string): Promise<void> => {
+    const path = extractPathFromUrl(photoUrl);
+    if (path) {
+      try {
+        await deleteSingleMutation.mutateAsync({ path });
+      } catch (error) {
+        console.error("Delete image error:", error);
+      }
+    }
   };
 
-  const handleOpenEditDialog = (pkgId: string) => {
-    const pkg = packages.find((p) => p.id === pkgId);
-    if (!pkg) return;
-    
+  // Create Event Handler - disederhanakan
+  const handleCreate = async () => {
+    try {
+      let photoUrl = "";
+
+      if (selectedFile) {
+        photoUrl = await handleImageUpload();
+      }
+
+      await mutations.createMutation.mutateAsync({
+        name: formData.name,
+        description: formData.description,
+        photo_url: photoUrl,
+        status: formData.status,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        isActive: formData.isActive,
+      });
+
+      setIsCreateDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Create event error:", error);
+    }
+  };
+
+  // Edit Event Handler - disederhanakan
+  const handleEdit = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      let photoUrl = formData.photo_url;
+      let shouldDeleteOldImage = false;
+
+      // Jika ada file baru, upload dan tandai untuk hapus yang lama
+      if (selectedFile) {
+        const newPhotoUrl = await handleImageUpload();
+        photoUrl = newPhotoUrl;
+        shouldDeleteOldImage = true;
+      }
+
+      // Update event
+      await mutations.updateMutation.mutateAsync({
+        id: selectedEvent.id,
+        name: formData.name,
+        description: formData.description,
+        photo_url: photoUrl,
+        status: formData.status,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        isActive: formData.isActive,
+      });
+
+      // Hapus gambar lama setelah update berhasil
+      if (shouldDeleteOldImage && selectedEvent.photo_url) {
+        await handleImageDelete(selectedEvent.photo_url);
+      }
+
+      setIsEditDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Update event error:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      if (selectedEvent.photo_url) {
+        await handleImageDelete(selectedEvent.photo_url);
+      }
+
+      await mutations.removeMutation.mutateAsync(selectedEvent.id);
+
+      setIsDeleteDialogOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error("Delete event error:", error);
+    }
+  };
+
+  const openEditDialog = (event: IEvent) => {
+    setSelectedEvent(event);
     setFormData({
-      name: pkg.name,
-      description: pkg.description || "",
-      points: pkg.points,
-      price: pkg.price,
-      originalPrice: pkg.originalPrice || pkg.price,
-      validityDays: pkg.validityDays,
-      supportType: pkg.supportType,
-      bonusPercentage: pkg.bonusPercentage || 0,
-      earlyAccess: pkg.earlyAccess,
+      name: event.name,
+      description: event.description,
+      photo_url: event.photo_url || "",
+      status: event.status,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      isActive: event.isActive,
     });
-    openEditDialog(pkgId);
+    setImagePreview(event.photo_url || "");
+    setSelectedFile(null); // Reset selected file
+    setIsEditDialogOpen(true);
   };
 
-  const filteredPackages = packages.filter((pkg) =>
-    pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const openViewDialog = (event: IEvent) => {
+    setSelectedEvent(event);
+    setIsViewDialogOpen(true);
+  };
+
+  const openDeleteDialog = (event: IEvent) => {
+    setSelectedEvent(event);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      photo_url: "",
+      status: StatusEvent.upcoming,
+      startDate: "",
+      endDate: "",
+      isActive: true,
+    });
+    setSelectedFile(null);
+    setImagePreview("");
+    setSelectedEvent(null);
+  };
+
+  const filteredEvents = events.filter(
+    (event) =>
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Format status untuk display
+  const getStatusDisplay = (status: StatusEvent) => {
+    switch (status) {
+      case StatusEvent.upcoming:
+        return { label: "Upcoming", class: "bg-blue-100 text-blue-700" };
+      case StatusEvent.live:
+        return { label: "Live", class: "bg-green-100 text-green-700" };
+      case StatusEvent.ended:
+        return { label: "Ended", class: "bg-gray-100 text-gray-700" };
+      default:
+        return { label: status, class: "bg-gray-100 text-gray-700" };
+    }
+  };
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p className="text-gray-600">Loading packages...</p>
+        <p>Loading events...</p>
       </div>
     );
   }
@@ -148,21 +317,21 @@ export default function AdminPackageView() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              Package Management
+              Event Management
             </h1>
             <p className="text-gray-600 mt-1">
-              Manage voting point packages and pricing
+              Create and manage voting events
             </p>
           </div>
           <Button
             className="bg-purple-600 hover:bg-purple-700"
             onClick={() => {
               resetForm();
-              openCreateDialog();
+              setIsCreateDialogOpen(true);
             }}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create Package
+            Create Event
           </Button>
         </div>
 
@@ -170,7 +339,7 @@ export default function AdminPackageView() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search packages..."
+              placeholder="Search events..."
               className="pl-10 bg-white border-gray-200"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -183,132 +352,130 @@ export default function AdminPackageView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {filteredPackages.map((pkg) => (
-          <Card
-            key={pkg.id}
-            className="border-gray-200 hover:shadow-lg transition-shadow"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Coins className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{pkg.name}</h3>
-                    {pkg.earlyAccess && (
+      <Card className="border-gray-200">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50">
+                <TableHead className="font-medium text-gray-700">
+                  Image
+                </TableHead>
+                <TableHead className="font-medium text-gray-700">
+                  Event Name
+                </TableHead>
+                <TableHead className="font-medium text-gray-700">
+                  Description
+                </TableHead>
+                <TableHead className="font-medium text-gray-700">
+                  Start Date
+                </TableHead>
+                <TableHead className="font-medium text-gray-700">
+                  End Date
+                </TableHead>
+                <TableHead className="font-medium text-gray-700">
+                  Status
+                </TableHead>
+                <TableHead className="font-medium text-gray-700 w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredEvents.map((event) => {
+                const statusDisplay = getStatusDisplay(
+                  event.status as StatusEvent
+                );
+                return (
+                  <TableRow key={event.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <div className="w-12 h-12 rounded-lg overflow-hidden">
+                        <Image
+                          src={event.photo_url || "/placeholder.svg"}
+                          alt={event.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{event.name}</TableCell>
+                    <TableCell className="text-gray-600 max-w-xs truncate">
+                      {event.description}
+                    </TableCell>
+                    <TableCell className="text-gray-600">
+                      {new Date(event.startDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-gray-600">
+                      {new Date(event.endDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
                       <Badge
                         variant="secondary"
-                        className="bg-yellow-100 text-yellow-700 text-xs mt-1"
+                        className={statusDisplay.class}
                       >
-                        Early Access
+                        {statusDisplay.label}
                       </Badge>
-                    )}
-                  </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openViewDialog(pkg.id)}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleOpenEditDialog(pkg.id)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => openDeleteDialog(pkg.id)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => openViewDialog(event)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openEditDialog(event)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => openDeleteDialog(event)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-              <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
-
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Voting Points</span>
-                  <span className="font-semibold text-purple-600">
-                    {pkg.points} points
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Price</span>
-                  <span className="font-semibold text-gray-900">
-                    Rp {pkg.price.toLocaleString('id-ID')}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Support Type</span>
-                  <span className="font-medium text-gray-900">
-                    {pkg.supportType}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Validity</span>
-                  <span className="font-medium text-gray-900">
-                    {pkg.validityDays} days
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <div>
-                  {pkg.isActive ? (
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-700"
-                    >
-                      Active
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="bg-gray-100 text-gray-700"
-                    >
-                      Inactive
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-xs text-gray-500">
-                  Rp {Math.round(pkg.price / pkg.points).toLocaleString('id-ID')}/point
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Create Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
+      {/* CREATE DIALOG */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Create New Package</DialogTitle>
+            <DialogTitle>Create New Event</DialogTitle>
             <DialogDescription>
-              Add a new voting points package
+              Add a new voting event to the system
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Package Name</Label>
+              <Label htmlFor="create-name">Event Name</Label>
               <Input
                 id="create-name"
                 value={formData.name}
                 onChange={(e) =>
-                  setFormData({ name: e.target.value })
+                  setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Enter package name"
+                placeholder="Enter event name"
               />
             </div>
             <div className="grid gap-2">
@@ -317,144 +484,139 @@ export default function AdminPackageView() {
                 id="create-description"
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData({ description: e.target.value })
+                  setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Enter package description"
+                placeholder="Enter event description"
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-points">Voting Points</Label>
+                <Label htmlFor="create-start-date">Start Date</Label>
                 <Input
-                  id="create-points"
-                  type="number"
-                  value={formData.points}
+                  id="create-start-date"
+                  type="datetime-local"
+                  value={formData.startDate}
                   onChange={(e) =>
-                    setFormData({ points: Number(e.target.value) })
+                    setFormData({ ...formData, startDate: e.target.value })
                   }
-                  placeholder="0"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-price">Price (IDR)</Label>
+                <Label htmlFor="create-end-date">End Date</Label>
                 <Input
-                  id="create-price"
-                  type="number"
-                  value={formData.price}
+                  id="create-end-date"
+                  type="datetime-local"
+                  value={formData.endDate}
                   onChange={(e) =>
-                    setFormData({ price: Number(e.target.value) })
+                    setFormData({ ...formData, endDate: e.target.value })
                   }
-                  placeholder="0"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-validity">Validity Days</Label>
-                <Input
-                  id="create-validity"
-                  type="number"
-                  value={formData.validityDays}
-                  onChange={(e) =>
-                    setFormData({ validityDays: Number(e.target.value) })
-                  }
-                  placeholder="30"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="create-support">Support Type</Label>
-                <Select
-                  value={formData.supportType}
-                  onValueChange={(value: SupportType) =>
-                    setFormData({ supportType: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select support type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SupportType.BASIC}>Basic</SelectItem>
-                    <SelectItem value={SupportType.PRIORITY}>Priority</SelectItem>
-                    <SelectItem value={SupportType.PREMIUM}>Premium</SelectItem>
-                    <SelectItem value={SupportType.VIP}>VIP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-bonus">Bonus Percentage</Label>
-                <Input
-                  id="create-bonus"
-                  type="number"
-                  value={formData.bonusPercentage}
-                  onChange={(e) =>
-                    setFormData({ bonusPercentage: Number(e.target.value) })
-                  }
-                  placeholder="0"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="create-original">Original Price (IDR)</Label>
-                <Input
-                  id="create-original"
-                  type="number"
-                  value={formData.originalPrice}
-                  onChange={(e) =>
-                    setFormData({ originalPrice: Number(e.target.value) })
-                  }
-                  placeholder="0"
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="create-early"
-                checked={formData.earlyAccess}
-                onChange={(e) =>
-                  setFormData({ earlyAccess: e.target.checked })
+            <div className="grid gap-2">
+              <Label htmlFor="create-status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: StatusEvent) =>
+                  setFormData({ ...formData, status: value })
                 }
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <Label htmlFor="create-early" className="cursor-pointer">
-                Mark as early access package
-              </Label>
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={StatusEvent.upcoming}>Upcoming</SelectItem>
+                  <SelectItem value={StatusEvent.live}>Live</SelectItem>
+                  <SelectItem value={StatusEvent.ended}>Ended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Image Upload Section */}
+            <div className="grid gap-2">
+              <Label htmlFor="create-image">Event Image</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="create-image"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageSelect}
+                  className="flex-1"
+                  disabled={uploadSingleMutation.isPending}
+                />
+                {imagePreview && (
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden">
+                      <Image
+                        src={imagePreview}
+                        alt="Preview"
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 w-6 h-6"
+                      onClick={handleRemoveImage}
+                      type="button"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {uploadSingleMutation.isPending && (
+                <p className="text-sm text-gray-500">Uploading image...</p>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeCreateDialog}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateDialogOpen(false);
+                resetForm();
+              }}
+              disabled={mutations.createMutation.isPending}
+            >
               Cancel
             </Button>
             <Button
               className="bg-purple-600 hover:bg-purple-700"
               onClick={handleCreate}
-              disabled={mutations.createMutation.isPending}
+              disabled={
+                mutations.createMutation.isPending ||
+                uploadSingleMutation.isPending
+              }
             >
-              {mutations.createMutation.isPending ? "Creating..." : "Create Package"}
+              {mutations.createMutation.isPending
+                ? "Creating..."
+                : "Create Event"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={closeEditDialog}>
+      {/* EDIT DIALOG - Sama seperti CREATE tapi dengan data yang sudah ada */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Package</DialogTitle>
-            <DialogDescription>Update package information</DialogDescription>
+            <DialogTitle>Edit Event</DialogTitle>
+            <DialogDescription>Update event information</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* Form fields sama seperti create dialog */}
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Package Name</Label>
+              <Label htmlFor="edit-name">Event Name</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) =>
-                  setFormData({ name: e.target.value })
+                  setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Enter package name"
+                placeholder="Enter event name"
               />
             </div>
             <div className="grid gap-2">
@@ -463,221 +625,239 @@ export default function AdminPackageView() {
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData({ description: e.target.value })
+                  setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Enter package description"
+                placeholder="Enter event description"
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-points">Voting Points</Label>
+                <Label htmlFor="edit-start-date">Start Date</Label>
                 <Input
-                  id="edit-points"
-                  type="number"
-                  value={formData.points}
+                  id="edit-start-date"
+                  type="datetime-local"
+                  value={formData.startDate}
                   onChange={(e) =>
-                    setFormData({ points: Number(e.target.value) })
+                    setFormData({ ...formData, startDate: e.target.value })
                   }
-                  placeholder="0"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-price">Price (IDR)</Label>
+                <Label htmlFor="edit-end-date">End Date</Label>
                 <Input
-                  id="edit-price"
-                  type="number"
-                  value={formData.price}
+                  id="edit-end-date"
+                  type="datetime-local"
+                  value={formData.endDate}
                   onChange={(e) =>
-                    setFormData({ price: Number(e.target.value) })
+                    setFormData({ ...formData, endDate: e.target.value })
                   }
-                  placeholder="0"
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-validity">Validity Days</Label>
-                <Input
-                  id="edit-validity"
-                  type="number"
-                  value={formData.validityDays}
-                  onChange={(e) =>
-                    setFormData({ validityDays: Number(e.target.value) })
-                  }
-                  placeholder="30"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-support">Support Type</Label>
-                <Select
-                  value={formData.supportType}
-                  onValueChange={(value: SupportType) =>
-                    setFormData({ supportType: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select support type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SupportType.BASIC}>Basic</SelectItem>
-                    <SelectItem value={SupportType.PRIORITY}>Priority</SelectItem>
-                    <SelectItem value={SupportType.PREMIUM}>Premium</SelectItem>
-                    <SelectItem value={SupportType.VIP}>VIP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="edit-early"
-                checked={formData.earlyAccess}
-                onChange={(e) =>
-                  setFormData({ earlyAccess: e.target.checked })
+            <div className="grid gap-2">
+              <Label htmlFor="edit-status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: StatusEvent) =>
+                  setFormData({ ...formData, status: value })
                 }
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <Label htmlFor="edit-early" className="cursor-pointer">
-                Mark as early access package
-              </Label>
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={StatusEvent.upcoming}>Upcoming</SelectItem>
+                  <SelectItem value={StatusEvent.live}>Live</SelectItem>
+                  <SelectItem value={StatusEvent.ended}>Ended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-image">Event Image</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="edit-image"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleImageSelect}
+                  className="flex-1"
+                  disabled={uploadSingleMutation.isPending}
+                />
+                {imagePreview && (
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden">
+                      <Image
+                        src={imagePreview}
+                        alt="Preview"
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 w-6 h-6"
+                      onClick={handleRemoveImage}
+                      type="button"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {uploadSingleMutation.isPending && (
+                <p className="text-sm text-gray-500">Uploading image...</p>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeEditDialog}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={mutations.updateMutation.isPending}
+            >
               Cancel
             </Button>
             <Button
               className="bg-purple-600 hover:bg-purple-700"
               onClick={handleEdit}
-              disabled={mutations.updateMutation.isPending}
+              disabled={
+                mutations.updateMutation.isPending ||
+                uploadSingleMutation.isPending
+              }
             >
-              {mutations.updateMutation.isPending ? "Saving..." : "Save Changes"}
+              {mutations.updateMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* View Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={closeViewDialog}>
+      {/* VIEW DIALOG */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Package Details</DialogTitle>
+            <DialogTitle>Event Details</DialogTitle>
           </DialogHeader>
-          {(selectedPackageDetail || selectedPackage) && (
+          {selectedEvent && (
             <div className="grid gap-6 py-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Coins className="w-8 h-8 text-purple-600" />
+              {selectedEvent.photo_url && (
+                <div className="flex justify-center">
+                  <div className="w-48 h-48 rounded-lg overflow-hidden">
+                    <Image
+                      src={selectedEvent.photo_url}
+                      alt={selectedEvent.name}
+                      width={192}
+                      height={192}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {(selectedPackageDetail || selectedPackage)?.name}
-                  </h3>
-                  {(selectedPackageDetail || selectedPackage)?.earlyAccess && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-yellow-100 text-yellow-700 mt-1"
-                    >
-                      Early Access Package
-                    </Badge>
-                  )}
-                </div>
-              </div>
+              )}
               <div className="grid gap-4">
                 <div>
-                  <Label className="text-gray-600">Description</Label>
-                  <p className="mt-1">{(selectedPackageDetail || selectedPackage)?.description}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Voting Points</Label>
-                    <p className="text-2xl font-semibold text-purple-600 mt-1">
-                      {(selectedPackageDetail || selectedPackage)?.points}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Price</Label>
-                    <p className="text-2xl font-semibold text-gray-900 mt-1">
-                      Rp {(selectedPackageDetail || selectedPackage)?.price.toLocaleString('id-ID')}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Support Type</Label>
-                    <p className="text-xl font-semibold mt-1">
-                      {(selectedPackageDetail || selectedPackage)?.supportType}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Validity</Label>
-                    <p className="text-xl font-semibold mt-1">
-                      {(selectedPackageDetail || selectedPackage)?.validityDays} days
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Price per Point</Label>
-                    <p className="text-xl font-semibold mt-1">
-                      Rp {Math.round((selectedPackageDetail || selectedPackage)!.price / (selectedPackageDetail || selectedPackage)!.points).toLocaleString('id-ID')}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Bonus</Label>
-                    <p className="text-xl font-semibold mt-1">
-                      {(selectedPackageDetail || selectedPackage)?.bonusPercentage || 0}%
-                    </p>
-                  </div>
+                  <Label className="text-gray-600">Event Name</Label>
+                  <p className="text-lg font-medium mt-1">
+                    {selectedEvent.name}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Status</Label>
-                  <div className="mt-1">
-                    {(selectedPackageDetail || selectedPackage)?.isActive ? (
+                  <Label className="text-gray-600">Description</Label>
+                  <p className="mt-1">{selectedEvent.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Status</Label>
+                    <div className="mt-1">
                       <Badge
                         variant="secondary"
-                        className="bg-green-100 text-green-700"
+                        className={
+                          getStatusDisplay(selectedEvent.status as StatusEvent)
+                            .class
+                        }
                       >
-                        Active
+                        {
+                          getStatusDisplay(selectedEvent.status as StatusEvent)
+                            .label
+                        }
                       </Badge>
-                    ) : (
-                      <Badge
-                        variant="secondary"
-                        className="bg-gray-100 text-gray-700"
-                      >
-                        Inactive
-                      </Badge>
-                    )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Active</Label>
+                    <p className="mt-1">
+                      {selectedEvent.isActive ? "Yes" : "No"}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Start Date</Label>
+                    <p className="mt-1">
+                      {new Date(selectedEvent.startDate).toLocaleDateString()}{" "}
+                      at{" "}
+                      {new Date(selectedEvent.startDate).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">End Date</Label>
+                    <p className="mt-1">
+                      {new Date(selectedEvent.endDate).toLocaleDateString()} at{" "}
+                      {new Date(selectedEvent.endDate).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-600">Created At</Label>
+                    <p className="mt-1">
+                      {new Date(selectedEvent.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-600">Last Updated</Label>
+                    <p className="mt-1">
+                      {new Date(selectedEvent.updatedAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={closeViewDialog}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={closeDeleteDialog}>
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Package</DialogTitle>
+            <DialogTitle>Delete Event</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{selectedPackage?.name}&ldquo;? This
-              action cannot be undone.
+              Are you sure you want to delete &ldquo;{selectedEvent?.name}
+              &rdquo;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDeleteDialog}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={mutations.removeMutation.isPending}
+            >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
               disabled={mutations.removeMutation.isPending}
             >

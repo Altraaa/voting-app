@@ -219,10 +219,8 @@ export default function AdminEventView() {
 
       setIsEditDialogOpen(false);
       resetForm();
-      toast.success("Event berhasil diperbarui");
     } catch (error) {
       console.error("Update event error:", error);
-      toast.error("Gagal memperbarui event");
     }
   };
 

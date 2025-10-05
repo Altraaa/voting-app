@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Users, Clock, TrendingUp, ArrowRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,7 +10,6 @@ import { useParams } from "next/navigation";
 import { StatusEvent } from "@/generated/prisma";
 import { useEventQueries } from "@/config/hooks/EventHook/eventQueries";
 
-// Map StatusEvent ke status yang lebih user-friendly
 const mapStatus = (status: StatusEvent): string => {
   switch (status) {
     case "live":
@@ -25,7 +23,6 @@ const mapStatus = (status: StatusEvent): string => {
   }
 };
 
-// Format date untuk tampilan
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -33,13 +30,6 @@ const formatDate = (dateString: string) => {
     month: "short",
     day: "numeric",
   });
-};
-
-// Hitung progress voting (ini contoh, sesuaikan dengan logika bisnis Anda)
-const calculateProgress = (category: any) => {
-  // Di sini Anda perlu menyesuaikan dengan data voting yang sebenarnya
-  // Untuk sekarang kita gunakan random sebagai placeholder
-  return Math.floor(Math.random() * 40 + 20);
 };
 
 export default function CategoryView() {
@@ -65,7 +55,7 @@ export default function CategoryView() {
     return (
       <div className="px-4 lg:px-20 py-32">
         <div className="text-center text-red-500">
-          Error loading event: {error.message}
+          Error loading event: something went wrong
         </div>
       </div>
     );
@@ -185,25 +175,12 @@ export default function CategoryView() {
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  {Math.floor(Math.random() * 10000 + 5000).toLocaleString()}{" "}
-                  votes
+                  {category._count.candidates} Candidates
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   Ends {formatDate(event.endDate)}
                 </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">
-                   {category._count.candidates} candidates
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {calculateProgress(category)}% leading
-                  </span>
-                </div>
-                <Progress value={calculateProgress(category)} className="h-2" />
               </div>
 
               <Button asChild className="w-full">
