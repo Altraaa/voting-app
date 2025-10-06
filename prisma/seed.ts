@@ -11,6 +11,11 @@ async function main() {
       name: "Super Admin",
       password: adminPassword,
       role: "ADMIN",
+      firstName: "Super",
+      lastName: "Admin",
+      phone: "089680854445",
+      terms: true,
+      newsLetter: false,
     },
   });
 }
