@@ -1,18 +1,22 @@
-
+// config/types/dutikuType.ts
 export interface DuitkuPaymentRequest {
   merchantCode: string;
   paymentAmount: number;
   merchantOrderId: string;
   productDetails: string;
   email: string;
-  customerVaName?: string;
+  customerVaName: string;
   phoneNumber?: string;
-  itemDetails: any[];
+  itemDetails: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
   callbackUrl: string;
   returnUrl: string;
-  paymentMethod?: string;
   signature: string;
-  expiryPeriod?: number;
+  expiryPeriod: number;
+  paymentMethod?: string;
 }
 
 export interface DuitkuPaymentResponse {
@@ -21,4 +25,19 @@ export interface DuitkuPaymentResponse {
   paymentUrl: string;
   statusCode: string;
   statusMessage: string;
+}
+
+export interface PaymentData {
+  merchantOrderId: string;
+  paymentAmount: number;
+  productDetails: string;
+  email: string;
+  customerName: string;
+  phoneNumber: string;
+  paymentMethod: string;
+}
+
+export interface PaymentInitiate {
+  pointVoteId: string;
+  paymentMethod: string;
 }
