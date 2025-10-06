@@ -28,6 +28,7 @@ model User {
   updatedAt  DateTime @updatedAt
   packages   PackageHistory[]
   events     EventMember[]
+  PointVotes PointVotes[]
 }
 
 model Event {
@@ -98,17 +99,24 @@ model Package {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   PackageHistories    PackageHistory[]
+  PointVotes PointVotes[]
 }
 
 model PointVotes {
-  id              String  @id @default(cuid())
+  id              String         @id @default(cuid())
   userId          String
   packageId       String
   points          Int
   amount          Int
   payment_status  PaymentStatus
-  createdAt       DateTime @default(now())
+  merchantOrderId String         @unique
+  reference       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id])
+  package         Package        @relation(fields: [packageId], references: [id])
 }
+
 
 model PackageHistory {
   id            String   @id @default(cuid())
