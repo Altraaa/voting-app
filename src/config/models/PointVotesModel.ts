@@ -1,10 +1,14 @@
-import { PaymentStatus } from "@/generated/prisma";
+import { PointVotes, } from "@/generated/prisma";
 
-export interface IPointVotes {
-  id: string;
-  user_id: string;
-  points: number;
-  ammount: number;
-  payment_status: PaymentStatus;
-  created_at: string;
+export interface IPointVotes extends PointVotes {
+  user: {
+    id: string;
+    email: string;
+    points: number;
+  };
+  package: {
+    id: string;
+    name: string;
+    points: number;
+  };
 }
