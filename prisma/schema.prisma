@@ -108,6 +108,7 @@ model PointVotes {
   packageId       String
   points          Int
   amount          Int
+  paymentMethod   String
   payment_status  PaymentStatus
   merchantOrderId String         @unique
   reference       String?

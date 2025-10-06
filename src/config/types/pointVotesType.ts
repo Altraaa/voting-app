@@ -8,6 +8,7 @@ export type PointVotesBasePayload = {
   payment_status: PaymentStatus;
   merchantOrderId: string;
   reference?: string;
+  paymentMethod: string;
 };
 
 export type PointVotesCreatePayload = PointVotesBasePayload;
