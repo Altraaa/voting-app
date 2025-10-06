@@ -2,16 +2,40 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (
     pathname.startsWith("/api/admin")
   ) {
-    const token = req.cookies.get("session")?.value;
-    const decoded = verifyToken(token || "");
-    if (!decoded || decoded.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const token =
+      req.cookies.get("session")?.value
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: "Forbidden: no token",
+          debug: "No cookie or Authorization header",
+        },
+        { status: 403 }
+      );
+    }
+
+    const decoded = await verifyToken(token); 
+
+
+    if (!decoded) {
+      return NextResponse.json(
+        { error: "Forbidden: invalid token" },
+        { status: 403 }
+      );
+    }
+
+    if (decoded.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Forbidden: not admin" },
+        { status: 403 }
+      );
     }
   }
 
