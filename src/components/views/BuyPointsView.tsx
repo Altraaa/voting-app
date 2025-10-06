@@ -30,6 +30,10 @@ import {
 import { useRouter } from "next/navigation";
 import { usePackage } from "@/config/hooks/PackageHook/usePackage";
 import { IPackage } from "@/config/models/PackageModel";
+import { toast } from "sonner";
+import { PaymentStatus } from "@/generated/prisma";
+import { useAuthUser } from "@/config/hooks/useAuthUser";
+import { usePurchasePoints } from "@/config/hooks/PointVotesHook/usePurchasePoint";
 
 // Payment methods
 const paymentMethods = [
@@ -92,31 +96,56 @@ const generateFeatures = (pkg: IPackage): string[] => {
   return features;
 };
 
+// Generate merchant order ID
+const generateMerchantOrderId = (userId: string, packageId: string): string => {
+  const timestamp = Date.now();
+  return `POINT-${userId}-${packageId}-${timestamp}`;
+};
+
 export default function PointsView() {
   const router = useRouter();
   const [selectedPayment, setSelectedPayment] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<IPackage | null>(null);
+
+  const { user } = useAuthUser();
+  const { purchasePoints, isProcessing } = usePurchasePoints();
 
   const { queries: packageQueries } = usePackage();
   const { data: packages = [], isLoading: packagesLoading } =
     packageQueries.useGetAllPackages();
 
   const handlePurchase = async (pkg: IPackage) => {
-    if (!selectedPayment) return;
-
-    setIsProcessing(true);
+    if (!selectedPayment || !user) return;
 
     try {
-      // Simulate API call to create payment
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const merchantOrderId = generateMerchantOrderId(user.id, pkg.id);
 
-      // Redirect to payment page with package and payment method
-      router.push(`/payment?package=${pkg.id}&method=${selectedPayment}`);
+      const purchaseData = {
+        userId: user.id,
+        packageId: pkg.id,
+        points: pkg.points,
+        amount: pkg.price,
+        payment_status: PaymentStatus.pending,
+        merchantOrderId: merchantOrderId,
+        paymentMethod: selectedPayment,
+      };
+
+      const result = await purchasePoints(purchaseData);
+
+      // Redirect to payment page with transaction data
+      router.push(
+        `/payment?transactionId=${result.id}&method=${selectedPayment}`
+      );
+
+      toast.success("Payment initiated successfully", {
+        description: "Redirecting to payment page...",
+      });
     } catch (error) {
       console.error("Purchase error:", error);
+      toast.error("Failed to process purchase", {
+        description: "Please try again or contact support.",
+      });
     } finally {
-      setIsProcessing(false);
       setSelectedPayment("");
       setSelectedPackage(null);
     }
@@ -137,9 +166,9 @@ export default function PointsView() {
 
   if (packagesLoading) {
     return (
-      <div className="px-20 py-28">
+      <div className="px-4 lg:px-20 py-28">
         <div className="text-center space-y-4 mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-balance">
+          <h1 className="text-4xl md:text-5xl font-bold">
             Buy Voting <span className="text-primary">Points</span>
           </h1>
           <div className="flex justify-center">
@@ -151,26 +180,26 @@ export default function PointsView() {
   }
 
   return (
-    <div className="px-4 lg:px-20 py-28">
+    <div className="px-4 lg:px-20 py-28 bg-background">
       <div className="text-center space-y-4 mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold text-balance">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground">
           Buy Voting <span className="text-primary">Points</span>
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Purchase voting points to participate in all categories. Secure
           payment with multiple options available.
         </p>
       </div>
 
       {/* Current Points Display */}
-      <div className="bg-card rounded-lg p-6 mb-8 text-center">
+      <div className="bg-card rounded-lg p-6 mb-8 text-center border border-border">
         <p className="text-sm text-muted-foreground mb-2">
           Your Current Balance
         </p>
         <div className="flex items-center justify-center gap-2">
           <Star className="w-6 h-6 text-primary" />
           <span className="text-3xl font-bold text-primary">
-            10
+            {user?.points || 0}
           </span>
           <span className="text-lg text-muted-foreground">voting points</span>
         </div>
@@ -186,7 +215,7 @@ export default function PointsView() {
           return (
             <Card
               key={pkg.id}
-              className={`relative overflow-hidden hover:shadow-lg transition-all ${
+              className={`relative overflow-hidden hover:shadow-lg transition-all border-border bg-card ${
                 isPopular ? "ring-2 ring-primary scale-105" : ""
               }`}
             >
@@ -202,8 +231,10 @@ export default function PointsView() {
                 <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <PackageIcon className="w-6 h-6 text-primary" />
                 </div>
-                <CardTitle className="text-xl">{pkg.name}</CardTitle>
-                <p className="text-sm text-muted-foreground text-pretty">
+                <CardTitle className="text-xl text-card-foreground">
+                  {pkg.name}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
                   {pkg.description}
                 </p>
               </CardHeader>
@@ -219,7 +250,7 @@ export default function PointsView() {
                 </div>
 
                 <div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-2xl font-bold text-card-foreground">
                     {formatPrice(pkg.price)}
                   </div>
                   {pkg.originalPrice && pkg.originalPrice > pkg.price && (
@@ -231,7 +262,10 @@ export default function PointsView() {
 
                 <ul className="space-y-2 text-sm text-left">
                   {features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center gap-2">
+                    <li
+                      key={featureIndex}
+                      className="flex items-center gap-2 text-card-foreground"
+                    >
                       <Check className="w-4 h-4 text-primary flex-shrink-0" />
                       <span>{feature}</span>
                     </li>
@@ -248,19 +282,23 @@ export default function PointsView() {
                       Select Package
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="max-w-md bg-card border-border">
                     <DialogHeader>
-                      <DialogTitle>Complete Your Purchase</DialogTitle>
-                      <DialogDescription>
+                      <DialogTitle className="text-card-foreground">
+                        Complete Your Purchase
+                      </DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
                         You&apos;re purchasing {pkg.name} - {pkg.points} voting
                         points for {formatPrice(pkg.price)}
                       </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-6">
-                      <div className="bg-card rounded-lg p-4">
-                        <h4 className="font-semibold mb-2">Package Details</h4>
-                        <div className="flex justify-between items-center">
+                      <div className="bg-muted rounded-lg p-4">
+                        <h4 className="font-semibold mb-2 text-card-foreground">
+                          Package Details
+                        </h4>
+                        <div className="flex justify-between items-center text-card-foreground">
                           <span>{pkg.name}</span>
                           <span className="font-bold">
                             {formatPrice(pkg.price)}
@@ -277,7 +315,9 @@ export default function PointsView() {
                       </div>
 
                       <div>
-                        <h4 className="font-semibold mb-3">Payment Method</h4>
+                        <h4 className="font-semibold mb-3 text-card-foreground">
+                          Payment Method
+                        </h4>
                         <RadioGroup
                           value={selectedPayment}
                           onValueChange={setSelectedPayment}
@@ -293,7 +333,7 @@ export default function PointsView() {
                               />
                               <Label
                                 htmlFor={method.id}
-                                className="flex items-center gap-2 cursor-pointer"
+                                className="flex items-center gap-2 cursor-pointer text-card-foreground"
                               >
                                 <method.icon className="w-4 h-4" />
                                 {method.name}
@@ -312,12 +352,14 @@ export default function PointsView() {
                           setSelectedPackage(null);
                         }}
                         disabled={isProcessing}
+                        className="border-border hover:bg-muted"
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={() => handlePurchase(pkg)}
                         disabled={!selectedPayment || isProcessing}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         {isProcessing ? (
                           <>
@@ -338,14 +380,16 @@ export default function PointsView() {
       </div>
 
       {/* FAQ Section */}
-      <div className="bg-card rounded-lg p-8">
-        <h2 className="text-2xl font-bold text-center mb-8">
+      <div className="bg-card rounded-lg p-8 border border-border">
+        <h2 className="text-2xl font-bold text-center mb-8 text-card-foreground">
           Frequently Asked Questions
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h3 className="font-semibold mb-2">How do voting points work?</h3>
+            <h3 className="font-semibold mb-2 text-card-foreground">
+              How do voting points work?
+            </h3>
             <p className="text-sm text-muted-foreground">
               Each vote costs 1 point. Points are deducted from your balance
               when you vote for candidates in any category.
@@ -353,7 +397,9 @@ export default function PointsView() {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">Do points expire?</h3>
+            <h3 className="font-semibold mb-2 text-card-foreground">
+              Do points expire?
+            </h3>
             <p className="text-sm text-muted-foreground">
               Yes, points have different validity periods depending on the
               package you choose, ranging from 30 to 180 days.
@@ -361,7 +407,9 @@ export default function PointsView() {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">Can I get a refund?</h3>
+            <h3 className="font-semibold mb-2 text-card-foreground">
+              Can I get a refund?
+            </h3>
             <p className="text-sm text-muted-foreground">
               Unused points can be refunded within 7 days of purchase. Contact
               our support team for assistance.
@@ -369,7 +417,9 @@ export default function PointsView() {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">Is payment secure?</h3>
+            <h3 className="font-semibold mb-2 text-card-foreground">
+              Is payment secure?
+            </h3>
             <p className="text-sm text-muted-foreground">
               Yes, all payments are processed through secure, encrypted channels
               with trusted payment providers.
@@ -377,14 +427,16 @@ export default function PointsView() {
           </div>
         </div>
 
-        <Separator className="my-6" />
+        <Separator className="my-6 bg-border" />
 
         <div className="text-center">
           <p className="text-sm text-muted-foreground mb-4">
             Need help with your purchase? Our support team is here to assist
             you.
           </p>
-          <Button variant="outline">Contact Support</Button>
+          <Button variant="outline" className="border-border hover:bg-muted">
+            Contact Support
+          </Button>
         </div>
       </div>
     </div>
