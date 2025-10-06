@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/config/utils/ErrorHandler";
 import {
   PointVotesCreatePayload,
   DuitkuCallbackPayload,
+  PointVotesCreateResponse,
 } from "@/config/types/pointVotesType";
 import { IPointVotes } from "@/config/models/PointVotesModel";
 
@@ -19,28 +20,30 @@ const invalidatePointVotesQueries = (queryClient: QueryClient) => {
 export const usePointVotesMutations = () => {
   const queryClient = useQueryClient();
 
-  const createMutation = useApiMutation<IPointVotes, PointVotesCreatePayload>(
-    (data) => PointVotesRoute.create(data),
-    {
-      onSuccess: (newPointVote) => {
+  const createMutation = useApiMutation<
+    PointVotesCreateResponse,
+    PointVotesCreatePayload
+  >((data) => PointVotesRoute.create(data), {
+    onSuccess: (response) => {
+      if (response.success && response.data) {
         queryClient.setQueryData(
-          POINT_VOTES_QUERY_KEYS.detail(newPointVote.id),
-          newPointVote
+          POINT_VOTES_QUERY_KEYS.detail(response.data.id),
+          response.data
         );
 
         invalidatePointVotesQueries(queryClient);
 
         toast.success("Pembelian points berhasil diproses");
-      },
-      onError: (error) => {
-        toast.error("Gagal memproses pembelian points", {
-          description:
-            getErrorMessage(error) ||
-            "Terjadi kesalahan saat memproses pembelian",
-        });
-      },
-    }
-  );
+      }
+    },
+    onError: (error) => {
+      toast.error("Gagal memproses pembelian points", {
+        description:
+          getErrorMessage(error) ||
+          "Terjadi kesalahan saat memproses pembelian",
+      });
+    },
+  });
 
   const paymentCallbackMutation = useApiMutation<
     IPointVotes,

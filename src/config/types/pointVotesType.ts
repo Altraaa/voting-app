@@ -45,3 +45,9 @@ export interface IPointVotes extends PointVotes {
     points: number;
   };
 }
+
+export interface PointVotesCreateResponse {
+  success: boolean;
+  data: IPointVotes & { paymentUrl?: string };
+  message: string;
+}
