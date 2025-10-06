@@ -6,10 +6,7 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (
-    pathname.startsWith("/api/admin") ||
-    pathname.startsWith("/api/users") ||
-    pathname.startsWith("/api/categories") ||
-    pathname.startsWith("/api/candidates")
+    pathname.startsWith("/api/admin")
   ) {
     const token = req.cookies.get("session")?.value;
     const decoded = verifyToken(token || "");
