@@ -29,7 +29,7 @@ export const voteController = {
     const vote = await voteService.createVote(decoded.id, candidateId, points);
     return NextResponse.json(vote);
   },
-    async getAll() {
+  async getAll() {
     const votes = await voteService.getVotes();
     return NextResponse.json(votes);
   },

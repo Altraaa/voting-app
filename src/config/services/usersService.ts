@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { UsersCreatePayload, UsersUpdatePayload, UsersUpdateProfilePayload } from "../types/usersType";
+import {
+  UsersCreatePayload,
+  UsersUpdatePayload,
+  UsersUpdateProfilePayload,
+} from "../types/usersType";
 
 export const userService = {
   async getAll() {

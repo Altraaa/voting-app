@@ -35,7 +35,7 @@ export function setAuthCookie(token: string, res: NextResponse) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, 
+    maxAge: 60 * 60 * 24 * 7,
   });
 }
 
