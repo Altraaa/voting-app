@@ -1,26 +1,10 @@
-// components/PointsView.tsx
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Star,
-  CreditCard,
-  Smartphone,
-  Building2,
   Check,
   Zap,
   Crown,
@@ -30,20 +14,10 @@ import {
 import { usePackage } from "@/config/hooks/PackageHook/usePackage";
 import { IPackage } from "@/config/models/PackageModel";
 import { toast } from "sonner";
-import { PaymentStatus } from "@/generated/prisma";
 import { useAuthUser } from "@/config/hooks/useAuthUser";
-import { usePurchasePoints } from "@/config/hooks/PointVotesHook/usePurchasePoint";
+import { useRouter } from "next/navigation";
+import { Route } from "next";
 
-// Payment methods
-const paymentMethods = [
-  { id: "gopay", name: "GoPay", icon: Smartphone },
-  { id: "ovo", name: "OVO", icon: Smartphone },
-  { id: "dana", name: "DANA", icon: Smartphone },
-  { id: "bank", name: "Bank Transfer", icon: Building2 },
-  { id: "credit", name: "Credit Card", icon: CreditCard },
-];
-
-// Map support type to display text
 const getSupportTypeText = (supportType: string) => {
   switch (supportType) {
     case "BASIC":
@@ -76,7 +50,6 @@ const getPackageIcon = (pkg: IPackage, index: number) => {
   return Star;
 };
 
-// Generate features based on package data
 const generateFeatures = (pkg: IPackage): string[] => {
   const features = [
     `${pkg.points} voting points`,
@@ -95,63 +68,23 @@ const generateFeatures = (pkg: IPackage): string[] => {
   return features;
 };
 
-// Generate merchant order ID
-const generateMerchantOrderId = (userId: string, packageId: string): string => {
-  const timestamp = Date.now();
-  return `POINT-${userId}-${packageId}-${timestamp}`;
-};
-
 export default function PointsView() {
-  const [selectedPayment, setSelectedPayment] = useState<string>("");
-  const [selectedPackage, setSelectedPackage] = useState<IPackage | null>(null);
-
+  const router = useRouter();
   const { user } = useAuthUser();
-  const { purchasePoints, isProcessing } = usePurchasePoints();
 
   const { queries: packageQueries } = usePackage();
   const { data: packages = [], isLoading: packagesLoading } =
     packageQueries.useGetAllPackages();
 
-  const handlePurchase = async (pkg: IPackage) => {
-    if (!selectedPayment || !user) return;
-
-    try {
-      const merchantOrderId = generateMerchantOrderId(user.id, pkg.id);
-
-      const purchaseData = {
-        userId: user.id,
-        packageId: pkg.id,
-        points: pkg.points,
-        amount: pkg.price,
-        payment_status: PaymentStatus.pending,
-        merchantOrderId: merchantOrderId,
-        paymentMethod: selectedPayment,
-      };
-
-      console.log("Sending purchase data:", purchaseData);
-
-      const result = await purchasePoints(purchaseData);
-
-      if (result.data?.paymentUrl) {
-        toast.success("Redirecting to payment...");
-        setTimeout(() => {
-          window.location.href = result.data!.paymentUrl!;
-        }, 1000);
-      } else {
-        console.error("No payment URL received:", result);
-        toast.error("Payment gateway not available", {
-          description: "Please try again later.",
-        });
-      }
-    } catch (error: any) {
-      console.error("Purchase error:", error);
-      toast.error("Failed to process purchase", {
-        description: error?.message || "Please try again or contact support.",
-      });
-    } finally {
-      setSelectedPayment("");
-      setSelectedPackage(null);
+  const handleSelectPackage = (pkg: IPackage) => {
+    if (!user) {
+      toast.error("Please login to purchase points");
+      return;
     }
+
+    router.push(
+      `/checkout?packageId=${pkg.id}&amount=${pkg.price}&points=${pkg.points}` as Route
+    );
   };
 
   const formatPrice = (price: number) => {
@@ -162,7 +95,6 @@ export default function PointsView() {
     }).format(price);
   };
 
-  // Filter only active packages and sort by price
   const activePackages = packages
     .filter((pkg) => pkg.isActive)
     .sort((a, b) => a.price - b.price);
@@ -274,108 +206,13 @@ export default function PointsView() {
                     </li>
                   ))}
                 </ul>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      className="w-full"
-                      variant={isPopular ? "default" : "outline"}
-                      onClick={() => setSelectedPackage(pkg)}
-                    >
-                      Select Package
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md bg-card border-border">
-                    <DialogHeader>
-                      <DialogTitle className="text-card-foreground">
-                        Complete Your Purchase
-                      </DialogTitle>
-                      <DialogDescription className="text-muted-foreground">
-                        You&apos;re purchasing {pkg.name} - {pkg.points} voting
-                        points for {formatPrice(pkg.price)}
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-6">
-                      <div className="bg-muted rounded-lg p-4">
-                        <h4 className="font-semibold mb-2 text-card-foreground">
-                          Package Details
-                        </h4>
-                        <div className="flex justify-between items-center text-card-foreground">
-                          <span>{pkg.name}</span>
-                          <span className="font-bold">
-                            {formatPrice(pkg.price)}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {pkg.points} voting points
-                        </div>
-                        {pkg.originalPrice && pkg.originalPrice > pkg.price && (
-                          <div className="text-sm text-muted-foreground line-through">
-                            Original: {formatPrice(pkg.originalPrice)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold mb-3 text-card-foreground">
-                          Payment Method
-                        </h4>
-                        <RadioGroup
-                          value={selectedPayment}
-                          onValueChange={setSelectedPayment}
-                        >
-                          {paymentMethods.map((method) => (
-                            <div
-                              key={method.id}
-                              className="flex items-center space-x-2"
-                            >
-                              <RadioGroupItem
-                                value={method.id}
-                                id={method.id}
-                              />
-                              <Label
-                                htmlFor={method.id}
-                                className="flex items-center gap-2 cursor-pointer text-card-foreground"
-                              >
-                                <method.icon className="w-4 h-4" />
-                                {method.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
-                    </div>
-
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedPayment("");
-                          setSelectedPackage(null);
-                        }}
-                        disabled={isProcessing}
-                        className="border-border hover:bg-muted"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => handlePurchase(pkg)}
-                        disabled={!selectedPayment || isProcessing}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            Processing...
-                          </>
-                        ) : (
-                          `Pay ${formatPrice(pkg.price)}`
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  className="w-full"
+                  variant={isPopular ? "default" : "outline"}
+                  onClick={() => handleSelectPackage(pkg)}
+                >
+                  Buy Now
+                </Button>
               </CardContent>
             </Card>
           );
