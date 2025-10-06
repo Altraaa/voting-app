@@ -1,9 +1,9 @@
 // controllers/pointVotesController.ts
 import { NextResponse } from "next/server";
 import { pointVotesService } from "../services/pointVotesService";
-import { DuitkuCallbackPayload } from "../types/pointVotesType";
 import prisma from "@/lib/prisma";
 import { DuitkuService } from "@/lib/duitku";
+import { DuitkuCallbackPayload } from "../types/pointVotesType";
 
 export const pointVotesController = {
   async getAll() {
@@ -47,7 +47,8 @@ export const pointVotesController = {
         !data.userId ||
         !data.packageId ||
         !data.amount ||
-        !data.merchantOrderId
+        !data.merchantOrderId ||
+        !data.phoneNumber // Tambahkan validasi phoneNumber
       ) {
         return NextResponse.json(
           { error: "Missing required fields" },
@@ -55,57 +56,14 @@ export const pointVotesController = {
         );
       }
 
+      // Buat pointVotes record dengan status pending
       const pointVote = await pointVotesService.create(data);
-
-      const user = await prisma.user.findUnique({
-        where: { id: data.userId },
-        select: {
-          email: true,
-          firstName: true,
-          lastName: true,
-          phone: true,
-        },
-      });
-
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      const packageData = await prisma.package.findUnique({
-        where: { id: data.packageId },
-        select: { name: true, points: true },
-      });
-
-      if (!packageData) {
-        throw new Error("Package not found");
-      }
-
-      const paymentData = {
-        merchantOrderId: pointVote.merchantOrderId,
-        paymentAmount: pointVote.amount,
-        productDetails: `${packageData.name} - ${packageData.points} Voting Points`,
-        email: user.email,
-        customerName: `${user.firstName} ${user.lastName}`.trim(),
-        paymentMethod: data.paymentMethod
-      };
-
-      console.log("Creating Duitku payment with data:", paymentData);
-
-      const paymentResponse = await DuitkuService.createPayment(paymentData);
-
-      const updatedPointVote = await pointVotesService.update({
-        id: pointVote.id,
-        reference: paymentResponse.reference,
-      });
 
       return NextResponse.json(
         {
           success: true,
-          data: {
-            ...updatedPointVote,
-            paymentUrl: paymentResponse.paymentUrl,
-          },
-          message: "Payment initiated successfully",
+          data: pointVote,
+          message: "Point vote created successfully",
         },
         { status: 201 }
       );
@@ -114,6 +72,83 @@ export const pointVotesController = {
       return NextResponse.json(
         {
           error: "Failed to create point vote",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
+    }
+  },
+
+  async initiatePayment(req: Request) {
+    try {
+      const { pointVoteId, paymentMethod } = await req.json();
+
+      // Dapatkan data pointVote
+      const pointVote = await pointVotesService.getById(pointVoteId);
+      if (!pointVote) {
+        return NextResponse.json(
+          { error: "Point vote not found" },
+          { status: 404 }
+        );
+      }
+
+      // Dapatkan data user dan package
+      const user = await prisma.user.findUnique({
+        where: { id: pointVote.userId },
+        select: {
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const packageData = await prisma.package.findUnique({
+        where: { id: pointVote.packageId },
+        select: { name: true, points: true },
+      });
+
+      if (!packageData) {
+        throw new Error("Package not found");
+      }
+
+      // Siapkan data untuk Duitku
+      const paymentData = {
+        merchantOrderId: pointVote.merchantOrderId,
+        paymentAmount: pointVote.amount,
+        productDetails: `${packageData.name} - ${packageData.points} Voting Points`,
+        email: user.email,
+        customerName: `${user.firstName} ${user.lastName}`.trim(),
+        phoneNumber: pointVote.phoneNumber ?? "",
+        paymentMethod: paymentMethod,
+      };
+
+      console.log("Initiating Duitku payment with data:", paymentData);
+
+      const paymentResponse = await DuitkuService.createPayment(paymentData);
+
+      const updatedPointVote = await pointVotesService.update({
+        id: pointVote.id,
+        reference: paymentResponse.reference,
+        paymentMethod: paymentMethod,
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...updatedPointVote,
+          paymentUrl: paymentResponse.paymentUrl,
+        },
+        message: "Payment initiated successfully",
+      });
+    } catch (error) {
+      console.error("Payment initiation error:", error);
+      return NextResponse.json(
+        {
+          error: "Failed to initiate payment",
           details: error instanceof Error ? error.message : "Unknown error",
         },
         { status: 500 }

@@ -1,25 +1,22 @@
-import { DuitkuPaymentRequest, DuitkuPaymentResponse } from "@/config/types/dutikuType";
+import {
+  DuitkuPaymentRequest,
+  DuitkuPaymentResponse,
+  PaymentData,
+} from "@/config/types/dutikuType";
 import crypto from "crypto";
 
 export class DuitkuService {
   static generateSignature(
     merchantCode: string,
-    merchantOrderId: string,
     paymentAmount: number,
+    merchantOrderId: string,
     apiKey: string
   ): string {
-    const plainText = merchantCode + merchantOrderId + paymentAmount + apiKey;
+    const plainText = merchantCode + paymentAmount + merchantOrderId + apiKey;
     return crypto.createHash("md5").update(plainText).digest("hex");
   }
 
-  static async createPayment(paymentData: {
-    merchantOrderId: string;
-    paymentAmount: number;
-    productDetails: string;
-    email: string;
-    customerName: string;
-    paymentMethod: string;
-  }): Promise<DuitkuPaymentResponse> {
+  static async createPayment(paymentData: PaymentData): Promise<DuitkuPaymentResponse> {
     const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
     const apiKey = process.env.DUITKU_API_KEY!;
     const callbackUrl = process.env.DUITKU_CALLBACK_URL!;
@@ -28,8 +25,8 @@ export class DuitkuService {
 
     const signature = this.generateSignature(
       merchantCode,
-      paymentData.merchantOrderId,
       paymentData.paymentAmount,
+      paymentData.merchantOrderId,
       apiKey
     );
 
@@ -40,11 +37,12 @@ export class DuitkuService {
       productDetails: paymentData.productDetails,
       email: paymentData.email,
       customerVaName: paymentData.customerName,
+      phoneNumber: paymentData.phoneNumber,
       callbackUrl,
       returnUrl,
-      paymentMethod: paymentData.paymentMethod,
       signature,
-      expiryPeriod: 60, // 60 menit
+      expiryPeriod: 60,
+      paymentMethod: paymentData.paymentMethod,
       itemDetails: [
         {
           name: paymentData.productDetails,
@@ -64,12 +62,13 @@ export class DuitkuService {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Content-Length": JSON.stringify(paymentRequest).length.toString(),
         },
         body: JSON.stringify(paymentRequest),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Duitku API error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 

@@ -10,6 +10,7 @@ import {
   PointVotesCreateResponse,
 } from "@/config/types/pointVotesType";
 import { IPointVotes } from "@/config/models/PointVotesModel";
+import { PaymentInitiate } from "@/config/types/dutikuType";
 
 const invalidatePointVotesQueries = (queryClient: QueryClient) => {
   return queryClient.invalidateQueries({
@@ -41,6 +42,39 @@ export const usePointVotesMutations = () => {
         description:
           getErrorMessage(error) ||
           "Terjadi kesalahan saat memproses pembelian",
+      });
+    },
+  });
+
+  const paymentInitiateMutation = useApiMutation<
+    PointVotesCreateResponse,
+    PaymentInitiate
+  >((data) => PointVotesRoute.paymentInitiate(data), {
+    onSuccess: (response) => {
+      if (response.success && response.data) {
+        queryClient.setQueryData(
+          POINT_VOTES_QUERY_KEYS.detail(response.data.id),
+          response.data
+        );
+
+        invalidatePointVotesQueries(queryClient);
+
+        toast.success("Payment initiated successfully", {
+          description: "Redirecting to payment page...",
+        });
+
+        if (response.data.paymentUrl) {
+          setTimeout(() => {
+            window.open(response.data.paymentUrl, "_blank");
+          }, 1000);
+        }
+      }
+    },
+    onError: (error) => {
+      toast.error("Gagal memproses pembayaran", {
+        description:
+          getErrorMessage(error) ||
+          "Terjadi kesalahan saat memproses pembayaran",
       });
     },
   });
@@ -78,6 +112,7 @@ export const usePointVotesMutations = () => {
 
   return {
     createMutation,
+    paymentInitiateMutation,
     paymentCallbackMutation,
   };
 };

@@ -9,6 +9,7 @@ export type PointVotesBasePayload = {
   merchantOrderId: string;
   reference?: string;
   paymentMethod: string;
+  phoneNumber?: string;
 };
 
 export type PointVotesCreatePayload = PointVotesBasePayload;
@@ -51,3 +52,4 @@ export interface PointVotesCreateResponse {
   data: IPointVotes & { paymentUrl?: string };
   message: string;
 }
+
