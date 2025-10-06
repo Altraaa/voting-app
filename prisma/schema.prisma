@@ -109,6 +109,7 @@ model PointVotes {
   points          Int
   amount          Int
   paymentMethod   String
+  phoneNumber     String?         
   payment_status  PaymentStatus
   merchantOrderId String         @unique
   reference       String?
