@@ -83,7 +83,7 @@ export default function PointsView() {
     }
 
     router.push(
-      `/checkout?packageId=${pkg.id}&amount=${pkg.price}&points=${pkg.points}` as Route
+      `/payment?packageId=${pkg.id}&amount=${pkg.price}&points=${pkg.points}` as Route
     );
   };
 
