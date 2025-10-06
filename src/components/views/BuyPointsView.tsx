@@ -27,7 +27,6 @@ import {
   Gift,
   Loader2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { usePackage } from "@/config/hooks/PackageHook/usePackage";
 import { IPackage } from "@/config/models/PackageModel";
 import { toast } from "sonner";
@@ -103,7 +102,6 @@ const generateMerchantOrderId = (userId: string, packageId: string): string => {
 };
 
 export default function PointsView() {
-  const router = useRouter();
   const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [selectedPackage, setSelectedPackage] = useState<IPackage | null>(null);
 
@@ -130,20 +128,25 @@ export default function PointsView() {
         paymentMethod: selectedPayment,
       };
 
+      console.log("Sending purchase data:", purchaseData);
+
       const result = await purchasePoints(purchaseData);
 
-      // Redirect to payment page with transaction data
-      router.push(
-        `/payment?transactionId=${result.id}&method=${selectedPayment}`
-      );
-
-      toast.success("Payment initiated successfully", {
-        description: "Redirecting to payment page...",
-      });
-    } catch (error) {
+      if (result.data?.paymentUrl) {
+        toast.success("Redirecting to payment...");
+        setTimeout(() => {
+          window.location.href = result.data!.paymentUrl!;
+        }, 1000);
+      } else {
+        console.error("No payment URL received:", result);
+        toast.error("Payment gateway not available", {
+          description: "Please try again later.",
+        });
+      }
+    } catch (error: any) {
       console.error("Purchase error:", error);
       toast.error("Failed to process purchase", {
-        description: "Please try again or contact support.",
+        description: error?.message || "Please try again or contact support.",
       });
     } finally {
       setSelectedPayment("");
