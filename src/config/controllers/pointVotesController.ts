@@ -41,9 +41,11 @@ export const pointVotesController = {
     }
   },
 
-  async getByMerchantOrderId (merchantOrderId: string) {
+  async getByMerchantOrderId(merchantOrderId: string) {
     try {
-      const pointVote = await pointVotesService.getByMerchantOrderId(merchantOrderId);
+      const pointVote = await pointVotesService.getByMerchantOrderId(
+        merchantOrderId
+      );
       if (!pointVote) {
         return NextResponse.json(
           { error: "Point vote not found" },
