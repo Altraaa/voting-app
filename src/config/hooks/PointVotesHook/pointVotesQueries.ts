@@ -22,4 +22,14 @@ export const usePointVotesQueries = {
         staleTime: 2 * 60 * 1000, 
       }
     ),
+  
+  useGetPointVoteMerchantId: (merchantId: string) =>
+    useApiQuery<IPointVotes>(
+      POINT_VOTES_QUERY_KEYS.detail(merchantId),
+      () => PointVotesRoute.getByMerchantOrderId(merchantId),
+      {
+        enabled: !!merchantId,
+        staleTime: 2 * 60 * 1000, 
+      }
+  )
 };
