@@ -1,4 +1,26 @@
-// config/types/dutikuType.ts
+export interface DuitkuPaymentMethodRequest {
+  merchantCode: string;
+  amount: number;
+  datetime: string; // Format: YYYY-MM-DD HH:mm:ss
+  signature: string;
+}
+
+// Response payment methods
+export interface PaymentMethod {
+  paymentCode: string;
+  paymentName: string;
+  paymentImage: string;
+  totalFee: {
+    flat: number;
+    percent: number;
+  };
+}
+
+export interface DuitkuPaymentMethodResponse {
+  paymentFee: PaymentMethod[];
+}
+
+// Request untuk create transaction
 export interface DuitkuPaymentRequest {
   merchantCode: string;
   paymentAmount: number;
@@ -16,13 +38,15 @@ export interface DuitkuPaymentRequest {
   returnUrl: string;
   signature: string;
   expiryPeriod: number;
-  paymentMethod?: string;
+  paymentMethod: string;
 }
 
 export interface DuitkuPaymentResponse {
   merchantCode: string;
   reference: string;
   paymentUrl: string;
+  vaNumber?: string;
+  amount: number;
   statusCode: string;
   statusMessage: string;
 }
@@ -40,4 +64,12 @@ export interface PaymentData {
 export interface PaymentInitiate {
   pointVoteId: string;
   paymentMethod: string;
+}
+
+// Untuk menyimpan detail paket sementara
+export interface PackageCheckoutData {
+  packageId: string;
+  amount: number;
+  points: number;
+  packageName: string;
 }
