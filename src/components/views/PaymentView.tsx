@@ -83,7 +83,7 @@ export default function CheckoutPage() {
       console.log("Generated merchantOrderId:", merchantOrderId);
       console.log("Length:", merchantOrderId.length);
 
-      await purchaseAndPay(
+      const paymentResponse = await purchaseAndPay(
         {
           userId: user.id,
           packageId: packageId!,
@@ -96,6 +96,11 @@ export default function CheckoutPage() {
         },
         selectedPayment
       );
+
+      if (paymentResponse.data.paymentUrl) {
+        window.location.href = paymentResponse.data.paymentUrl;
+      }
+      
     } catch (error: any) {
       console.error("Payment error:", error);
     }
