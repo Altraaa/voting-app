@@ -34,7 +34,6 @@ export default function PaymentView() {
 
   const selectedPackage = packages.find((pkg) => pkg.id === packageId);
 
-  // Fetch payment methods
   const {
     data: paymentMethodsData,
     isLoading: loadingMethods,
@@ -54,6 +53,12 @@ export default function PaymentView() {
       console.error("Payment methods error:", methodsError);
     }
   }, [methodsError]);
+
+  useEffect(() => {
+    if (paymentMethodsData) {
+      console.log("Payment methods data:", paymentMethodsData);
+    }
+  }, [paymentMethodsData]);
 
   const handlePayment = async () => {
     if (!selectedPayment) {
@@ -100,22 +105,21 @@ export default function PaymentView() {
     }).format(price);
   };
 
-  const calculateTotalFee = (paymentCode: string) => {
-    const method = paymentMethodsData?.paymentFee.find(
-      (m) => m.paymentCode === paymentCode
+  const calculateTotalFee = (paymentMethodCode: string) => {
+    if (!paymentMethodsData?.data?.paymentFee) return 0;
+
+    const method = paymentMethodsData.data.paymentFee.find(
+      (m) => m.paymentMethod === paymentMethodCode
     );
     if (!method) return 0;
 
-    const baseAmount = parseInt(amount || "0");
-    const flatFee = method.totalFee.flat || 0;
-    const percentFee = (baseAmount * (method.totalFee.percent || 0)) / 100;
-
-    return flatFee + percentFee;
+    // totalFee is string, convert to number
+    return parseFloat(method.totalFee) || 0;
   };
 
-  const getTotalAmount = (paymentCode: string) => {
+  const getTotalAmount = (paymentMethodCode: string) => {
     const baseAmount = parseInt(amount || "0");
-    const fee = calculateTotalFee(paymentCode);
+    const fee = calculateTotalFee(paymentMethodCode);
     return baseAmount + fee;
   };
 
@@ -127,6 +131,8 @@ export default function PaymentView() {
     );
   }
 
+  const paymentMethods = paymentMethodsData?.data?.paymentFee || [];
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Button variant="ghost" onClick={() => router.back()} className="mb-6">
@@ -137,7 +143,6 @@ export default function PaymentView() {
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Order Summary */}
         <Card>
           <CardHeader>
             <CardTitle>Order Summary</CardTitle>
@@ -229,55 +234,64 @@ export default function PaymentView() {
                 <div className="text-center py-8 text-destructive">
                   Failed to load payment methods
                 </div>
-              ) : !paymentMethodsData?.paymentFee?.length ? (
+              ) : !paymentMethods.length ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No payment methods available
+                  <p>No payment methods available</p>
+                  <p className="text-xs mt-2">
+                    Response: {JSON.stringify(paymentMethodsData)}
+                  </p>
                 </div>
               ) : (
                 <RadioGroup
                   value={selectedPayment}
                   onValueChange={setSelectedPayment}
                 >
-                  <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto">
-                    {paymentMethodsData.paymentFee.map((method) => {
-                      const fee = calculateTotalFee(method.paymentCode);
+                  <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                    {paymentMethods.map((method) => {
+                      const fee = calculateTotalFee(method.paymentMethod);
                       return (
                         <div
-                          key={method.paymentCode}
+                          key={method.paymentMethod}
                           className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
-                            selectedPayment === method.paymentCode
+                            selectedPayment === method.paymentMethod
                               ? "border-primary bg-primary/5"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
-                          onClick={() => setSelectedPayment(method.paymentCode)}
+                          onClick={() =>
+                            setSelectedPayment(method.paymentMethod)
+                          }
                         >
                           <RadioGroupItem
-                            value={method.paymentCode}
-                            id={method.paymentCode}
+                            value={method.paymentMethod}
+                            id={method.paymentMethod}
                           />
                           <div className="flex-1 flex items-center gap-3">
                             {method.paymentImage ? (
-                              <Image
-                                src={method.paymentImage}
-                                alt={method.paymentName}
-                                width={40}
-                                height={40}
-                                className="object-contain"
-                              />
+                              <div className="w-12 h-12 relative flex-shrink-0">
+                                <Image
+                                  src={method.paymentImage}
+                                  alt={method.paymentName}
+                                  fill
+                                  className="object-contain"
+                                  unoptimized
+                                />
+                              </div>
                             ) : (
-                              <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
-                                <CreditCard className="w-5 h-5 text-gray-400" />
+                              <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                <CreditCard className="w-6 h-6 text-gray-400" />
                               </div>
                             )}
                             <Label
-                              htmlFor={method.paymentCode}
+                              htmlFor={method.paymentMethod}
                               className="flex-1 cursor-pointer"
                             >
                               <div className="font-medium">
                                 {method.paymentName}
                               </div>
                               <div className="text-sm text-muted-foreground">
-                                Fee: {formatPrice(fee)}
+                                {fee > 0
+                                  ? `Fee: ${formatPrice(fee)}`
+                                  : "No additional fee"}
                               </div>
                             </Label>
                           </div>

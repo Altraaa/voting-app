@@ -1,4 +1,3 @@
-// lib/duitku.ts
 import {
   DuitkuPaymentRequest,
   DuitkuPaymentResponse,
@@ -9,7 +8,6 @@ import {
 import crypto from "crypto";
 
 export class DuitkuService {
-  // Signature untuk get payment methods (MD5)
   static generatePaymentMethodSignature(
     merchantCode: string,
     amount: number,
@@ -20,7 +18,6 @@ export class DuitkuService {
     return crypto.createHash("sha256").update(plainText).digest("hex");
   }
 
-  // Signature untuk create transaction (SHA256)
   static generateTransactionSignature(
     merchantCode: string,
     merchantOrderId: string,
@@ -31,7 +28,6 @@ export class DuitkuService {
     return crypto.createHash("md5").update(plainText).digest("hex");
   }
 
-  // Get available payment methods
   static async getPaymentMethods(
     amount: number
   ): Promise<DuitkuPaymentMethodResponse> {
@@ -39,7 +35,6 @@ export class DuitkuService {
     const apiKey = process.env.DUITKU_API_KEY!;
     const baseUrl = process.env.DUITKU_BASE_URL!;
 
-    // Format datetime: YYYY-MM-DD HH:mm:ss
     const datetime = new Date()
       .toISOString()
       .replace("T", " ")
@@ -96,7 +91,6 @@ export class DuitkuService {
     }
   }
 
-  // Create payment transaction
   static async createPayment(
     paymentData: PaymentData
   ): Promise<DuitkuPaymentResponse> {
@@ -175,7 +169,6 @@ export class DuitkuService {
     }
   }
 
-  // Validate callback signature (MD5)
   static validateCallbackSignature(callbackData: any): boolean {
     const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
     const apiKey = process.env.DUITKU_API_KEY!;

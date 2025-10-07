@@ -1,26 +1,26 @@
 export interface DuitkuPaymentMethodRequest {
   merchantCode: string;
   amount: number;
-  datetime: string; // Format: YYYY-MM-DD HH:mm:ss
+  datetime: string;
   signature: string;
 }
 
-// Response payment methods
 export interface PaymentMethod {
-  paymentCode: string;
+  paymentMethod: string;
   paymentName: string;
   paymentImage: string;
-  totalFee: {
-    flat: number;
-    percent: number;
-  };
+  totalFee: string;
 }
 
 export interface DuitkuPaymentMethodResponse {
-  paymentFee: PaymentMethod[];
+  success: boolean;
+  data: {
+    paymentFee: PaymentMethod[];
+    responseCode: string;
+    responseMessage: string;
+  };
 }
 
-// Request untuk create transaction
 export interface DuitkuPaymentRequest {
   merchantCode: string;
   paymentAmount: number;
@@ -66,7 +66,6 @@ export interface PaymentInitiate {
   paymentMethod: string;
 }
 
-// Untuk menyimpan detail paket sementara
 export interface PackageCheckoutData {
   packageId: string;
   amount: number;
