@@ -25,7 +25,7 @@ export default function PaymentSuccess() {
     isLoading, 
     error,
     refetch 
-  } = queries.useGetPointVoteMerchantId(merchantOrderId || "");
+  } = queries.useGetPointVoteMerchantOrderId(merchantOrderId || "");
   console.log(pointVoteData)
 
 

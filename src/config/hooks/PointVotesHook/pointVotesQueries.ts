@@ -23,12 +23,12 @@ export const usePointVotesQueries = {
       }
     ),
   
-  useGetPointVoteMerchantId: (merchantId: string) =>
+  useGetPointVoteMerchantOrderId: (merchantOrderId: string) =>
     useApiQuery<IPointVotes>(
-      POINT_VOTES_QUERY_KEYS.detail(merchantId),
-      () => PointVotesRoute.getByMerchantOrderId(merchantId),
+      POINT_VOTES_QUERY_KEYS.detail(merchantOrderId),
+      () => PointVotesRoute.getByMerchantOrderId(merchantOrderId),
       {
-        enabled: !!merchantId,
+        enabled: !!merchantOrderId,
         staleTime: 2 * 60 * 1000, 
       }
   )
