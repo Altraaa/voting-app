@@ -41,6 +41,25 @@ export const pointVotesController = {
     }
   },
 
+  async getByMerchantOrderId (merchantOrderId: string) {
+    try {
+      const pointVote = await pointVotesService.getByMerchantOrderId(merchantOrderId);
+      if (!pointVote) {
+        return NextResponse.json(
+          { error: "Point vote not found" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(pointVote);
+    } catch (error) {
+      console.error("Controller get by Merchant Order Id error:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch point vote" },
+        { status: 500 }
+      );
+    }
+  },
+
   async create(req: Request) {
     try {
       const data = await req.json();

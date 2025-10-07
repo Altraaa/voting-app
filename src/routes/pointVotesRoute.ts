@@ -16,6 +16,12 @@ export const PointVotesRoute = {
       method: "GET",
     }),
 
+  getByMerchantOrderId: (merchantOrderId: string): Promise<IPointVotes> =>
+    ApiRequest({
+      url: `points/votes/merchant/${merchantOrderId}`,
+      method: "GET",
+    }),
+
   create: (data: PointVotesCreatePayload): Promise<PointVotesCreateResponse> =>
     ApiRequest({
       url: "points/votes",
