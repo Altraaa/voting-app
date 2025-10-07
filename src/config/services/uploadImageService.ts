@@ -1,9 +1,5 @@
-import { writeFile, unlink, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
 import { UploadResult } from "@/config/types/uploadType";
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Upload file to local filesystem
@@ -13,9 +9,7 @@ export async function uploadImage(
   folder?: string
 ): Promise<UploadResult> {
   try {
-    if (!file) {
-      return { success: false, error: "No file provided" };
-    }
+    if (!file) return { success: false, error: "No file provided" };
 
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
@@ -35,26 +29,22 @@ export async function uploadImage(
     const fileExt = file.name.split(".").pop();
     const fileName = `${timestamp}-${randomString}.${fileExt}`;
 
-    const targetDir = folder ? path.join(UPLOAD_DIR, folder) : UPLOAD_DIR;
+    const filePath = `${folder ? `${folder}/` : ""}${fileName}`;
 
-    if (!existsSync(targetDir)) {
-      await mkdir(targetDir, { recursive: true });
-    }
+    const { data, error } = await supabase.storage
+      .from("photos")
+      .upload(filePath, file);
 
-    const filePath = path.join(targetDir, fileName);
+    if (error) throw error;
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    await writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${folder ? `${folder}/` : ""}${fileName}`;
-    const storagePath = `${folder ? `${folder}/` : ""}${fileName}`;
+    const { data: publicData } = supabase.storage
+      .from("photos")
+      .getPublicUrl(filePath);
 
     return {
       success: true,
-      url: publicUrl,
-      path: storagePath,
+      url: publicData.publicUrl,
+      path: filePath,
     };
   } catch (error) {
     console.error("Upload error:", error);
@@ -70,23 +60,10 @@ export async function uploadImage(
  */
 export async function deleteImage(filePath: string): Promise<boolean> {
   try {
-    const cleanPath = filePath.trim();
-    const fullPath = path.join(UPLOAD_DIR, cleanPath);
+    const { error } = await supabase.storage.from("photos").remove([filePath]);
 
-    if (existsSync(fullPath)) {
-      await unlink(fullPath);
-      return true;
-    }
-
-    console.warn(`File not found: ${fullPath}`);
-    
-    const alternativePath = path.join(process.cwd(), 'public', cleanPath);
-    if (existsSync(alternativePath)) {
-      await unlink(alternativePath);
-      return true;
-    }
-
-    return false;
+    if (error) throw error;
+    return true;
   } catch (error) {
     console.error("Delete error:", error);
     return false;
@@ -98,17 +75,9 @@ export async function deleteImage(filePath: string): Promise<boolean> {
  */
 export function extractPathFromUrl(url: string): string | null {
   try {
-    if (url.startsWith("/uploads/")) {
-      return url.replace("/uploads/", "");
-    }
-
-    const urlObj = new URL(url);
-    const pathMatch = urlObj.pathname.match(/\/uploads\/(.+)/);
-    return pathMatch ? pathMatch[1] : null;
+    const match = url.match(/\/object\/public\/photos\/(.+)/);
+    return match ? decodeURIComponent(match[1]) : null;
   } catch {
-    if (url.startsWith("/uploads/")) {
-      return url.replace("/uploads/", "");
-    }
     return null;
   }
 }
