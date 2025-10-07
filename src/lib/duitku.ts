@@ -12,11 +12,13 @@ export class DuitkuService {
     merchantOrderId: string,
     apiKey: string
   ): string {
-    const plainText = merchantCode + paymentAmount + merchantOrderId + apiKey;
-    return crypto.createHash("md5").update(plainText).digest("hex");
+    const plainText = merchantCode + merchantOrderId + paymentAmount + apiKey;
+    return crypto.createHash("sha256").update(plainText).digest("hex");
   }
 
-  static async createPayment(paymentData: PaymentData): Promise<DuitkuPaymentResponse> {
+  static async createPayment(
+    paymentData: PaymentData
+  ): Promise<DuitkuPaymentResponse> {
     const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
     const apiKey = process.env.DUITKU_API_KEY!;
     const callbackUrl = process.env.DUITKU_CALLBACK_URL!;
