@@ -15,8 +15,9 @@ import { Loader2, ArrowLeft, CheckCircle, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { usePurchasePoints } from "@/config/hooks/PointVotesHook/usePurchasePoint";
 import Image from "next/image";
+import { generateMerchantOrderId } from "@/config/utils/merchant";
 
-export default function PaymentView() {
+export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuthUser();
@@ -77,7 +78,10 @@ export default function PaymentView() {
     }
 
     try {
-      const merchantOrderId = `POINT-${user.id}-${packageId}-${Date.now()}`;
+      const merchantOrderId = generateMerchantOrderId(user.id);
+
+      console.log("Generated merchantOrderId:", merchantOrderId);
+      console.log("Length:", merchantOrderId.length);
 
       await purchaseAndPay(
         {
@@ -113,7 +117,6 @@ export default function PaymentView() {
     );
     if (!method) return 0;
 
-    // totalFee is string, convert to number
     return parseFloat(method.totalFee) || 0;
   };
 
@@ -143,6 +146,7 @@ export default function PaymentView() {
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Order Summary */}
         <Card>
           <CardHeader>
             <CardTitle>Order Summary</CardTitle>
