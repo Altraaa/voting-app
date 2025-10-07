@@ -1,4 +1,3 @@
-// lib/duitku.ts
 import {
   DuitkuPaymentRequest,
   DuitkuPaymentResponse,
