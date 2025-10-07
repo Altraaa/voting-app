@@ -3,6 +3,10 @@ import { pointVotesService } from "../services/pointVotesService";
 import prisma from "@/lib/prisma";
 import { DuitkuService } from "@/lib/duitku";
 import { DuitkuCallbackPayload } from "../types/pointVotesType";
+import {
+  validateDuitkuPaymentData,
+  sanitizeCustomerVaName,
+} from "@/config/constants/duitkuConstraints";
 
 export const pointVotesController = {
   async getAll() {
@@ -59,6 +63,13 @@ export const pointVotesController = {
             error: "Missing required fields",
             missingFields,
           },
+          { status: 400 }
+        );
+      }
+
+      if (data.merchantOrderId.length > 50) {
+        return NextResponse.json(
+          { error: "merchantOrderId must be 50 characters or less" },
           { status: 400 }
         );
       }
@@ -158,7 +169,7 @@ export const pointVotesController = {
       if (!customerName) {
         customerName = user.email.split("@")[0];
       }
-      customerName = customerName.substring(0, 20);
+      customerName = sanitizeCustomerVaName(customerName);
 
       const phoneNumber = pointVote.phoneNumber || "";
       if (!phoneNumber || !/^(\+62|62|0)[0-9]{9,12}$/.test(phoneNumber)) {
@@ -182,6 +193,26 @@ export const pointVotesController = {
         "Payment data prepared:",
         JSON.stringify(paymentData, null, 2)
       );
+
+      const validation = validateDuitkuPaymentData({
+        merchantOrderId: paymentData.merchantOrderId,
+        customerVaName: paymentData.customerName,
+        email: paymentData.email,
+        phoneNumber: paymentData.phoneNumber,
+        paymentAmount: paymentData.paymentAmount,
+        productDetails: paymentData.productDetails,
+      });
+
+      if (!validation.valid) {
+        console.error("Payment data validation failed:", validation.errors);
+        return NextResponse.json(
+          {
+            error: "Invalid payment data",
+            details: validation.errors.join(", "),
+          },
+          { status: 400 }
+        );
+      }
 
       const paymentResponse = await DuitkuService.createPayment(paymentData);
 
