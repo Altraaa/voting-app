@@ -1,4 +1,4 @@
-import PaymentView from "@/components/views/PaymentView";
+import PaymentView from "@/components/views/Payment/PaymentView";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
 
