@@ -1,21 +1,102 @@
+// lib/duitku.ts
 import {
   DuitkuPaymentRequest,
   DuitkuPaymentResponse,
   PaymentData,
+  DuitkuPaymentMethodRequest,
+  DuitkuPaymentMethodResponse,
 } from "@/config/types/dutikuType";
 import crypto from "crypto";
 
 export class DuitkuService {
-  static generateSignature(
+  // Signature untuk get payment methods (MD5)
+  static generatePaymentMethodSignature(
     merchantCode: string,
-    paymentAmount: number,
-    merchantOrderId: string,
+    amount: number,
+    datetime: string,
     apiKey: string
   ): string {
-    const plainText = merchantCode + merchantOrderId + paymentAmount + apiKey;
+    const plainText = `${merchantCode}${amount}${datetime}${apiKey}`;
     return crypto.createHash("sha256").update(plainText).digest("hex");
   }
 
+  // Signature untuk create transaction (SHA256)
+  static generateTransactionSignature(
+    merchantCode: string,
+    merchantOrderId: string,
+    paymentAmount: number,
+    apiKey: string
+  ): string {
+    const plainText = `${merchantCode}${merchantOrderId}${paymentAmount}${apiKey}`;
+    return crypto.createHash("md5").update(plainText).digest("hex");
+  }
+
+  // Get available payment methods
+  static async getPaymentMethods(
+    amount: number
+  ): Promise<DuitkuPaymentMethodResponse> {
+    const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
+    const apiKey = process.env.DUITKU_API_KEY!;
+    const baseUrl = process.env.DUITKU_BASE_URL!;
+
+    // Format datetime: YYYY-MM-DD HH:mm:ss
+    const datetime = new Date()
+      .toISOString()
+      .replace("T", " ")
+      .substring(0, 19);
+
+    const signature = this.generatePaymentMethodSignature(
+      merchantCode,
+      amount,
+      datetime,
+      apiKey
+    );
+
+    const requestData: DuitkuPaymentMethodRequest = {
+      merchantCode,
+      amount,
+      datetime,
+      signature,
+    };
+
+    try {
+      console.log("Requesting payment methods:", {
+        url: `${baseUrl}/merchant/paymentmethod/getpaymentmethod`,
+        data: requestData,
+      });
+
+      const response = await fetch(
+        `${baseUrl}/merchant/paymentmethod/getpaymentmethod`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Duitku payment methods error:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Payment methods response:", data);
+
+      return data;
+    } catch (error) {
+      console.error("Failed to get payment methods:", error);
+      throw new Error(
+        `Failed to get payment methods: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  // Create payment transaction
   static async createPayment(
     paymentData: PaymentData
   ): Promise<DuitkuPaymentResponse> {
@@ -25,10 +106,10 @@ export class DuitkuService {
     const returnUrl = process.env.DUITKU_RETURN_URL!;
     const baseUrl = process.env.DUITKU_BASE_URL!;
 
-    const signature = this.generateSignature(
+    const signature = this.generateTransactionSignature(
       merchantCode,
-      paymentData.paymentAmount,
       paymentData.merchantOrderId,
+      paymentData.paymentAmount,
       apiKey
     );
 
@@ -55,7 +136,7 @@ export class DuitkuService {
     };
 
     try {
-      console.log("Sending payment request to Duitku:", {
+      console.log("Creating payment transaction:", {
         url: `${baseUrl}/merchant/v2/inquiry`,
         data: paymentRequest,
       });
@@ -94,11 +175,12 @@ export class DuitkuService {
     }
   }
 
+  // Validate callback signature (MD5)
   static validateCallbackSignature(callbackData: any): boolean {
     const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
     const apiKey = process.env.DUITKU_API_KEY!;
     const { amount, merchantOrderId } = callbackData;
-    const plainText = merchantCode + amount + merchantOrderId + apiKey;
+    const plainText = `${merchantCode}${amount}${merchantOrderId}${apiKey}`;
     const signature = crypto.createHash("md5").update(plainText).digest("hex");
 
     return signature === callbackData.signature;
