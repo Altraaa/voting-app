@@ -284,12 +284,11 @@ export default function DetailCategoryView() {
               className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
               <div className="relative h-64">
-                <Image
+                <img
                   src={candidate.photo_url || "/placeholder-candidate.jpg"}
                   alt={candidate.name}
-                  fill
                   className="object-cover"
-                />
+                ></img>
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-background/90 text-foreground font-bold">
                     #{index + 1}
