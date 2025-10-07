@@ -1,4 +1,3 @@
-// controllers/pointVotesController.ts
 import { NextResponse } from "next/server";
 import { pointVotesService } from "../services/pointVotesService";
 import prisma from "@/lib/prisma";
@@ -41,23 +40,38 @@ export const pointVotesController = {
   async create(req: Request) {
     try {
       const data = await req.json();
-      console.log("Creating point vote with data:", data);
+      console.log("=== CREATE POINT VOTE ===");
+      console.log("Request data:", JSON.stringify(data, null, 2));
 
-      if (
-        !data.userId ||
-        !data.packageId ||
-        !data.amount ||
-        !data.merchantOrderId ||
-        !data.phoneNumber // Tambahkan validasi phoneNumber
-      ) {
+      const requiredFields = [
+        "userId",
+        "packageId",
+        "amount",
+        "merchantOrderId",
+        "phoneNumber",
+      ];
+      const missingFields = requiredFields.filter((field) => !data[field]);
+
+      if (missingFields.length > 0) {
+        console.error("Missing required fields:", missingFields);
         return NextResponse.json(
-          { error: "Missing required fields" },
+          {
+            error: "Missing required fields",
+            missingFields,
+          },
           { status: 400 }
         );
       }
 
-      // Buat pointVotes record dengan status pending
+      if (!/^(\+62|62|0)[0-9]{9,12}$/.test(data.phoneNumber)) {
+        return NextResponse.json(
+          { error: "Invalid phone number format. Use format: 08123456789" },
+          { status: 400 }
+        );
+      }
+
       const pointVote = await pointVotesService.create(data);
+      console.log("Point vote created:", JSON.stringify(pointVote, null, 2));
 
       return NextResponse.json(
         {
@@ -68,7 +82,8 @@ export const pointVotesController = {
         { status: 201 }
       );
     } catch (error) {
-      console.error("Controller create error:", error);
+      console.error("=== CREATE POINT VOTE ERROR ===");
+      console.error(error);
       return NextResponse.json(
         {
           error: "Failed to create point vote",
@@ -83,7 +98,16 @@ export const pointVotesController = {
     try {
       const { pointVoteId, paymentMethod } = await req.json();
 
-      // Dapatkan data pointVote
+      console.log("=== INITIATE PAYMENT ===");
+      console.log("Request body:", { pointVoteId, paymentMethod });
+
+      if (!pointVoteId || !paymentMethod) {
+        return NextResponse.json(
+          { error: "Missing pointVoteId or paymentMethod" },
+          { status: 400 }
+        );
+      }
+
       const pointVote = await pointVotesService.getById(pointVoteId);
       if (!pointVote) {
         return NextResponse.json(
@@ -92,7 +116,8 @@ export const pointVotesController = {
         );
       }
 
-      // Dapatkan data user dan package
+      console.log("Point vote found:", JSON.stringify(pointVote, null, 2));
+
       const user = await prisma.user.findUnique({
         where: { id: pointVote.userId },
         select: {
@@ -106,6 +131,8 @@ export const pointVotesController = {
         throw new Error("User not found");
       }
 
+      console.log("User found:", JSON.stringify(user, null, 2));
+
       const packageData = await prisma.package.findUnique({
         where: { id: pointVote.packageId },
         select: { name: true, points: true },
@@ -115,20 +142,53 @@ export const pointVotesController = {
         throw new Error("Package not found");
       }
 
-      // Siapkan data untuk Duitku
+      console.log("Package found:", JSON.stringify(packageData, null, 2));
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(user.email)) {
+        return NextResponse.json(
+          { error: "Invalid email format" },
+          { status: 400 }
+        );
+      }
+
+      let customerName = `${user.firstName || ""} ${
+        user.lastName || ""
+      }`.trim();
+      if (!customerName) {
+        customerName = user.email.split("@")[0];
+      }
+      customerName = customerName.substring(0, 20);
+
+      const phoneNumber = pointVote.phoneNumber || "";
+      if (!phoneNumber || !/^(\+62|62|0)[0-9]{9,12}$/.test(phoneNumber)) {
+        return NextResponse.json(
+          { error: "Invalid phone number. Please update your phone number" },
+          { status: 400 }
+        );
+      }
+
       const paymentData = {
         merchantOrderId: pointVote.merchantOrderId,
         paymentAmount: pointVote.amount,
-        productDetails: `${packageData.name} - ${packageData.points} Voting Points`,
+        productDetails: `${packageData.name} - ${packageData.points} Points`,
         email: user.email,
-        customerName: `${user.firstName} ${user.lastName}`.trim(),
-        phoneNumber: pointVote.phoneNumber ?? "",
+        customerName: customerName,
+        phoneNumber: phoneNumber,
         paymentMethod: paymentMethod,
       };
 
-      console.log("Initiating Duitku payment with data:", paymentData);
+      console.log(
+        "Payment data prepared:",
+        JSON.stringify(paymentData, null, 2)
+      );
 
       const paymentResponse = await DuitkuService.createPayment(paymentData);
+
+      console.log(
+        "Payment response from Duitku:",
+        JSON.stringify(paymentResponse, null, 2)
+      );
 
       const updatedPointVote = await pointVotesService.update({
         id: pointVote.id,
@@ -145,7 +205,8 @@ export const pointVotesController = {
         message: "Payment initiated successfully",
       });
     } catch (error) {
-      console.error("Payment initiation error:", error);
+      console.error("=== PAYMENT INITIATION ERROR ===");
+      console.error(error);
       return NextResponse.json(
         {
           error: "Failed to initiate payment",
@@ -174,25 +235,29 @@ export const pointVotesController = {
     try {
       const callbackData: DuitkuCallbackPayload = await req.json();
 
-      // Validasi signature (sesuai dokumentasi Duitku)
-      // const isValidSignature = validateSignature(callbackData);
-      // if (!isValidSignature) {
-      //   return NextResponse.json(
-      //     { error: "Invalid signature" },
-      //     { status: 400 }
-      //   );
-      // }
+      console.log("=== DUITKU CALLBACK ===");
+      console.log("Callback data:", JSON.stringify(callbackData, null, 2));
+
+      const isValidSignature =
+        DuitkuService.validateCallbackSignature(callbackData);
+      if (!isValidSignature) {
+        console.error("Invalid signature from Duitku callback");
+        return NextResponse.json(
+          { error: "Invalid signature" },
+          { status: 400 }
+        );
+      }
 
       const result = await pointVotesService.handleDuitkuCallback(callbackData);
 
-      // Response sesuai requirement Duitku callback
       return NextResponse.json({
         success: true,
         message: "Callback processed successfully",
         data: result,
       });
     } catch (error) {
-      console.error("Controller duitku callback error:", error);
+      console.error("=== DUITKU CALLBACK ERROR ===");
+      console.error(error);
       return NextResponse.json(
         {
           success: false,
