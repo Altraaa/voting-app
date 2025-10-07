@@ -23,7 +23,7 @@ export const usePointVotesQueries = {
       }
     ),
   
-  useGetPointVoteMerchantId: (merchantOrderId: string) =>
+  useGetPointVoteMerchantOrderId: (merchantOrderId: string) =>
     useApiQuery<IPointVotes>(
       POINT_VOTES_QUERY_KEYS.detail(merchantOrderId),
       () => PointVotesRoute.getByMerchantOrderId(merchantOrderId),
