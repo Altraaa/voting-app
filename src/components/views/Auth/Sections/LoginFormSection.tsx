@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { LoginFormProps } from "@/components/props/AuthProps";
+import { toast } from "sonner";
 
 const LoginForm: React.FC<LoginFormProps> = ({
   loginForm,
@@ -17,6 +18,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onTogglePassword,
   onSubmit,
 }) => {
+  const handleSocialLogin = (provider: string) => {
+    toast.info("Segera Hadir", {
+      description: `Login dengan ${provider} akan segera tersedia`,
+      duration: 3000,
+    });
+  };
+
   return (
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
       <div className="mb-6 lg:mb-8">
@@ -115,6 +123,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           variant="outline"
           className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
           size="lg"
+          onClick={() => handleSocialLogin("Google")}
         >
           <FcGoogle className="h-5 w-5" />
           Google
@@ -124,6 +133,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           variant="outline"
           className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
           size="lg"
+          onClick={() => handleSocialLogin("Facebook")}
         >
           <Facebook />
           Facebook

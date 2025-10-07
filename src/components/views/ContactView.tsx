@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function ContactView() {
   const [formData, setFormData] = useState({
@@ -84,8 +85,8 @@ export default function ContactView() {
       icon: Mail,
       title: "Email",
       description: "Send email for general inquiries",
-      value: "seraphicvsl@gmail.com",
-      action: "mailto:seraphicvsl@gmail.com",
+      value: "contact@seraphic.id",
+      action: "mailto:contact@seraphic.id",
     },
     {
       icon: Phone,
@@ -118,6 +119,13 @@ export default function ContactView() {
     { value: "partnership", label: "Partnership" },
     { value: "feedback", label: "Feedback & Suggestions" },
   ];
+
+    const handleSendMessage = () => {
+      toast.info("Segera Hadir", {
+        description: `Kirim pesan akan segera tersedia`,
+        duration: 3000,
+      });
+    };
 
   return (
     <div className="min-h-screen bg-background">
@@ -246,7 +254,7 @@ export default function ContactView() {
                   asChild
                 >
                   <a
-                    href="mailto:seraphicvsl@gmail.com"
+                    href="mailto:contact@seraphic.id"
                     className="flex items-center space-x-2"
                   >
                     <Mail className="h-4 w-4" />
@@ -364,6 +372,7 @@ export default function ContactView() {
                     type="submit"
                     className="w-full h-12 text-base"
                     disabled={isSubmitting}
+                    onClick={() => handleSendMessage()}
                   >
                     {isSubmitting ? (
                       <>

@@ -1,12 +1,6 @@
-/*
-  Warnings:
+-- CreateEnum
+CREATE TYPE "public"."Role" AS ENUM ('USER', 'ADMIN');
 
-  - A unique constraint covering the columns `[name,categoryId]` on the table `Candidate` will be added. If there are existing duplicate values, this will fail.
-  - A unique constraint covering the columns `[name,eventId]` on the table `Category` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `description` to the `Candidate` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `eventId` to the `Category` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "public"."PaymentStatus" AS ENUM ('success', 'failed', 'pending');
 
@@ -16,22 +10,27 @@ CREATE TYPE "public"."StatusEvent" AS ENUM ('live', 'upcoming', 'ended');
 -- CreateEnum
 CREATE TYPE "public"."SupportType" AS ENUM ('BASIC', 'PRIORITY', 'PREMIUM', 'VIP');
 
--- DropIndex
-DROP INDEX "public"."Candidate_name_key";
+-- CreateTable
+CREATE TABLE "public"."User" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "points" INTEGER NOT NULL DEFAULT 0,
+    "created" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated" TIMESTAMP(3) NOT NULL,
+    "role" "public"."Role" NOT NULL DEFAULT 'USER',
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "newsLetter" BOOLEAN NOT NULL,
+    "phone" TEXT NOT NULL,
+    "terms" BOOLEAN NOT NULL,
+    "avatar_url" TEXT,
+    "password" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropIndex
-DROP INDEX "public"."Category_name_key";
-
--- AlterTable
-ALTER TABLE "public"."Candidate" ADD COLUMN     "description" TEXT NOT NULL,
-ADD COLUMN     "photo_url" TEXT;
-
--- AlterTable
-ALTER TABLE "public"."Category" ADD COLUMN     "eventId" TEXT NOT NULL,
-ADD COLUMN     "photo_url" TEXT;
-
--- AlterTable
-ALTER TABLE "public"."User" ADD COLUMN     "avatar_url" TEXT;
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "public"."Event" (
@@ -47,6 +46,43 @@ CREATE TABLE "public"."Event" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Category" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "photo_url" TEXT,
+    "eventId" TEXT NOT NULL,
+    "created" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Candidate" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "photo_url" TEXT,
+    "categoryId" TEXT NOT NULL,
+    "created" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Candidate_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Vote" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "candidateId" TEXT NOT NULL,
+    "pointsUsed" INTEGER NOT NULL,
+    "created" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Vote_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -75,6 +111,8 @@ CREATE TABLE "public"."PointVotes" (
     "packageId" TEXT NOT NULL,
     "points" INTEGER NOT NULL,
     "amount" INTEGER NOT NULL,
+    "paymentMethod" TEXT NOT NULL,
+    "phoneNumber" TEXT,
     "payment_status" "public"."PaymentStatus" NOT NULL,
     "merchantOrderId" TEXT NOT NULL,
     "reference" TEXT,
@@ -111,6 +149,15 @@ CREATE TABLE "public"."EventMember" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_name_eventId_key" ON "public"."Category"("name", "eventId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Candidate_name_categoryId_key" ON "public"."Candidate"("name", "categoryId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "PointVotes_merchantOrderId_key" ON "public"."PointVotes"("merchantOrderId");
 
 -- CreateIndex
@@ -119,14 +166,17 @@ CREATE UNIQUE INDEX "PackageHistory_userId_packageId_purchaseDate_key" ON "publi
 -- CreateIndex
 CREATE UNIQUE INDEX "EventMember_userId_eventId_key" ON "public"."EventMember"("userId", "eventId");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Candidate_name_categoryId_key" ON "public"."Candidate"("name", "categoryId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Category_name_eventId_key" ON "public"."Category"("name", "eventId");
-
 -- AddForeignKey
 ALTER TABLE "public"."Category" ADD CONSTRAINT "Category_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Candidate" ADD CONSTRAINT "Candidate_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Vote" ADD CONSTRAINT "Vote_candidateId_fkey" FOREIGN KEY ("candidateId") REFERENCES "public"."Candidate"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Vote" ADD CONSTRAINT "Vote_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."PointVotes" ADD CONSTRAINT "PointVotes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
