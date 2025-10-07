@@ -87,6 +87,14 @@ export default function PointsView() {
     );
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
   const activePackages = packages
     .filter((pkg) => pkg.isActive)
     .sort((a, b) => a.price - b.price);
@@ -178,13 +186,13 @@ export default function PointsView() {
 
                 <div>
                   <div className="text-2xl font-bold text-card-foreground">
-                    Rp. {pkg.price}
+                    {formatPrice(pkg.price)}
                   </div>
-                  {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                  {/* {pkg.originalPrice && pkg.originalPrice > pkg.price && (
                     <div className="text-sm text-muted-foreground line-through">
-                      Rp. {pkg.originalPrice}
+                      {formatPrice(pkg.originalPrice)}
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 <ul className="space-y-2 text-sm text-left">
