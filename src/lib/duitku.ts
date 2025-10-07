@@ -1,3 +1,4 @@
+// lib/duitku.ts
 import {
   DuitkuPaymentRequest,
   DuitkuPaymentResponse,
@@ -100,6 +101,10 @@ export class DuitkuService {
     const returnUrl = process.env.DUITKU_RETURN_URL!;
     const baseUrl = process.env.DUITKU_BASE_URL!;
 
+    if (!merchantCode || !apiKey || !callbackUrl || !returnUrl || !baseUrl) {
+      throw new Error("Missing required environment variables for Duitku");
+    }
+
     const signature = this.generateTransactionSignature(
       merchantCode,
       paymentData.merchantOrderId,
@@ -130,10 +135,30 @@ export class DuitkuService {
     };
 
     try {
-      console.log("Creating payment transaction:", {
-        url: `${baseUrl}/merchant/v2/inquiry`,
-        data: paymentRequest,
-      });
+      console.log("=== DUITKU CREATE PAYMENT DEBUG ===");
+      console.log("Environment Variables:");
+      console.log("- merchantCode:", merchantCode);
+      console.log("- baseUrl:", baseUrl);
+      console.log("- callbackUrl:", callbackUrl);
+      console.log("- returnUrl:", returnUrl);
+
+      console.log("\nPayment Data:");
+      console.log("- merchantOrderId:", paymentData.merchantOrderId);
+      console.log("- paymentAmount:", paymentData.paymentAmount);
+      console.log("- paymentMethod:", paymentData.paymentMethod);
+      console.log("- email:", paymentData.email);
+      console.log("- customerName:", paymentData.customerName);
+      console.log("- phoneNumber:", paymentData.phoneNumber);
+
+      console.log("\nSignature Generation:");
+      console.log(
+        "- Plain text:",
+        `${merchantCode}${paymentData.merchantOrderId}${paymentData.paymentAmount}${apiKey}`
+      );
+      console.log("- Generated signature:", signature);
+
+      console.log("\nFull Request Body:");
+      console.log(JSON.stringify(paymentRequest, null, 2));
 
       const response = await fetch(`${baseUrl}/merchant/v2/inquiry`, {
         method: "POST",
@@ -143,14 +168,20 @@ export class DuitkuService {
         body: JSON.stringify(paymentRequest),
       });
 
+      const responseText = await response.text();
+      console.log("\nDuitku Response Status:", response.status);
+      console.log("Duitku Response Body:", responseText);
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Duitku API error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.error("=== DUITKU API ERROR ===");
+        console.error("Status:", response.status);
+        console.error("Response:", responseText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${responseText}`
+        );
       }
 
-      const data = await response.json();
-      console.log("Duitku API Response:", data);
+      const data = JSON.parse(responseText);
 
       if (data.statusCode !== "00") {
         throw new Error(
@@ -158,9 +189,11 @@ export class DuitkuService {
         );
       }
 
+      console.log("=== PAYMENT SUCCESS ===");
       return data;
     } catch (error) {
-      console.error("Duitku payment creation error:", error);
+      console.error("=== DUITKU PAYMENT ERROR ===");
+      console.error(error);
       throw new Error(
         `Failed to create payment: ${
           error instanceof Error ? error.message : "Unknown error"
