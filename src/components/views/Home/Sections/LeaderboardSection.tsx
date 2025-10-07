@@ -290,7 +290,7 @@ export default function LeaderboardSection() {
           className="w-full"
           key={refreshTrigger}
         >
-          <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex flex-col justify-center w-full md:flex-row items-center md:justify-between gap-2 md:gap-4 mb-5 md:mb-8">
             <TabsList className="flex flex-wrap">
               {leaderboardEvents.map((ev, idx) => (
                 <TabsTrigger key={ev.id} value={ev.id} className="text-sm">
@@ -330,8 +330,8 @@ export default function LeaderboardSection() {
                 {/* Category chooser */}
                 <div className="mb-6">
                   <Tabs defaultValue={ev.categories[0]?.id} className="w-full">
-                    <div className="flex items-center justify-between gap-4 mb-6">
-                      <div className="w-full overflow-x-auto">
+                    <div className="flex items-center justify-between gap-2 md:gap-4 mb-6">
+                      <div className="w-full md:overflow-x-auto">
                         <TabsList className="inline-flex min-w-max">
                           {ev.categories.map((cat) => (
                             <TabsTrigger
