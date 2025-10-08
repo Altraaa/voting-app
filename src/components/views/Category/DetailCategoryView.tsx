@@ -283,12 +283,14 @@ export default function DetailCategoryView() {
               key={candidate.id}
               className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              <div className="relative h-64">
+              {/* PERUBAHAN DI SINI: Container dengan rasio 4:5 dan object-contain */}
+              <div className="relative aspect-[4/5] bg-muted/30">
                 <Image
                   src={candidate.photo_url || "/placeholder-candidate.jpg"}
                   alt={candidate.name}
                   fill
-                  className="object-cover"
+                  className="object-contain p-2"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-background/90 text-foreground font-bold">
@@ -358,7 +360,8 @@ export default function DetailCategoryView() {
             <div className="space-y-6 py-4">
               {/* Candidate Info */}
               <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                <div className="relative w-16 h-16 flex-shrink-0">
+                {/* PERUBAHAN DI SINI: Container dengan rasio 4:5 untuk dialog */}
+                <div className="relative w-20 h-25 flex-shrink-0">
                   <Image
                     src={
                       selectedCandidate.photo_url ||
@@ -366,7 +369,7 @@ export default function DetailCategoryView() {
                     }
                     alt={selectedCandidate.name}
                     fill
-                    className="rounded-full object-cover"
+                    className="object-contain rounded-md"
                   />
                 </div>
                 <div className="flex-1">
