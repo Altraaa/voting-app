@@ -52,14 +52,6 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/help"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/contact"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
