@@ -68,7 +68,6 @@ export default function AdminEventView() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<IEvent | null>(null);
 
-  // State untuk upload - disederhanakan
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -118,13 +117,11 @@ export default function AdminEventView() {
     reader.readAsDataURL(file);
   };
 
-  // Remove image preview
   const handleRemoveImage = () => {
     setSelectedFile(null);
     setImagePreview("");
   };
 
-  // Upload image handler yang lebih sederhana
   const handleImageUpload = async (): Promise<string> => {
     if (!selectedFile) {
       return "";
@@ -147,7 +144,6 @@ export default function AdminEventView() {
     }
   };
 
-  // Delete image handler
   const handleImageDelete = async (photoUrl: string): Promise<void> => {
     const path = extractPathFromUrl(photoUrl);
     if (path) {
@@ -159,7 +155,6 @@ export default function AdminEventView() {
     }
   };
 
-  // Create Event Handler - disederhanakan
   const handleCreate = async () => {
     try {
       let photoUrl = "";
@@ -185,7 +180,6 @@ export default function AdminEventView() {
     }
   };
 
-  // Edit Event Handler - disederhanakan
   const handleEdit = async () => {
     if (!selectedEvent) return;
 
@@ -193,14 +187,12 @@ export default function AdminEventView() {
       let photoUrl = formData.photo_url;
       let shouldDeleteOldImage = false;
 
-      // Jika ada file baru, upload dan tandai untuk hapus yang lama
       if (selectedFile) {
         const newPhotoUrl = await handleImageUpload();
         photoUrl = newPhotoUrl;
         shouldDeleteOldImage = true;
       }
 
-      // Update event
       await mutations.updateMutation.mutateAsync({
         id: selectedEvent.id,
         name: formData.name,
@@ -212,7 +204,6 @@ export default function AdminEventView() {
         isActive: formData.isActive,
       });
 
-      // Hapus gambar lama setelah update berhasil
       if (shouldDeleteOldImage && selectedEvent.photo_url) {
         await handleImageDelete(selectedEvent.photo_url);
       }
@@ -253,7 +244,7 @@ export default function AdminEventView() {
       isActive: event.isActive,
     });
     setImagePreview(event.photo_url || "");
-    setSelectedFile(null); // Reset selected file
+    setSelectedFile(null);
     setIsEditDialogOpen(true);
   };
 
@@ -288,187 +279,217 @@ export default function AdminEventView() {
       event.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Format status untuk display
   const getStatusDisplay = (status: StatusEvent) => {
     switch (status) {
       case StatusEvent.upcoming:
-        return { label: "Upcoming", class: "bg-blue-100 text-blue-700" };
+        return { label: "Upcoming", variant: "secondary" as const };
       case StatusEvent.live:
-        return { label: "Live", class: "bg-green-100 text-green-700" };
+        return { label: "Live", variant: "default" as const };
       case StatusEvent.ended:
-        return { label: "Ended", class: "bg-gray-100 text-gray-700" };
+        return { label: "Ended", variant: "outline" as const };
       default:
-        return { label: status, class: "bg-gray-100 text-gray-700" };
+        return { label: status, variant: "secondary" as const };
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <p>Loading events...</p>
+      <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading events...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Event Management
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Create and manage voting events
-            </p>
-          </div>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => {
-              resetForm();
-              setIsCreateDialogOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Event
-          </Button>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+            Event Management
+          </h1>
+          <p className="text-muted-foreground">
+            Create and manage voting events
+          </p>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search events..."
-              className="pl-10 bg-white border-gray-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-        </div>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
+          onClick={() => {
+            resetForm();
+            setIsCreateDialogOpen(true);
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Event
+        </Button>
       </div>
 
-      <Card className="border-gray-200">
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search events..."
+            className="pl-10 bg-background border-border"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" className="border-border hover:bg-muted">
+          <Filter className="w-4 h-4 mr-2" />
+          <span className="hidden sm:inline">Filter</span>
+        </Button>
+      </div>
+
+      {/* Table Section */}
+      <Card className="border-border bg-card">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-medium text-gray-700">
-                  Image
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Event Name
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Description
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Start Date
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  End Date
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Status
-                </TableHead>
-                <TableHead className="font-medium text-gray-700 w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEvents.map((event) => {
-                const statusDisplay = getStatusDisplay(
-                  event.status as StatusEvent
-                );
-                return (
-                  <TableRow key={event.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="w-12 h-12 rounded-lg overflow-hidden">
-                        <Image
-                          src={event.photo_url || "/placeholder.svg"}
-                          alt={event.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{event.name}</TableCell>
-                    <TableCell className="text-gray-600 max-w-xs truncate">
-                      {event.description}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {new Date(event.startDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {new Date(event.endDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={statusDisplay.class}
-                      >
-                        {statusDisplay.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8"
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted hover:bg-muted">
+                  <TableHead className="font-medium text-card-foreground hidden sm:table-cell">
+                    Image
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground">
+                    Event Name
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden lg:table-cell">
+                    Description
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden md:table-cell">
+                    Start Date
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden md:table-cell">
+                    End Date
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground">
+                    Status
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground w-12">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEvents.map((event) => {
+                  const statusDisplay = getStatusDisplay(
+                    event.status as StatusEvent
+                  );
+                  return (
+                    <TableRow
+                      key={event.id}
+                      className="hover:bg-muted/50 border-border"
+                    >
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden">
+                          <Image
+                            src={event.photo_url || "/placeholder.svg"}
+                            alt={event.name}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-card-foreground">
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{event.name}</span>
+                          <span className="text-sm text-muted-foreground sm:hidden">
+                            {new Date(event.startDate).toLocaleDateString()} -{" "}
+                            {new Date(event.endDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground max-w-xs truncate hidden lg:table-cell">
+                        {event.description}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden md:table-cell">
+                        {new Date(event.startDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden md:table-cell">
+                        {new Date(event.endDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusDisplay.variant}>
+                          {statusDisplay.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 hover:bg-muted"
+                            >
+                              <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-card border-border"
                           >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => openViewDialog(event)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openEditDialog(event)}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => openDeleteDialog(event)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                            <DropdownMenuItem
+                              onClick={() => openViewDialog(event)}
+                              className="text-card-foreground hover:bg-muted cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openEditDialog(event)}
+                              className="text-card-foreground hover:bg-muted cursor-pointer"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-border" />
+                            <DropdownMenuItem
+                              className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                              onClick={() => openDeleteDialog(event)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredEvents.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">No events found</div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
+      {/* Dialogs - Tetap sama seperti sebelumnya */}
       {/* CREATE DIALOG */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Create New Event
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Add a new voting event to the system
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Event Name</Label>
+              <Label htmlFor="create-name" className="text-card-foreground">
+                Event Name
+              </Label>
               <Input
                 id="create-name"
                 value={formData.name}
@@ -476,10 +497,16 @@ export default function AdminEventView() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Enter event name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-description">Description</Label>
+              <Label
+                htmlFor="create-description"
+                className="text-card-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="create-description"
                 value={formData.description}
@@ -488,11 +515,17 @@ export default function AdminEventView() {
                 }
                 placeholder="Enter event description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-start-date">Start Date</Label>
+                <Label
+                  htmlFor="create-start-date"
+                  className="text-card-foreground"
+                >
+                  Start Date
+                </Label>
                 <Input
                   id="create-start-date"
                   type="datetime-local"
@@ -500,10 +533,16 @@ export default function AdminEventView() {
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-end-date">End Date</Label>
+                <Label
+                  htmlFor="create-end-date"
+                  className="text-card-foreground"
+                >
+                  End Date
+                </Label>
                 <Input
                   id="create-end-date"
                   type="datetime-local"
@@ -511,42 +550,61 @@ export default function AdminEventView() {
                   onChange={(e) =>
                     setFormData({ ...formData, endDate: e.target.value })
                   }
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-status">Status</Label>
+              <Label htmlFor="create-status" className="text-card-foreground">
+                Status
+              </Label>
               <Select
                 value={formData.status}
                 onValueChange={(value: StatusEvent) =>
                   setFormData({ ...formData, status: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={StatusEvent.upcoming}>Upcoming</SelectItem>
-                  <SelectItem value={StatusEvent.live}>Live</SelectItem>
-                  <SelectItem value={StatusEvent.ended}>Ended</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem
+                    value={StatusEvent.upcoming}
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    Upcoming
+                  </SelectItem>
+                  <SelectItem
+                    value={StatusEvent.live}
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    Live
+                  </SelectItem>
+                  <SelectItem
+                    value={StatusEvent.ended}
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    Ended
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {/* Image Upload Section */}
             <div className="grid gap-2">
-              <Label htmlFor="create-image">Event Image</Label>
-              <div className="flex items-center gap-4">
+              <Label htmlFor="create-image" className="text-card-foreground">
+                Event Image
+              </Label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Input
                   id="create-image"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageSelect}
-                  className="flex-1"
+                  className="flex-1 bg-background border-border text-foreground"
                   disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={imagePreview}
                         alt="Preview"
@@ -568,7 +626,9 @@ export default function AdminEventView() {
                 )}
               </div>
               {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
+                <p className="text-sm text-muted-foreground">
+                  Uploading image...
+                </p>
               )}
             </div>
           </div>
@@ -580,11 +640,12 @@ export default function AdminEventView() {
                 resetForm();
               }}
               disabled={mutations.createMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleCreate}
               disabled={
                 mutations.createMutation.isPending ||
@@ -599,17 +660,23 @@ export default function AdminEventView() {
         </DialogContent>
       </Dialog>
 
-      {/* EDIT DIALOG - Sama seperti CREATE tapi dengan data yang sudah ada */}
+      {/* EDIT DIALOG */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Event</DialogTitle>
-            <DialogDescription>Update event information</DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Edit Event
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update event information
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Form fields sama seperti create dialog */}
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Event Name</Label>
+              <Label htmlFor="edit-name" className="text-card-foreground">
+                Event Name
+              </Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -617,10 +684,16 @@ export default function AdminEventView() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Enter event name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label
+                htmlFor="edit-description"
+                className="text-card-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -629,11 +702,17 @@ export default function AdminEventView() {
                 }
                 placeholder="Enter event description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-start-date">Start Date</Label>
+                <Label
+                  htmlFor="edit-start-date"
+                  className="text-card-foreground"
+                >
+                  Start Date
+                </Label>
                 <Input
                   id="edit-start-date"
                   type="datetime-local"
@@ -641,10 +720,13 @@ export default function AdminEventView() {
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-end-date">End Date</Label>
+                <Label htmlFor="edit-end-date" className="text-card-foreground">
+                  End Date
+                </Label>
                 <Input
                   id="edit-end-date"
                   type="datetime-local"
@@ -652,41 +734,61 @@ export default function AdminEventView() {
                   onChange={(e) =>
                     setFormData({ ...formData, endDate: e.target.value })
                   }
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-status">Status</Label>
+              <Label htmlFor="edit-status" className="text-card-foreground">
+                Status
+              </Label>
               <Select
                 value={formData.status}
                 onValueChange={(value: StatusEvent) =>
                   setFormData({ ...formData, status: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={StatusEvent.upcoming}>Upcoming</SelectItem>
-                  <SelectItem value={StatusEvent.live}>Live</SelectItem>
-                  <SelectItem value={StatusEvent.ended}>Ended</SelectItem>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem
+                    value={StatusEvent.upcoming}
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    Upcoming
+                  </SelectItem>
+                  <SelectItem
+                    value={StatusEvent.live}
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    Live
+                  </SelectItem>
+                  <SelectItem
+                    value={StatusEvent.ended}
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    Ended
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-image">Event Image</Label>
-              <div className="flex items-center gap-4">
+              <Label htmlFor="edit-image" className="text-card-foreground">
+                Event Image
+              </Label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Input
                   id="edit-image"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageSelect}
-                  className="flex-1"
+                  className="flex-1 bg-background border-border text-foreground"
                   disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={imagePreview}
                         alt="Preview"
@@ -708,7 +810,9 @@ export default function AdminEventView() {
                 )}
               </div>
               {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
+                <p className="text-sm text-muted-foreground">
+                  Uploading image...
+                </p>
               )}
             </div>
           </div>
@@ -717,11 +821,12 @@ export default function AdminEventView() {
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
               disabled={mutations.updateMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleEdit}
               disabled={
                 mutations.updateMutation.isPending ||
@@ -738,15 +843,17 @@ export default function AdminEventView() {
 
       {/* VIEW DIALOG */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Event Details</DialogTitle>
+            <DialogTitle className="text-card-foreground">
+              Event Details
+            </DialogTitle>
           </DialogHeader>
           {selectedEvent && (
             <div className="grid gap-6 py-4">
               {selectedEvent.photo_url && (
                 <div className="flex justify-center">
-                  <div className="w-48 h-48 rounded-lg overflow-hidden">
+                  <div className="w-48 h-48 rounded-lg overflow-hidden border border-border">
                     <Image
                       src={selectedEvent.photo_url}
                       alt={selectedEvent.name}
@@ -759,24 +866,25 @@ export default function AdminEventView() {
               )}
               <div className="grid gap-4">
                 <div>
-                  <Label className="text-gray-600">Event Name</Label>
-                  <p className="text-lg font-medium mt-1">
+                  <Label className="text-muted-foreground">Event Name</Label>
+                  <p className="text-lg font-medium mt-1 text-card-foreground">
                     {selectedEvent.name}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Description</Label>
-                  <p className="mt-1">{selectedEvent.description}</p>
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="mt-1 text-card-foreground">
+                    {selectedEvent.description}
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Status</Label>
+                    <Label className="text-muted-foreground">Status</Label>
                     <div className="mt-1">
                       <Badge
-                        variant="secondary"
-                        className={
+                        variant={
                           getStatusDisplay(selectedEvent.status as StatusEvent)
-                            .class
+                            .variant
                         }
                       >
                         {
@@ -787,39 +895,41 @@ export default function AdminEventView() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Active</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Active</Label>
+                    <p className="mt-1 text-card-foreground">
                       {selectedEvent.isActive ? "Yes" : "No"}
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Start Date</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Start Date</Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedEvent.startDate).toLocaleDateString()}{" "}
                       at{" "}
                       {new Date(selectedEvent.startDate).toLocaleTimeString()}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">End Date</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">End Date</Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedEvent.endDate).toLocaleDateString()} at{" "}
                       {new Date(selectedEvent.endDate).toLocaleTimeString()}
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Created At</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Created At</Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedEvent.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Last Updated</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">
+                      Last Updated
+                    </Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedEvent.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -831,6 +941,7 @@ export default function AdminEventView() {
             <Button
               variant="outline"
               onClick={() => setIsViewDialogOpen(false)}
+              className="border-border hover:bg-muted"
             >
               Close
             </Button>
@@ -840,10 +951,12 @@ export default function AdminEventView() {
 
       {/* DELETE CONFIRMATION DIALOG */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Delete Event</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Delete Event
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Are you sure you want to delete &ldquo;{selectedEvent?.name}
               &rdquo;? This action cannot be undone.
             </DialogDescription>
@@ -853,6 +966,7 @@ export default function AdminEventView() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={mutations.removeMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>

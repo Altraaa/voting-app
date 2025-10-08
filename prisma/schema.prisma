@@ -20,6 +20,7 @@ model User {
   lastName   String
   newsLetter Boolean
   phone      String
+  isVerified Boolean @default(false)
   terms      Boolean
   avatar_url String?
   votes      Vote[]
