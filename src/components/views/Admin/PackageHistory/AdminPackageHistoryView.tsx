@@ -213,7 +213,6 @@ export default function AdminPackageHistoryView() {
           </Button>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-4 gap-6 mb-6">
           <Card className="border-gray-200">
             <CardContent className="p-6">
