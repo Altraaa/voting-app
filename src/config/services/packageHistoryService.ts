@@ -24,7 +24,7 @@ export const packageHistoryService = {
     return prisma.packageHistory.create({
       data: {
         ...data,
-        isActive: new Date() < data.validUntil,
+        isActive: new Date() < new Date(data.validUntil),
       },
     });
   },
