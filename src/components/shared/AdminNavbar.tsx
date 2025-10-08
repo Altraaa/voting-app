@@ -84,7 +84,7 @@ export default function DashboardHeader({
               <Vote className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-semibold text-foreground hidden sm:inline-block">
-              VoteHub
+              Seraphic
             </span>
           </div>
         )}

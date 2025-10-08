@@ -363,11 +363,14 @@ export default function AdminCandidateView() {
 
       {/* Table Section */}
       <Card className="border-border bg-card">
-        <CardContent className="p-0">
+        <CardContent className="px-4">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted hover:bg-muted">
+                  <TableHead className="font-medium text-card-foreground">
+                    No
+                  </TableHead>
                   <TableHead className="font-medium text-card-foreground">
                     Candidate
                   </TableHead>
@@ -389,11 +392,14 @@ export default function AdminCandidateView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCandidates.map((candidate) => (
+                {filteredCandidates.map((candidate, index) => (
                   <TableRow
                     key={candidate.id}
                     className="hover:bg-muted/50 border-border"
                   >
+                    <TableCell className="text-muted-foreground text-center">
+                      {index + 1}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10 border border-border">
