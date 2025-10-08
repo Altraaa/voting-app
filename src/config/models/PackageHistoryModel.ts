@@ -7,7 +7,7 @@ export interface IPackagePurchase {
   packageId: string;
   purchaseDate: string; 
   pointsReceived: number;
-  validUntil: Date; 
+  validUntil: string; 
   isActive: boolean;
   package: IPackage;
   user: IUsers;

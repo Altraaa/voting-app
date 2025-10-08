@@ -19,6 +19,7 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({
   onMenuToggle,
+  isSidebarOpen,
 }: DashboardHeaderProps) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

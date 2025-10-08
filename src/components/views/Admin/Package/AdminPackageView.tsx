@@ -129,198 +129,367 @@ export default function AdminPackageView() {
     pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getStatusVariant = (isActive: boolean) => {
+    return isActive ? "default" : ("outline" as const);
+  };
+
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <p className="text-gray-600">Loading packages...</p>
+      <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading packages...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Package Management
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Manage voting point packages and pricing
-            </p>
-          </div>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => {
-              resetForm();
-              openCreateDialog();
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Package
-          </Button>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+            Package Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage voting point packages and pricing
+          </p>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search packages..."
-              className="pl-10 bg-white border-gray-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-        </div>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
+          onClick={() => {
+            resetForm();
+            openCreateDialog();
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Package
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {filteredPackages.map((pkg) => (
-          <Card
-            key={pkg.id}
-            className="border-gray-200 hover:shadow-lg transition-shadow"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Coins className="w-6 h-6 text-purple-600" />
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search packages..."
+            className="pl-10 bg-background border-border"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" className="border-border hover:bg-muted">
+          <Filter className="w-4 h-4 mr-2" />
+          <span className="hidden sm:inline">Filter</span>
+        </Button>
+      </div>
+
+      {/* Cards Grid for Mobile, Table for Desktop */}
+      <div className="block lg:hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredPackages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              className="border-border bg-card hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Coins className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-card-foreground">
+                        {pkg.name}
+                      </h3>
+                      {pkg.earlyAccess && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-yellow-100 text-yellow-700 text-xs mt-1"
+                        >
+                          Early Access
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{pkg.name}</h3>
-                    {pkg.earlyAccess && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-yellow-100 text-yellow-700 text-xs mt-1"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 h-7 hover:bg-muted"
                       >
-                        Early Access
-                      </Badge>
-                    )}
+                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-card border-border"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => openViewDialog(pkg.id)}
+                        className="text-card-foreground hover:bg-muted cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleOpenEditDialog(pkg.id)}
+                        className="text-card-foreground hover:bg-muted cursor-pointer"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-border" />
+                      <DropdownMenuItem
+                        className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                        onClick={() => openDeleteDialog(pkg.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  {pkg.description}
+                </p>
+
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Points
+                    </span>
+                    <span className="font-semibold text-primary">
+                      {pkg.points} pts
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Price</span>
+                    <span className="font-semibold text-card-foreground">
+                      Rp {pkg.price.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Support
+                    </span>
+                    <span className="text-sm font-medium text-card-foreground">
+                      {pkg.supportType}
+                    </span>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="w-8 h-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openViewDialog(pkg.id)}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleOpenEditDialog(pkg.id)}
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => openDeleteDialog(pkg.id)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
 
-              <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
-
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Voting Points</span>
-                  <span className="font-semibold text-purple-600">
-                    {pkg.points} points
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <Badge variant={getStatusVariant(pkg.isActive)}>
+                    {pkg.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Rp{" "}
+                    {Math.round(pkg.price / pkg.points).toLocaleString("id-ID")}
+                    /point
                   </span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Price</span>
-                  <span className="font-semibold text-gray-900">
-                    Rp {pkg.price.toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Support Type</span>
-                  <span className="font-medium text-gray-900">
-                    {pkg.supportType}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Validity</span>
-                  <span className="font-medium text-gray-900">
-                    {pkg.validityDays} days
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <div>
-                  {pkg.isActive ? (
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-700"
-                    >
-                      Active
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="bg-gray-100 text-gray-700"
-                    >
-                      Inactive
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-xs text-gray-500">
-                  Rp{" "}
-                  {Math.round(pkg.price / pkg.points).toLocaleString("id-ID")}
-                  /point
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
+
+      {/* Table for Desktop */}
+      <Card className="border-border bg-card hidden lg:block">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted hover:bg-muted border-b border-border">
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Package
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Points
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Price
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Support Type
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Validity
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Status
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4 w-12">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPackages.map((pkg) => (
+                  <tr
+                    key={pkg.id}
+                    className="hover:bg-muted/50 border-b border-border last:border-b-0"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Coins className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-card-foreground">
+                            {pkg.name}
+                          </span>
+                          <span className="text-sm text-muted-foreground line-clamp-1">
+                            {pkg.description}
+                          </span>
+                          {pkg.earlyAccess && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-yellow-100 text-yellow-700 text-xs mt-1 w-fit"
+                            >
+                              Early Access
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="font-semibold text-primary">
+                        {pkg.points}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-card-foreground">
+                          Rp {pkg.price.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Rp{" "}
+                          {Math.round(pkg.price / pkg.points).toLocaleString(
+                            "id-ID"
+                          )}
+                          /point
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-card-foreground">
+                        {pkg.supportType}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-card-foreground">
+                        {pkg.validityDays} days
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <Badge variant={getStatusVariant(pkg.isActive)}>
+                        {pkg.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 hover:bg-muted"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-card border-border"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => openViewDialog(pkg.id)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleOpenEditDialog(pkg.id)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-border" />
+                          <DropdownMenuItem
+                            className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                            onClick={() => openDeleteDialog(pkg.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredPackages.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">No packages found</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Package</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Create New Package
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Add a new voting points package
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Package Name</Label>
+              <Label htmlFor="create-name" className="text-card-foreground">
+                Package Name
+              </Label>
               <Input
                 id="create-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ name: e.target.value })}
                 placeholder="Enter package name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-description">Description</Label>
+              <Label
+                htmlFor="create-description"
+                className="text-card-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="create-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ description: e.target.value })}
                 placeholder="Enter package description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-points">Voting Points</Label>
+                <Label htmlFor="create-points" className="text-card-foreground">
+                  Voting Points
+                </Label>
                 <Input
                   id="create-points"
                   type="number"
@@ -329,10 +498,13 @@ export default function AdminPackageView() {
                     setFormData({ points: Number(e.target.value) })
                   }
                   placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-price">Price (IDR)</Label>
+                <Label htmlFor="create-price" className="text-card-foreground">
+                  Price (IDR)
+                </Label>
                 <Input
                   id="create-price"
                   type="number"
@@ -341,12 +513,18 @@ export default function AdminPackageView() {
                     setFormData({ price: Number(e.target.value) })
                   }
                   placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-validity">Validity Days</Label>
+                <Label
+                  htmlFor="create-validity"
+                  className="text-card-foreground"
+                >
+                  Validity Days
+                </Label>
                 <Input
                   id="create-validity"
                   type="number"
@@ -355,33 +533,59 @@ export default function AdminPackageView() {
                     setFormData({ validityDays: Number(e.target.value) })
                   }
                   placeholder="30"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-support">Support Type</Label>
+                <Label
+                  htmlFor="create-support"
+                  className="text-card-foreground"
+                >
+                  Support Type
+                </Label>
                 <Select
                   value={formData.supportType}
                   onValueChange={(value: SupportType) =>
                     setFormData({ supportType: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-border text-foreground">
                     <SelectValue placeholder="Select support type" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SupportType.BASIC}>Basic</SelectItem>
-                    <SelectItem value={SupportType.PRIORITY}>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem
+                      value={SupportType.BASIC}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Basic
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.PRIORITY}
+                      className="text-card-foreground hover:bg-muted"
+                    >
                       Priority
                     </SelectItem>
-                    <SelectItem value={SupportType.PREMIUM}>Premium</SelectItem>
-                    <SelectItem value={SupportType.VIP}>VIP</SelectItem>
+                    <SelectItem
+                      value={SupportType.PREMIUM}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Premium
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.VIP}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      VIP
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-bonus">Bonus Percentage</Label>
+                <Label htmlFor="create-bonus" className="text-card-foreground">
+                  Bonus Percentage
+                </Label>
                 <Input
                   id="create-bonus"
                   type="number"
@@ -390,10 +594,16 @@ export default function AdminPackageView() {
                     setFormData({ bonusPercentage: Number(e.target.value) })
                   }
                   placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-original">Original Price (IDR)</Label>
+                <Label
+                  htmlFor="create-original"
+                  className="text-card-foreground"
+                >
+                  Original Price (IDR)
+                </Label>
                 <Input
                   id="create-original"
                   type="number"
@@ -402,6 +612,7 @@ export default function AdminPackageView() {
                     setFormData({ originalPrice: Number(e.target.value) })
                   }
                   placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
@@ -411,19 +622,26 @@ export default function AdminPackageView() {
                 id="create-early"
                 checked={formData.earlyAccess}
                 onChange={(e) => setFormData({ earlyAccess: e.target.checked })}
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
               />
-              <Label htmlFor="create-early" className="cursor-pointer">
+              <Label
+                htmlFor="create-early"
+                className="cursor-pointer text-card-foreground"
+              >
                 Mark as early access package
               </Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeCreateDialog}>
+            <Button
+              variant="outline"
+              onClick={closeCreateDialog}
+              className="border-border hover:bg-muted"
+            >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleCreate}
               disabled={mutations.createMutation.isPending}
             >
@@ -437,34 +655,49 @@ export default function AdminPackageView() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={closeEditDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Package</DialogTitle>
-            <DialogDescription>Update package information</DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Edit Package
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update package information
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Package Name</Label>
+              <Label htmlFor="edit-name" className="text-card-foreground">
+                Package Name
+              </Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ name: e.target.value })}
                 placeholder="Enter package name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label
+                htmlFor="edit-description"
+                className="text-card-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ description: e.target.value })}
                 placeholder="Enter package description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-points">Voting Points</Label>
+                <Label htmlFor="edit-points" className="text-card-foreground">
+                  Voting Points
+                </Label>
                 <Input
                   id="edit-points"
                   type="number"
@@ -473,10 +706,13 @@ export default function AdminPackageView() {
                     setFormData({ points: Number(e.target.value) })
                   }
                   placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-price">Price (IDR)</Label>
+                <Label htmlFor="edit-price" className="text-card-foreground">
+                  Price (IDR)
+                </Label>
                 <Input
                   id="edit-price"
                   type="number"
@@ -485,12 +721,15 @@ export default function AdminPackageView() {
                     setFormData({ price: Number(e.target.value) })
                   }
                   placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-validity">Validity Days</Label>
+                <Label htmlFor="edit-validity" className="text-card-foreground">
+                  Validity Days
+                </Label>
                 <Input
                   id="edit-validity"
                   type="number"
@@ -499,26 +738,47 @@ export default function AdminPackageView() {
                     setFormData({ validityDays: Number(e.target.value) })
                   }
                   placeholder="30"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-support">Support Type</Label>
+                <Label htmlFor="edit-support" className="text-card-foreground">
+                  Support Type
+                </Label>
                 <Select
                   value={formData.supportType}
                   onValueChange={(value: SupportType) =>
                     setFormData({ supportType: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-border text-foreground">
                     <SelectValue placeholder="Select support type" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SupportType.BASIC}>Basic</SelectItem>
-                    <SelectItem value={SupportType.PRIORITY}>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem
+                      value={SupportType.BASIC}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Basic
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.PRIORITY}
+                      className="text-card-foreground hover:bg-muted"
+                    >
                       Priority
                     </SelectItem>
-                    <SelectItem value={SupportType.PREMIUM}>Premium</SelectItem>
-                    <SelectItem value={SupportType.VIP}>VIP</SelectItem>
+                    <SelectItem
+                      value={SupportType.PREMIUM}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Premium
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.VIP}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      VIP
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -529,19 +789,26 @@ export default function AdminPackageView() {
                 id="edit-early"
                 checked={formData.earlyAccess}
                 onChange={(e) => setFormData({ earlyAccess: e.target.checked })}
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
               />
-              <Label htmlFor="edit-early" className="cursor-pointer">
+              <Label
+                htmlFor="edit-early"
+                className="cursor-pointer text-card-foreground"
+              >
                 Mark as early access package
               </Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeEditDialog}>
+            <Button
+              variant="outline"
+              onClick={closeEditDialog}
+              className="border-border hover:bg-muted"
+            >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleEdit}
               disabled={mutations.updateMutation.isPending}
             >
@@ -555,18 +822,20 @@ export default function AdminPackageView() {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={closeViewDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Package Details</DialogTitle>
+            <DialogTitle className="text-card-foreground">
+              Package Details
+            </DialogTitle>
           </DialogHeader>
           {(selectedPackageDetail || selectedPackage) && (
             <div className="grid gap-6 py-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Coins className="w-8 h-8 text-purple-600" />
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Coins className="w-8 h-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-card-foreground">
                     {(selectedPackageDetail || selectedPackage)?.name}
                   </h3>
                   {(selectedPackageDetail || selectedPackage)?.earlyAccess && (
@@ -581,21 +850,23 @@ export default function AdminPackageView() {
               </div>
               <div className="grid gap-4">
                 <div>
-                  <Label className="text-gray-600">Description</Label>
-                  <p className="mt-1">
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="mt-1 text-card-foreground">
                     {(selectedPackageDetail || selectedPackage)?.description}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Voting Points</Label>
-                    <p className="text-2xl font-semibold text-purple-600 mt-1">
+                    <Label className="text-muted-foreground">
+                      Voting Points
+                    </Label>
+                    <p className="text-2xl font-semibold text-primary mt-1">
                       {(selectedPackageDetail || selectedPackage)?.points}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Price</Label>
-                    <p className="text-2xl font-semibold text-gray-900 mt-1">
+                    <Label className="text-muted-foreground">Price</Label>
+                    <p className="text-2xl font-semibold text-card-foreground mt-1">
                       Rp{" "}
                       {(
                         selectedPackageDetail || selectedPackage
@@ -603,25 +874,29 @@ export default function AdminPackageView() {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Support Type</Label>
-                    <p className="text-xl font-semibold mt-1">
+                    <Label className="text-muted-foreground">
+                      Support Type
+                    </Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
                       {(selectedPackageDetail || selectedPackage)?.supportType}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Validity</Label>
-                    <p className="text-xl font-semibold mt-1">
+                    <Label className="text-muted-foreground">Validity</Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
                       {(selectedPackageDetail || selectedPackage)?.validityDays}{" "}
                       days
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Price per Point</Label>
-                    <p className="text-xl font-semibold mt-1">
+                    <Label className="text-muted-foreground">
+                      Price per Point
+                    </Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
                       Rp{" "}
                       {Math.round(
                         (selectedPackageDetail || selectedPackage)!.price /
@@ -630,8 +905,8 @@ export default function AdminPackageView() {
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Bonus</Label>
-                    <p className="text-xl font-semibold mt-1">
+                    <Label className="text-muted-foreground">Bonus</Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
                       {(selectedPackageDetail || selectedPackage)
                         ?.bonusPercentage || 0}
                       %
@@ -639,18 +914,18 @@ export default function AdminPackageView() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Status</Label>
+                  <Label className="text-muted-foreground">Status</Label>
                   <div className="mt-1">
                     {(selectedPackageDetail || selectedPackage)?.isActive ? (
                       <Badge
-                        variant="secondary"
+                        variant="default"
                         className="bg-green-100 text-green-700"
                       >
                         Active
                       </Badge>
                     ) : (
                       <Badge
-                        variant="secondary"
+                        variant="outline"
                         className="bg-gray-100 text-gray-700"
                       >
                         Inactive
@@ -662,7 +937,11 @@ export default function AdminPackageView() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={closeViewDialog}>
+            <Button
+              variant="outline"
+              onClick={closeViewDialog}
+              className="border-border hover:bg-muted"
+            >
               Close
             </Button>
           </DialogFooter>
@@ -671,16 +950,23 @@ export default function AdminPackageView() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={closeDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Delete Package</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Delete Package
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Are you sure you want to delete &ldquo;{selectedPackage?.name}
               &ldquo;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDeleteDialog}>
+            <Button
+              variant="outline"
+              onClick={closeDeleteDialog}
+              disabled={mutations.removeMutation.isPending}
+              className="border-border hover:bg-muted"
+            >
               Cancel
             </Button>
             <Button
