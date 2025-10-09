@@ -13,3 +13,11 @@ export const transporter = nodemailer.createTransport({
     pass: SMTP_PASSWORD,
   },
 });
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ SMTP gagal connect:", error);
+  } else {
+    console.log("✅ SMTP Hostinger siap jalan!");
+  }
+});

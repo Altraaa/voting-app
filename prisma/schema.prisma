@@ -9,27 +9,29 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  name       String
-  points     Int      @default(0)
-  created    DateTime @default(now())
-  updated    DateTime @updatedAt
-  role       Role     @default(USER)
-  firstName  String
-  lastName   String
-  newsLetter Boolean
-  phone      String
-  isVerified Boolean @default(false)
-  terms      Boolean
-  avatar_url String?
-  votes      Vote[]
-  password   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  packages   PackageHistory[]
-  events     EventMember[]
-  PointVotes PointVotes[]
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  points          Int      @default(0)
+  created         DateTime @default(now())
+  updated         DateTime @updatedAt
+  role            Role     @default(USER)
+  firstName       String
+  lastName        String
+  newsLetter      Boolean
+  phone           String
+  isVerified      Boolean @default(false)
+  terms           Boolean
+  avatar_url      String?
+  votes           Vote[]
+  password        String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  packages        PackageHistory[]
+  events          EventMember[]
+  PointVotes      PointVotes[]
+  OTPVerification OTPVerification[]
+  
 }
 
 model Event {
@@ -148,6 +150,18 @@ model EventMember {
 
   @@unique([userId, eventId])
 }
+
+model OTPVerification {
+  id          String   @id @default(cuid())
+  userId      String
+  otpCode     String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
 
 enum Role {
   USER
