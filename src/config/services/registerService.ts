@@ -12,8 +12,23 @@ export async function registerService(data: RegisterPayload) {
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
+
   if (existing) {
-    throw new Error("EMAIL_EXISTS");
+    if (existing.isVerified) {
+      throw new Error("EMAIL_EXISTS");
+    }
+
+    const createdAt = existing.createdAt.getTime();
+    const now = Date.now();
+
+    if (now - createdAt > 60 * 60 * 1000) {
+      await prisma.oTPVerification.deleteMany({
+        where: { userId: existing.id },
+      });
+      await prisma.user.delete({ where: { id: existing.id } });
+    } else {
+      throw new Error("UNVERIFIED_ACCOUNT_EXISTS");
+    }
   }
 
   const hashed = await hashPassword(password);
@@ -38,7 +53,7 @@ export async function registerService(data: RegisterPayload) {
   });
 
   await transporter.sendMail({
-    from: `"Voting App" <${process.env.NEXT_PUBLIC_EMAIL}>`,
+    from: `"Seraphic (No Reply)" <${process.env.NEXT_PUBLIC_EMAIL}>`,
     to: email,
     subject: "Verifikasi Akun Kamu",
     html: `
