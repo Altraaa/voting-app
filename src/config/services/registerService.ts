@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createToken } from "@/lib/auth";
+import { transporter } from "@/lib/mailer";
+import crypto from "crypto";
 import { RegisterPayload } from "../types/authType";
 
 export async function registerService(data: RegisterPayload) {
@@ -25,11 +27,32 @@ export async function registerService(data: RegisterPayload) {
     },
   });
 
+  const otpCode = crypto.randomInt(100000, 999999).toString();
+
+  await prisma.oTPVerification.create({
+    data: {
+      userId: user.id,
+      otpCode,
+      expiresAt: new Date(Date.now() + 60 * 1000),
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Voting App" <${process.env.NEXT_PUBLIC_EMAIL}>`,
+    to: email,
+    subject: "Verifikasi Akun Kamu",
+    html: `
+      <h2>Hai ${user.name || "User"} 👋</h2>
+      <p>Kode OTP kamu adalah: <b>${otpCode}</b></p>
+      <p><i>Kode ini hanya berlaku selama 1 menit.</i></p>
+    `,
+  });
+
   const token = createToken({
     id: user.id,
     email: user.email,
     role: user.role,
   });
 
-  return { user, token };
+  return { user, token, message: "OTP_SENT" };
 }

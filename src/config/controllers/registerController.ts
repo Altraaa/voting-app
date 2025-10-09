@@ -4,13 +4,14 @@ import { registerService } from "../services/registerService";
 export async function registerController(req: Request) {
   try {
     const body = await req.json();
-    const { user, token } = await registerService(body);
+    const { user, token, message } = await registerService(body);
 
     const res = NextResponse.json({
       id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
+      message
     });
 
     res.cookies.set("token", token, {
