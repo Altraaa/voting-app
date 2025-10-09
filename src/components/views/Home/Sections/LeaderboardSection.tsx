@@ -463,53 +463,101 @@ export default function LeaderboardSection() {
                             ))}
                           </div>
 
-                          {/* Remaining Candidates in Table */}
+                          {/* Remaining Candidates in Responsive Table */}
                           {remainingCandidates.length > 0 && (
                             <div className="mb-8">
                               <h3 className="text-lg font-semibold mb-4">
                                 Other Candidates
                               </h3>
-                              <div className="border rounded-lg">
-                                {remainingCandidates.map((candidate: any, index: number) => (
-                                  <div
-                                    key={candidate.id}
-                                    className="flex items-center justify-between p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors"
-                                  >
-                                    <div className="flex items-center gap-4">
-                                      <span className="font-medium text-muted-foreground w-6">
-                                        #{index + 4}
-                                      </span>
-                                      <span className="font-medium">
-                                        {candidate.name}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-32">
-                                        <Progress
-                                          value={candidate.percentage}
-                                          className="h-2"
-                                        />
+
+                              {/* Desktop Table */}
+                              <div className="hidden md:block border rounded-lg">
+                                {remainingCandidates.map(
+                                  (candidate: any, index: number) => (
+                                    <div
+                                      key={candidate.id}
+                                      className="flex items-center justify-between p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors"
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <span className="font-medium text-muted-foreground w-6">
+                                          #{index + 4}
+                                        </span>
+                                        <span className="font-medium">
+                                          {candidate.name}
+                                        </span>
                                       </div>
-                                      <span className="text-sm text-muted-foreground w-12 text-right">
-                                        {candidate.percentage.toFixed(1)}%
-                                      </span>
-                                      <Button
-                                        size="sm"
-                                        disabled={
-                                          userPoints === 0 ||
-                                          !isAuthenticated ||
-                                          authLoading
-                                        }
-                                        onClick={() =>
-                                          handleVoteClick(candidate, cat)
-                                        }
-                                      >
-                                        <Star className="mr-2 h-3 w-3" />
-                                        Vote
-                                      </Button>
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-32">
+                                          <Progress
+                                            value={candidate.percentage}
+                                            className="h-2"
+                                          />
+                                        </div>
+                                        <span className="text-sm text-muted-foreground w-12 text-right">
+                                          {candidate.percentage.toFixed(1)}%
+                                        </span>
+                                        <Button
+                                          size="sm"
+                                          disabled={
+                                            userPoints === 0 ||
+                                            !isAuthenticated ||
+                                            authLoading
+                                          }
+                                          onClick={() =>
+                                            handleVoteClick(candidate, cat)
+                                          }
+                                        >
+                                          <Star className="mr-2 h-3 w-3" />
+                                          Vote
+                                        </Button>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  )
+                                )}
+                              </div>
+
+                              {/* Mobile Cards */}
+                              <div className="md:hidden space-y-4">
+                                {remainingCandidates.map(
+                                  (candidate: any, index: number) => (
+                                    <Card key={candidate.id} className="p-4">
+                                      <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-3">
+                                          <span className="font-medium text-muted-foreground text-sm">
+                                            #{index + 4}
+                                          </span>
+                                          <span className="font-medium">
+                                            {candidate.name}
+                                          </span>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          disabled={
+                                            userPoints === 0 ||
+                                            !isAuthenticated ||
+                                            authLoading
+                                          }
+                                          onClick={() =>
+                                            handleVoteClick(candidate, cat)
+                                          }
+                                        >
+                                          <Star className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex-1">
+                                          <Progress
+                                            value={candidate.percentage}
+                                            className="h-2"
+                                          />
+                                        </div>
+                                        <span className="text-sm text-muted-foreground w-12 text-right">
+                                          {candidate.percentage.toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    </Card>
+                                  )
+                                )}
                               </div>
                             </div>
                           )}
