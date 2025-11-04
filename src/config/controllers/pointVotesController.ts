@@ -103,7 +103,8 @@ export const pointVotesController = {
 
       const sanitizedData = {
         ...data,
-        packageId: data.packageId || undefined,
+        packageId: data.packageId || null,
+        isCustom: !data.packageId,
       };
 
       const pointVote = await pointVotesService.create(sanitizedData);
@@ -172,7 +173,7 @@ export const pointVotesController = {
       let packageData;
       let productDetails;
 
-      if (pointVote.packageId) {
+      if (pointVote.packageId && pointVote.packageId !== "custom") {
         packageData = await prisma.package.findUnique({
           where: { id: pointVote.packageId },
           select: { name: true, points: true },
