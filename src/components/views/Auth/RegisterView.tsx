@@ -19,6 +19,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MailCheck } from "lucide-react";
 
 const RegisterView = () => {
   const { registerForm, setRegisterForm } = useAuthStore();
@@ -38,6 +40,33 @@ const RegisterView = () => {
   const [otpCode, setOtpCode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [isUnverifiedAccount, setIsUnverifiedAccount] = useState(false);
+  const [showVerificationBanner, setShowVerificationBanner] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+
+  // Check for unverified account in localStorage on component mount
+  useEffect(() => {
+    const savedUnverifiedEmail = localStorage.getItem("unverifiedEmail");
+    if (savedUnverifiedEmail) {
+      setUnverifiedEmail(savedUnverifiedEmail);
+      setShowVerificationBanner(true);
+      setIsUnverifiedAccount(true);
+    }
+  }, []);
+
+  // Save unverified email to localStorage when detected
+  useEffect(() => {
+    if (isUnverifiedAccount && registerForm.email) {
+      localStorage.setItem("unverifiedEmail", registerForm.email);
+      setUnverifiedEmail(registerForm.email);
+    }
+  }, [isUnverifiedAccount, registerForm.email]);
+
+  // Clear localStorage when verification is successful
+  useEffect(() => {
+    if (!isUnverifiedAccount) {
+      localStorage.removeItem("unverifiedEmail");
+    }
+  }, [isUnverifiedAccount]);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -79,6 +108,7 @@ const RegisterView = () => {
       onSuccess: () => {
         toast.success("Registration successful! Please verify your OTP.");
         setIsUnverifiedAccount(false);
+        setShowVerificationBanner(false);
         setOtpDialogOpen(true);
         setCountdown(60);
       },
@@ -88,6 +118,7 @@ const RegisterView = () => {
           err?.message?.includes("UNVERIFIED_ACCOUNT_EXISTS")
         ) {
           setIsUnverifiedAccount(true);
+          setShowVerificationBanner(true);
           setOtpDialogOpen(true);
           setCountdown(60);
           toast.info("Akun ini sudah terdaftar, tapi belum diverifikasi.");
@@ -108,6 +139,8 @@ const RegisterView = () => {
         onSuccess: () => {
           toast.success("OTP verified! You can now login 🎉");
           setOtpDialogOpen(false);
+          setIsUnverifiedAccount(false);
+          setShowVerificationBanner(false);
         },
       }
     );
@@ -130,6 +163,15 @@ const RegisterView = () => {
     }
   };
 
+  const handleOpenOtpDialog = () => {
+    // If we have an unverified email in localStorage, use it
+    if (unverifiedEmail && unverifiedEmail !== registerForm.email) {
+      setRegisterForm({ ...registerForm, email: unverifiedEmail });
+    }
+    setOtpDialogOpen(true);
+    setCountdown(60);
+  };
+
   return (
     <>
       <AuthLayout
@@ -137,6 +179,46 @@ const RegisterView = () => {
         description="Join thousands of engaged citizens making their voices heard in the democratic process."
         showStats={true}
       >
+        {/* Verification Banner */}
+        {showVerificationBanner && (
+          <div className="mb-6">
+            <Alert className="border-blue-200 bg-blue-50">
+              <MailCheck className="h-5 w-5 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <span>
+                    You have an unverified account with{" "}
+                    <span className="font-semibold">{unverifiedEmail}</span>
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleOpenOtpDialog}
+                      className="text-blue-700 border-blue-300 hover:bg-blue-100"
+                    >
+                      Verify Now
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleResendOtp}
+                      disabled={countdown > 0 || isResending}
+                      className="text-blue-700 hover:bg-blue-100"
+                    >
+                      {isResending
+                        ? "Sending..."
+                        : countdown > 0
+                        ? `Resend in ${countdown}s`
+                        : "Resend OTP"}
+                    </Button>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <RegistrationForm
           registerForm={registerForm}
           showPassword={showPassword}
@@ -149,9 +231,6 @@ const RegisterView = () => {
           onToggleConfirmPassword={toggleConfirmPassword}
           onSubmit={handleSubmit}
           onGoogleLoginSuccess={handleGoogleLoginSuccess}
-          onResendOtp={handleResendOtp}
-          countdown={countdown}
-          isResending={isResending}
         />
       </AuthLayout>
 
