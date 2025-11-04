@@ -29,39 +29,54 @@ export default function CheckoutPage() {
 
   const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState(user?.phone || "");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { queries: packageQueries } = usePackage();
   const { data: packages = [] } = packageQueries.useGetAllPackages();
 
   const isCustomPurchase = !packageId;
 
-  const customPackage = isCustomPurchase
-    ? {
-        id: "custom",
-        name: "Custom Points Purchase",
-        points: parseInt(points || "0"),
-        price: parseInt(amount || "0"),
-        validityDays: 30, // Default validity untuk custom purchase
-        description: `${points} voting points`,
-      }
-    : null;
+  // Validasi parameter URL
+  useEffect(() => {
+    const validateParams = () => {
+      try {
+        const pointsNum = points ? parseInt(points) : 0;
+        const amountNum = amount ? parseInt(amount) : 0;
 
-  const selectedPackage = isCustomPurchase 
-    ? customPackage 
-    : packages.find((pkg) => pkg.id === packageId);
+        if (
+          isNaN(pointsNum) ||
+          isNaN(amountNum) ||
+          pointsNum < 10 ||
+          amountNum < 10000
+        ) {
+          throw new Error(
+            "Invalid points or amount. Minimum purchase is 10 points (Rp 10,000)"
+          );
+        }
+
+        if (!isCustomPurchase && !packageId) {
+          throw new Error("Invalid package selected");
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "An error occurred";
+        setError(errorMessage);
+        toast.error(errorMessage);
+        setIsLoading(false);
+      }
+    };
+
+    validateParams();
+  }, [packageId, points, amount, isCustomPurchase]);
 
   const {
     data: paymentMethodsData,
     isLoading: loadingMethods,
     error: methodsError,
   } = usePaymentMethods(parseInt(amount || "0"), !!amount);
-
-  useEffect(() => {
-    if (!packageId || !selectedPackage) {
-      toast.error("Invalid package selected");
-      router.push("/points");
-    }
-  }, [packageId, selectedPackage, router]);
 
   useEffect(() => {
     if (methodsError) {
@@ -117,6 +132,7 @@ export default function CheckoutPage() {
       }
     } catch (error: any) {
       console.error("Payment error:", error);
+      toast.error(error.message || "Payment failed");
     }
   };
 
@@ -145,10 +161,66 @@ export default function CheckoutPage() {
     return baseAmount + fee;
   };
 
-  if (!selectedPackage) {
+  // Tampilkan loading state
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Tampilkan error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{error}</p>
+            <Button onClick={() => router.push("/points")} className="mt-4">
+              Back to Points
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Buat customPackage dengan nilai yang sudah divalidasi
+  const pointsNum = parseInt(points || "0");
+  const amountNum = parseInt(amount || "0");
+
+  const customPackage = {
+    id: "custom",
+    name: "Custom Points Purchase",
+    points: pointsNum,
+    price: amountNum,
+    validityDays: 30,
+    description: `${pointsNum} voting points`,
+  };
+
+  const selectedPackage = isCustomPurchase
+    ? customPackage
+    : packages.find((pkg) => pkg.id === packageId);
+
+  // Pastikan selectedPackage ada
+  if (!selectedPackage) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Invalid package selected</p>
+            <Button onClick={() => router.push("/points")} className="mt-4">
+              Back to Points
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
