@@ -20,6 +20,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onToggleConfirmPassword,
   onSubmit,
   onGoogleLoginSuccess,
+  onResendOtp,
+  countdown,
+  isResending,
 }) => {
   return (
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
@@ -222,6 +225,22 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           />
         </div>
       </div>
+      {countdown !== undefined && (
+        <div className="mt-6 text-center">
+          <Button
+            variant="ghost"
+            onClick={onResendOtp}
+            disabled={countdown > 0 || isResending}
+            className="text-sm"
+          >
+            {isResending
+              ? "Sending..."
+              : countdown > 0
+              ? `Resend in ${countdown}s`
+              : "Resend Verification Code"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
