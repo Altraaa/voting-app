@@ -11,7 +11,7 @@ export const useLogin = () => {
     mutationFn: authRoute.login,
     onSuccess: (data: AuthResponse) => {
       toast.success("Login successful!");
-      
+
       const userRole = data.role;
       if (userRole === "ADMIN") {
         router.push("/admin");

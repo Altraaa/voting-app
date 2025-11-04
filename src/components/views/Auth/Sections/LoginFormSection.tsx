@@ -1,6 +1,6 @@
 import React from "react";
 import { Eye, EyeOff, Facebook } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
   loginForm,
   showPassword,
   isLoading,
+  isGoogleLoading,
   onInputChange,
   onCheckboxChange,
   onTogglePassword,
   onSubmit,
+  onGoogleLoginSuccess,
 }) => {
   const handleSocialLogin = (provider: string) => {
+    if (provider === "Google") {
+      // Google login sudah ditangani oleh komponen GoogleLogin
+      return;
+    }
     toast.info("Segera Hadir", {
       description: `Login dengan ${provider} akan segera tersedia`,
       duration: 3000,
@@ -118,16 +124,20 @@ const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
-          size="lg"
-          onClick={() => handleSocialLogin("Google")}
-        >
-          <FcGoogle className="h-5 w-5" />
-          Google
-        </Button>
+        <div className="flex justify-center">
+          <div
+            className={`${
+              isGoogleLoading ? "opacity-50 pointer-events-none" : ""
+            }`}
+          >
+            <GoogleLogin
+              onSuccess={onGoogleLoginSuccess}
+              onError={() => {
+                toast.error("Google login failed");
+              }}
+            />
+          </div>
+        </div>
         <Button
           type="button"
           variant="outline"
@@ -135,7 +145,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           size="lg"
           onClick={() => handleSocialLogin("Facebook")}
         >
-          <Facebook />
+          <Facebook className="h-5 w-5 mr-2" />
           Facebook
         </Button>
       </div>

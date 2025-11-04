@@ -1,21 +1,25 @@
 import React from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RegistrationFormProps } from "@/components/props/AuthProps";
+import { toast } from "sonner";
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({
   registerForm,
   showPassword,
   showConfirmPassword,
   isLoading,
+  isGoogleLoading,
   onInputChange,
   onCheckboxChange,
   onTogglePassword,
   onToggleConfirmPassword,
   onSubmit,
+  onGoogleLoginSuccess,
 }) => {
   return (
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
@@ -196,6 +200,28 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           {isLoading ? "Processing..." : "Sign Up"}
         </Button>
       </form>
+
+      <div className="text-center mb-4 relative text-gray-400 text-sm mt-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <span className="bg-white px-3 relative">Or sign up with</span>
+      </div>
+
+      <div className="flex justify-center">
+        <div
+          className={`${
+            isGoogleLoading ? "opacity-50 pointer-events-none" : ""
+          }`}
+        >
+          <GoogleLogin
+            onSuccess={onGoogleLoginSuccess}
+            onError={() => {
+              toast.error("Google sign up failed");
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };
