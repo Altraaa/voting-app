@@ -33,7 +33,22 @@ export default function CheckoutPage() {
   const { queries: packageQueries } = usePackage();
   const { data: packages = [] } = packageQueries.useGetAllPackages();
 
-  const selectedPackage = packages.find((pkg) => pkg.id === packageId);
+  const isCustomPurchase = !packageId;
+
+  const customPackage = isCustomPurchase
+    ? {
+        id: "custom",
+        name: "Custom Points Purchase",
+        points: parseInt(points || "0"),
+        price: parseInt(amount || "0"),
+        validityDays: 30, // Default validity untuk custom purchase
+        description: `${points} voting points`,
+      }
+    : null;
+
+  const selectedPackage = isCustomPurchase 
+    ? customPackage 
+    : packages.find((pkg) => pkg.id === packageId);
 
   const {
     data: paymentMethodsData,
@@ -86,7 +101,7 @@ export default function CheckoutPage() {
       const paymentResponse = await purchaseAndPay(
         {
           userId: user.id,
-          packageId: packageId!,
+          packageId: isCustomPurchase ? undefined : packageId!,
           points: parseInt(points || "0"),
           amount: parseInt(amount || "0"),
           payment_status: PaymentStatus.pending,
@@ -100,7 +115,6 @@ export default function CheckoutPage() {
       if (paymentResponse.data.paymentUrl) {
         window.location.href = paymentResponse.data.paymentUrl;
       }
-      
     } catch (error: any) {
       console.error("Payment error:", error);
     }
