@@ -76,13 +76,10 @@ export const pointVotesService = {
   },
 
   async create(data: PointVotesCreatePayload) {
-    // Jika packageId tidak ada, gunakan "custom" sebagai nilai default
-    const packageId = data.packageId || "custom";
-
     return prisma.pointVotes.create({
       data: {
         userId: data.userId,
-        packageId: packageId, // Selalu berikan nilai
+        packageId: data.packageId ?? null,
         points: data.points,
         amount: data.amount,
         payment_status: PaymentStatus.pending,
