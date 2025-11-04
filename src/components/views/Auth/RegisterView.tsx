@@ -149,6 +149,9 @@ const RegisterView = () => {
           onToggleConfirmPassword={toggleConfirmPassword}
           onSubmit={handleSubmit}
           onGoogleLoginSuccess={handleGoogleLoginSuccess}
+          onResendOtp={handleResendOtp}
+          countdown={countdown}
+          isResending={isResending}
         />
       </AuthLayout>
 
@@ -211,7 +214,8 @@ const RegisterView = () => {
           </div>
 
           <p className="text-xs text-center text-gray-500">
-            Didn&apos;t receive the code? Check your spam folder or resend a new one.
+            Didn&apos;t receive the code? Check your spam folder or resend a new
+            one.
           </p>
         </DialogContent>
       </Dialog>
