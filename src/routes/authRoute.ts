@@ -17,7 +17,12 @@ export const authRoute = {
       method: "POST",
       body: payload,
     }),
-
+  googleAuth: (credential: string): Promise<AuthResponse> =>
+    ApiRequest({
+      url: "auth/google",
+      method: "POST",
+      body: { credential },
+    }),
   verifyOtp: (payload: otpPayload): Promise<AuthResponse> =>
     ApiRequest({
       url: "auth/verify-otp",
