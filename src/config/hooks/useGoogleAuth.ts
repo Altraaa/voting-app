@@ -1,16 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { AuthResponse, LoginPayload } from "@/config/types/authType";
 import { toast } from "sonner";
+import { AuthResponse } from "@/config/types/authType";
 import { authRoute } from "@/routes/authRoute";
 
-export const useLogin = () => {
+export const useGoogleAuth = () => {
   const router = useRouter();
 
-  const mutation = useMutation<AuthResponse, Error, LoginPayload>({
-    mutationFn: authRoute.login,
+  const mutation = useMutation<AuthResponse, Error, string>({
+    mutationFn: authRoute.googleAuth,
     onSuccess: (data: AuthResponse) => {
-      toast.success("Login successful!");
+      toast.success("Login with Google successful!");
 
       const userRole = data.role;
       if (userRole === "ADMIN") {
@@ -20,13 +20,13 @@ export const useLogin = () => {
       }
     },
     onError: (error) => {
-      console.error("Login error:", error);
-      toast.error(error.message || "Something went wrong");
+      console.error("Google auth error:", error);
+      toast.error(error.message || "Google authentication failed");
     },
   });
 
   return {
-    login: mutation.mutate,
+    googleLogin: mutation.mutate,
     isLoading: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,

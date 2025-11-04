@@ -15,19 +15,27 @@ export interface RegistrationFormProps {
   showPassword: boolean;
   showConfirmPassword: boolean;
   isLoading: boolean;
+  isGoogleLoading: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCheckboxChange: (name: keyof RegisterForm, checked: boolean) => void;
   onTogglePassword: () => void;
   onToggleConfirmPassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  onGoogleLoginSuccess: (credentialResponse: any) => void;
 }
 
 export interface LoginFormProps {
-  loginForm: { email: string; password: string; rememberMe: boolean };
+  loginForm: {
+    email: string;
+    password: string;
+    rememberMe: boolean;
+  };
   showPassword: boolean;
   isLoading: boolean;
+  isGoogleLoading: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCheckboxChange: (checked: boolean) => void;
   onTogglePassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  onGoogleLoginSuccess: (credentialResponse: any) => void;
 }

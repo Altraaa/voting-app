@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRegister } from "@/config/hooks/useRegister";
 import { useVerifyOtp } from "@/config/hooks/useVerifyOtp";
 import { useResendOtp } from "@/config/hooks/useResendOtp";
+import { useGoogleAuth } from "@/config/hooks/useGoogleAuth";
 import { useAuthStore } from "@/config/stores/useAuthStores";
 import { usePasswordStore } from "@/config/stores/usePasswordStores";
 import { RegisterForm } from "@/config/types/authType";
@@ -31,6 +32,7 @@ const RegisterView = () => {
   const { register, isLoading: isRegistering } = useRegister();
   const { verifyOtp, isLoading: isVerifying } = useVerifyOtp();
   const { resendOtp, isLoading: isResending } = useResendOtp();
+  const { googleLogin, isLoading: isGoogleLoading } = useGoogleAuth();
 
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -66,6 +68,7 @@ const RegisterView = () => {
       return toast.error("Please accept the Terms of Service!");
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword, ...dataToRegister } = registerForm;
     const finalData = {
       ...dataToRegister,
@@ -121,6 +124,12 @@ const RegisterView = () => {
     });
   };
 
+  const handleGoogleLoginSuccess = (credentialResponse: any) => {
+    if (credentialResponse.credential) {
+      googleLogin(credentialResponse.credential);
+    }
+  };
+
   return (
     <>
       <AuthLayout
@@ -133,11 +142,13 @@ const RegisterView = () => {
           showPassword={showPassword}
           showConfirmPassword={showConfirmPassword}
           isLoading={isRegistering}
+          isGoogleLoading={isGoogleLoading}
           onInputChange={handleInputChange}
           onCheckboxChange={handleCheckboxChange}
           onTogglePassword={togglePassword}
           onToggleConfirmPassword={toggleConfirmPassword}
           onSubmit={handleSubmit}
+          onGoogleLoginSuccess={handleGoogleLoginSuccess}
         />
       </AuthLayout>
 
@@ -200,7 +211,7 @@ const RegisterView = () => {
           </div>
 
           <p className="text-xs text-center text-gray-500">
-            Didn’t receive the code? Check your spam folder or resend a new one.
+            Didn&apos;t receive the code? Check your spam folder or resend a new one.
           </p>
         </DialogContent>
       </Dialog>

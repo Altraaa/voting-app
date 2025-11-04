@@ -24,13 +24,15 @@ model User {
   terms           Boolean
   avatar_url      String?
   votes           Vote[]
-  password        String
+  password        String? 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   packages        PackageHistory[]
   events          EventMember[]
   PointVotes      PointVotes[]
   OTPVerification OTPVerification[]
+  googleId        String?  @unique
+  provider        String? 
 }
 
 model Event {

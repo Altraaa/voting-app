@@ -92,12 +92,6 @@ export default function CheckoutPage() {
   }, [paymentMethodsData]);
 
   const handlePayment = async () => {
-    console.log("=== HANDLE PAYMENT DEBUG ===");
-    console.log("selectedPayment:", selectedPayment);
-    console.log("phoneNumber:", phoneNumber);
-    console.log("isProcessing:", isProcessing);
-    console.log("loadingMethods:", loadingMethods);
-
     if (!selectedPayment) {
       toast.error("Please select a payment method");
       return;
