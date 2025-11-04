@@ -89,13 +89,15 @@ export const pointVotesService = {
             points: true,
           },
         },
-        package: {
-          select: {
-            id: true,
-            name: true,
-            points: true,
-          },
-        },
+        package: data.packageId
+          ? {
+              select: {
+                id: true,
+                name: true,
+                points: true,
+              },
+            }
+          : false,
       },
     });
   },
@@ -161,13 +163,13 @@ export const pointVotesService = {
 
       let paymentStatus: PaymentStatus;
       switch (callbackData.resultCode) {
-        case "00": 
+        case "00":
           paymentStatus = PaymentStatus.success;
           break;
-        case "01": 
+        case "01":
           paymentStatus = PaymentStatus.pending;
           break;
-        default: 
+        default:
           paymentStatus = PaymentStatus.failed;
       }
 
@@ -206,9 +208,24 @@ export const pointVotesService = {
 
   async createPackageHistory(
     userId: string,
-    packageId: string,
+    packageId: string | null | undefined,
     pointsReceived: number
   ) {
+    if (!packageId) {
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + 30);
+
+      return prisma.packageHistory.create({
+        data: {
+          userId,
+          packageId: "",
+          pointsReceived,
+          validUntil,
+          isActive: true,
+        },
+      });
+    }
+
     const packageData = await prisma.package.findUnique({
       where: { id: packageId },
     });

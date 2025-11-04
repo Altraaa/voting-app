@@ -2,7 +2,7 @@ import { PointVotes, PaymentStatus } from "@/generated/prisma";
 
 export type PointVotesBasePayload = {
   userId: string;
-  packageId: string;
+  packageId?: string;
   points: number;
   amount: number;
   payment_status: PaymentStatus;

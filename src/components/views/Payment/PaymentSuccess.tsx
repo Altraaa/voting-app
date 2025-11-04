@@ -84,9 +84,9 @@ export default function PaymentSuccess() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Button 
-        variant="ghost" 
-        onClick={() => router.push("/points")} 
+      <Button
+        variant="ghost"
+        onClick={() => router.push("/points")}
         className="mb-6"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -114,11 +114,17 @@ export default function PaymentSuccess() {
               {pointVoteData && (
                 <>
                   <div>
-                    <p className="text-sm text-muted-foreground">Points Ditambahkan</p>
-                    <p className="font-semibold">{pointVoteData.points} points</p>
+                    <p className="text-sm text-muted-foreground">
+                      Points Ditambahkan
+                    </p>
+                    <p className="font-semibold">
+                      {pointVoteData.points} points
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Pembayaran</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Pembayaran
+                    </p>
                     <p className="font-semibold">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
@@ -127,13 +133,23 @@ export default function PaymentSuccess() {
                       }).format(pointVoteData.amount)}
                     </p>
                   </div>
+                  {/* Tampilkan nama package jika ada, jika tidak tampilkan "Custom Points" */}
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">Package</p>
+                    <p className="font-semibold">
+                      {pointVoteData.package
+                        ? pointVoteData.package.name
+                        : "Custom Points Purchase"}
+                    </p>
+                  </div>
                 </>
               )}
             </div>
-            
+
             <div className="bg-green-100 border border-green-200 rounded-lg p-4 mt-4">
               <p className="text-green-800 text-sm">
-                Points telah berhasil ditambahkan ke akun Anda. Anda dapat menggunakan points tersebut untuk voting.
+                Points telah berhasil ditambahkan ke akun Anda. Anda dapat
+                menggunakan points tersebut untuk voting.
               </p>
             </div>
 
@@ -141,10 +157,7 @@ export default function PaymentSuccess() {
               <Button onClick={() => router.push("/points")}>
                 Lihat Points Saya
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => router.push("/")}
-              >
+              <Button variant="outline" onClick={() => router.push("/")}>
                 Kembali ke Beranda
               </Button>
             </div>
@@ -169,21 +182,17 @@ export default function PaymentSuccess() {
                 <p className="font-semibold">{reference}</p>
               </div>
             </div>
-            
+
             <div className="bg-red-100 border border-red-200 rounded-lg p-4">
               <p className="text-red-800 text-sm">
-                Maaf, pembayaran Anda gagal diproses. Silakan coba lagi atau hubungi customer service jika masalah berlanjut.
+                Maaf, pembayaran Anda gagal diproses. Silakan coba lagi atau
+                hubungi customer service jika masalah berlanjut.
               </p>
             </div>
 
             <div className="flex gap-4 mt-6">
-              <Button onClick={() => router.push("/points")}>
-                Coba Lagi
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => router.push("/")}
-              >
+              <Button onClick={() => router.push("/points")}>Coba Lagi</Button>
+              <Button variant="outline" onClick={() => router.push("/")}>
                 Kembali ke Beranda
               </Button>
             </div>
