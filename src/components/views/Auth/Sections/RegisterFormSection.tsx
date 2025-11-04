@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RegistrationFormProps } from "@/components/props/AuthProps";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({
   registerForm,
@@ -20,9 +21,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onToggleConfirmPassword,
   onSubmit,
   onGoogleLoginSuccess,
-  onResendOtp,
-  countdown,
-  isResending,
 }) => {
   return (
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
@@ -225,22 +223,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           />
         </div>
       </div>
-      {countdown !== undefined && (
-        <div className="mt-6 text-center">
-          <Button
-            variant="ghost"
-            onClick={onResendOtp}
-            disabled={countdown > 0 || isResending}
-            className="text-sm"
-          >
-            {isResending
-              ? "Sending..."
-              : countdown > 0
-              ? `Resend in ${countdown}s`
-              : "Resend Verification Code"}
-          </Button>
-        </div>
-      )}
+      <div className="text-center text-gray-600 text-sm pt-4">
+        Already have an account?{" "}
+        <Link href="/login">
+          <span className="text-primary font-semibold hover:underline cursor-pointer">
+            Sign In
+          </span>
+        </Link>
+      </div>
     </div>
   );
 };

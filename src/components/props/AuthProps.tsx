@@ -16,9 +16,6 @@ export interface RegistrationFormProps {
   showConfirmPassword: boolean;
   isLoading: boolean;
   isGoogleLoading: boolean;
-  onResendOtp?: () => void;
-  countdown?: number;
-  isResending?: boolean;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCheckboxChange: (name: keyof RegisterForm, checked: boolean) => void;
   onTogglePassword: () => void;
