@@ -92,12 +92,18 @@ export default function CheckoutPage() {
   }, [paymentMethodsData]);
 
   const handlePayment = async () => {
+    console.log("=== HANDLE PAYMENT DEBUG ===");
+    console.log("selectedPayment:", selectedPayment);
+    console.log("phoneNumber:", phoneNumber);
+    console.log("isProcessing:", isProcessing);
+    console.log("loadingMethods:", loadingMethods);
+
     if (!selectedPayment) {
       toast.error("Please select a payment method");
       return;
     }
 
-    if (!phoneNumber) {
+    if (!phoneNumber || phoneNumber.trim() === "") {
       toast.error("Please enter your phone number");
       return;
     }
@@ -339,7 +345,10 @@ export default function CheckoutPage() {
               ) : (
                 <RadioGroup
                   value={selectedPayment}
-                  onValueChange={setSelectedPayment}
+                  onValueChange={(value) => {
+                    console.log("Payment method selected:", value);
+                    setSelectedPayment(value);
+                  }}
                 >
                   <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2">
                     {paymentMethods.map((method) => {
@@ -352,9 +361,13 @@ export default function CheckoutPage() {
                               ? "border-primary bg-primary/5"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
-                          onClick={() =>
-                            setSelectedPayment(method.paymentMethod)
-                          }
+                          onClick={() => {
+                            console.log(
+                              "Setting payment method to:",
+                              method.paymentMethod
+                            );
+                            setSelectedPayment(method.paymentMethod);
+                          }}
                         >
                           <RadioGroupItem
                             value={method.paymentMethod}
@@ -396,6 +409,14 @@ export default function CheckoutPage() {
                   </div>
                 </RadioGroup>
               )}
+            </div>
+
+            {/* Debug Info */}
+            <div className="text-xs text-muted-foreground bg-gray-100 p-2 rounded">
+              <p>selectedPayment: {selectedPayment || "null"}</p>
+              <p>phoneNumber: {phoneNumber || "null"}</p>
+              <p>isProcessing: {isProcessing ? "true" : "false"}</p>
+              <p>loadingMethods: {loadingMethods ? "true" : "false"}</p>
             </div>
 
             {/* Pay Button */}

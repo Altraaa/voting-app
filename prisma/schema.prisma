@@ -31,7 +31,6 @@ model User {
   events          EventMember[]
   PointVotes      PointVotes[]
   OTPVerification OTPVerification[]
-  
 }
 
 model Event {
@@ -100,15 +99,15 @@ model Package {
   earlyAccess     Boolean       @default(false)
   isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  PackageHistories    PackageHistory[]
-  PointVotes PointVotes[]
+  updatedAt       DateTime      @updatedAt()
+  PackageHistories PackageHistory[]
+  PointVotes      PointVotes[]
 }
 
 model PointVotes {
   id              String         @id @default(cuid())
   userId          String
-  packageId       String?
+  packageId       String?        // Sudah benar, opsional
   points          Int
   amount          Int
   paymentMethod   String
@@ -120,22 +119,26 @@ model PointVotes {
   updatedAt       DateTime       @updatedAt
   user            User           @relation(fields: [userId], references: [id])
   package         Package?       @relation(fields: [packageId], references: [id])
+  
+  // Tambahkan field untuk melacak pembelian custom
+  isCustom       Boolean?       @default(false)
 }
-
 
 model PackageHistory {
   id            String   @id @default(cuid())
   userId        String
-  packageId     String
+  packageId     String?  // Ubah menjadi opsional
   purchaseDate  DateTime @default(now())
   pointsReceived Int
   validUntil    DateTime
   isActive      Boolean  @default(true)
   user          User     @relation(fields: [userId], references: [id])
-  package       Package  @relation(fields: [packageId], references: [id])
+  package       Package? @relation(fields: [packageId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Hapus unique constraint yang membatasi packageId null
+  // Atau gunakan partial unique index
   @@unique([userId, packageId, purchaseDate])
 }
 
@@ -161,7 +164,6 @@ model OTPVerification {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId])
 }
-
 
 enum Role {
   USER

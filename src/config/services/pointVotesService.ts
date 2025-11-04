@@ -76,10 +76,20 @@ export const pointVotesService = {
   },
 
   async create(data: PointVotesCreatePayload) {
+    // Jika packageId tidak ada, gunakan "custom" sebagai nilai default
+    const packageId = data.packageId || "custom";
+
     return prisma.pointVotes.create({
       data: {
-        ...data,
+        userId: data.userId,
+        packageId: packageId, // Selalu berikan nilai
+        points: data.points,
+        amount: data.amount,
         payment_status: PaymentStatus.pending,
+        merchantOrderId: data.merchantOrderId,
+        reference: data.reference,
+        paymentMethod: data.paymentMethod,
+        phoneNumber: data.phoneNumber,
       },
       include: {
         user: {
@@ -89,15 +99,13 @@ export const pointVotesService = {
             points: true,
           },
         },
-        package: data.packageId
-          ? {
-              select: {
-                id: true,
-                name: true,
-                points: true,
-              },
-            }
-          : false,
+        package: {
+          select: {
+            id: true,
+            name: true,
+            points: true,
+          },
+        },
       },
     });
   },
@@ -218,7 +226,7 @@ export const pointVotesService = {
       return prisma.packageHistory.create({
         data: {
           userId,
-          packageId: "",
+          packageId: null,
           pointsReceived,
           validUntil,
           isActive: true,
