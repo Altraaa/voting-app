@@ -89,13 +89,13 @@ export const pointVotesService = {
             points: true,
           },
         },
-        package: {
+        package: data.packageId ? {
           select: {
             id: true,
             name: true,
             points: true,
           },
-        },
+        } : false,
       },
     });
   },
