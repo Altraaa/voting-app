@@ -27,6 +27,16 @@ export async function loginController(req: Request) {
       );
     }
 
+    if (err.message === "GOOGLE_ACCOUNT") {
+      return NextResponse.json(
+        {
+          error:
+            "This account is registered with Google. Please login with Google.",
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

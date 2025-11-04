@@ -4,8 +4,12 @@ import { comparePassword, createToken } from "@/lib/auth";
 export async function loginService(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user || !user.password) {
+  if (!user) {
     throw new Error("INVALID_CREDENTIALS");
+  }
+
+  if (!user.password) {
+    throw new Error("GOOGLE_ACCOUNT");
   }
 
   const isValid = await comparePassword(password, user.password);
