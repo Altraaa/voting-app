@@ -70,7 +70,6 @@ export const pointVotesController = {
 
       const requiredFields = [
         "userId",
-        "packageId",
         "amount",
         "merchantOrderId",
         "phoneNumber",
@@ -102,7 +101,12 @@ export const pointVotesController = {
         );
       }
 
-      const pointVote = await pointVotesService.create(data);
+      const sanitizedData = {
+        ...data,
+        packageId: data.packageId || undefined,
+      };
+
+      const pointVote = await pointVotesService.create(sanitizedData);
       console.log("Point vote created:", JSON.stringify(pointVote, null, 2));
 
       return NextResponse.json(
@@ -165,16 +169,24 @@ export const pointVotesController = {
 
       console.log("User found:", JSON.stringify(user, null, 2));
 
-      const packageData = await prisma.package.findUnique({
-        where: { id: pointVote.packageId },
-        select: { name: true, points: true },
-      });
+      let packageData;
+      let productDetails;
 
-      if (!packageData) {
-        throw new Error("Package not found");
+      if (pointVote.packageId) {
+        packageData = await prisma.package.findUnique({
+          where: { id: pointVote.packageId },
+          select: { name: true, points: true },
+        });
+
+        if (!packageData) {
+          throw new Error("Package not found");
+        }
+
+        console.log("Package found:", JSON.stringify(packageData, null, 2));
+        productDetails = `${packageData.name} - ${packageData.points} Points`;
+      } else {
+        productDetails = `${pointVote.points} Custom Points`;
       }
-
-      console.log("Package found:", JSON.stringify(packageData, null, 2));
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(user.email)) {
@@ -203,7 +215,7 @@ export const pointVotesController = {
       const paymentData = {
         merchantOrderId: pointVote.merchantOrderId,
         paymentAmount: pointVote.amount,
-        productDetails: `${packageData.name} - ${packageData.points} Points`,
+        productDetails: productDetails,
         email: user.email,
         customerName: customerName,
         phoneNumber: phoneNumber,
