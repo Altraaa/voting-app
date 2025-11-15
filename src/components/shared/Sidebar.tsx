@@ -75,7 +75,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-4 border-t border-sidebar-border mt-auto shrink-0">
           <div className="flex items-center justify-between">
             <div className="text-xs text-sidebar-foreground/70">
-              © 2024 Seraphic
+              © 2024 Pilih.in
             </div>
           </div>
         </div>

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type CandidateWithVotes = ICandidate & {
   totalVotes: number;
@@ -169,7 +170,7 @@ export default function LeaderboardSection() {
 
         return {
           id: event.id,
-          title: event.name || `Event ${index + 1}`,
+          title: event.name || `Acara ${index + 1}`,
           trending: index < 2, // 2 event pertama trending
           categories: processedCategories,
         };
@@ -183,12 +184,12 @@ export default function LeaderboardSection() {
     category: Category
   ) => {
     if (!isAuthenticated) {
-      toast.error("Please login to vote");
+      toast.error("Silakan login untuk memberikan suara");
       return;
     }
 
     if (userPoints === 0) {
-      toast.error("You don't have any points to vote");
+      toast.error("Anda tidak memiliki poin untuk memberikan suara");
       return;
     }
 
@@ -206,17 +207,17 @@ export default function LeaderboardSection() {
 
   const handleVote = async () => {
     if (!selectedCandidate || !isAuthenticated) {
-      toast.error("Please login to vote");
+      toast.error("Silakan login untuk memberikan suara");
       return;
     }
 
     if (votePoints > userPoints) {
-      toast.error("Insufficient points");
+      toast.error("Poin tidak mencukupi");
       return;
     }
 
     if (votePoints < 1) {
-      toast.error("Minimum 1 point to vote");
+      toast.error("Minimal 1 poin untuk memberikan suara");
       return;
     }
 
@@ -226,7 +227,7 @@ export default function LeaderboardSection() {
         pointsUsed: votePoints,
       });
 
-      toast.success(`Successfully voted with ${votePoints} points!`);
+      toast.success(`Berhasil memberikan suara dengan ${votePoints} poin!`);
       setIsDialogOpen(false);
       setSelectedCandidate(null);
       setVotePoints(1);
@@ -234,7 +235,7 @@ export default function LeaderboardSection() {
       // Trigger refresh will happen automatically via useEffect
     } catch (error) {
       console.error("Error voting:", error);
-      toast.error("Failed to vote. Please try again.");
+      toast.error("Gagal memberikan suara. Silakan coba lagi.");
     }
   };
 
@@ -254,15 +255,71 @@ export default function LeaderboardSection() {
       <section className="py-20 px-4 lg:px-20 bg-card/30">
         <div className="text-center space-y-4 mb-10">
           <h2 className="text-3xl md:text-4xl font-bold text-balance">
-            Event <span className="text-primary">Leaderboards</span>
+            <span className="text-primary">Papan Peringkat</span> Acara
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Loading leaderboards...
+            Memuat papan peringkat...
           </p>
         </div>
-        <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 rounded mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="space-y-6">
+          {/* Loading Tabs */}
+          <div className="flex justify-center mb-6">
+            <div className="flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-32 rounded-md" />
+              ))}
+            </div>
+          </div>
+          
+          {/* Loading Content */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-40" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-6 w-12 rounded-full" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <Skeleton className="h-2 w-full" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* Loading Table */}
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-40" />
+            <div className="border rounded-lg">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-6" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-2 w-32" />
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -277,11 +334,10 @@ export default function LeaderboardSection() {
       <section className="py-20 px-4 lg:px-20 bg-card/30">
         <div className="text-center space-y-4 mb-10">
           <h2 className="text-3xl md:text-4xl font-bold text-balance">
-            Event <span className="text-primary">Leaderboards</span>
+            <span className="text-primary">Papan Peringkat</span> Acara
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Browse live standings by event and category. Select an event, then a
-            category to see the top candidates and their progress.
+            Lihat peringkat langsung berdasarkan acara dan kategori. Pilih acara, lalu kategori untuk melihat kandidat teratas dan perkembangannya.
           </p>
         </div>
 
@@ -308,7 +364,7 @@ export default function LeaderboardSection() {
                     {idx === 0 && (
                       <Badge className="px-1 py-0 text-[10px]">
                         <Trophy className="w-3 h-3 mr-1" />
-                        Featured
+                        Unggulan
                       </Badge>
                     )}
                   </div>
@@ -318,7 +374,7 @@ export default function LeaderboardSection() {
 
             <Button variant="outline" className="bg-transparent" asChild>
               <Link href="/event">
-                View All Events
+                Lihat Semua Acara
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -351,7 +407,7 @@ export default function LeaderboardSection() {
                         asChild
                       >
                         <Link href={`/event/${ev.id}/category`}>
-                          View All Categories
+                          Lihat Semua Kategori
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
@@ -374,14 +430,14 @@ export default function LeaderboardSection() {
                                 </div>
                                 <div>
                                   <p className="text-sm text-muted-foreground">
-                                    Your Voting Points
+                                    Poin Voting Anda
                                   </p>
                                   <div className="flex items-center gap-2">
                                     <span className="text-xl font-bold text-primary">
                                       {userPoints}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                      points available
+                                      poin tersedia
                                     </span>
                                   </div>
                                 </div>
@@ -390,7 +446,7 @@ export default function LeaderboardSection() {
                                 <Button asChild size="sm">
                                   <Link href="/points">
                                     <Star className="mr-2 h-4 w-4" />
-                                    Buy Points
+                                    Beli Poin
                                   </Link>
                                 </Button>
                               )}
@@ -420,16 +476,16 @@ export default function LeaderboardSection() {
                                     <div className="flex items-center gap-1">
                                       <Users className="w-4 h-4" />
                                       {cat.totalVotes.toLocaleString()} total
-                                      votes
+                                      suara
                                     </div>
-                                    <div>{index + 1} place</div>
+                                    <div>peringkat {index + 1}</div>
                                   </div>
                                 </CardHeader>
 
                                 <CardContent className="space-y-4">
                                   <div>
                                     <div className="flex justify-between items-center mb-2">
-                                      <span className="font-medium">Share</span>
+                                      <span className="font-medium">Persentase</span>
                                       <span className="text-sm text-muted-foreground">
                                         {candidate.percentage.toFixed(1)}%
                                       </span>
@@ -453,10 +509,10 @@ export default function LeaderboardSection() {
                                   >
                                     <Star className="mr-2 h-4 w-4" />
                                     {!isAuthenticated
-                                      ? "Login to Vote"
+                                      ? "Login untuk Vote"
                                       : userPoints === 0
-                                      ? "No Points"
-                                      : "Vote Now"}
+                                      ? "Tidak Ada Poin"
+                                      : "Vote Sekarang"}
                                   </Button>
                                 </CardContent>
                               </Card>
@@ -467,7 +523,7 @@ export default function LeaderboardSection() {
                           {remainingCandidates.length > 0 && (
                             <div className="mb-8">
                               <h3 className="text-lg font-semibold mb-4">
-                                Other Candidates
+                                Kandidat Lainnya
                               </h3>
 
                               {/* Desktop Table */}
@@ -565,7 +621,7 @@ export default function LeaderboardSection() {
                           <div className="text-center">
                             <Button variant="outline" size="lg" asChild>
                               <Link href={`/event/${ev.id}/category/${cat.id}`}>
-                                View Category Details
+                                Lihat Detail Kategori
                                 <ArrowRight className="ml-2 h-4 w-4" />
                               </Link>
                             </Button>
@@ -585,10 +641,9 @@ export default function LeaderboardSection() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Cast Your Vote</DialogTitle>
+            <DialogTitle>Berikan Suara Anda</DialogTitle>
             <DialogDescription>
-              Vote for <strong>{selectedCandidate?.name}</strong>. Each point
-              equals one vote.
+              Berikan suara untuk <strong>{selectedCandidate?.name}</strong>. Setiap poin sama dengan satu suara.
             </DialogDescription>
           </DialogHeader>
 
@@ -599,14 +654,14 @@ export default function LeaderboardSection() {
                 <div className="flex-1">
                   <h4 className="font-semibold">{selectedCandidate.name}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Current: {selectedCandidate.currentPercentage}%
+                    Saat ini: {selectedCandidate.currentPercentage}%
                   </p>
                 </div>
               </div>
 
               {/* Points Input */}
               <div className="space-y-2">
-                <Label htmlFor="points">How many points to use?</Label>
+                <Label htmlFor="points">Berapa poin yang akan digunakan?</Label>
                 <div className="flex gap-2">
                   <Input
                     id="points"
@@ -622,11 +677,11 @@ export default function LeaderboardSection() {
                     onClick={() => setVotePoints(userPoints)}
                     disabled={userPoints === 0}
                   >
-                    Max
+                    Maks
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Available: {userPoints} points • Using: {votePoints} points
+                  Tersedia: {userPoints} poin • Menggunakan: {votePoints} poin
                 </p>
               </div>
 
@@ -648,11 +703,11 @@ export default function LeaderboardSection() {
               {/* Summary */}
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm">Points to use:</span>
+                  <span className="text-sm">Poin yang digunakan:</span>
                   <span className="font-bold text-primary">{votePoints}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Remaining points:</span>
+                  <span className="text-sm">Sisa poin:</span>
                   <span className="font-bold">{userPoints - votePoints}</span>
                 </div>
               </div>
@@ -667,7 +722,7 @@ export default function LeaderboardSection() {
                 setSelectedCandidate(null);
               }}
             >
-              Cancel
+              Batal
             </Button>
             <Button
               disabled={
@@ -676,8 +731,8 @@ export default function LeaderboardSection() {
               onClick={handleVote}
             >
               {voteMutations.createMutation.isPending
-                ? "Voting..."
-                : `Confirm Vote (${votePoints} points)`}
+                ? "Memproses..."
+                : `Konfirmasi Vote (${votePoints} poin)`}
             </Button>
           </DialogFooter>
         </DialogContent>
