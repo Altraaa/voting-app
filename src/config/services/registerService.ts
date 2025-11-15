@@ -53,7 +53,7 @@ export async function registerService(data: RegisterPayload) {
   });
 
   await transporter.sendMail({
-    from: `"Seraphic (No Reply)" <${process.env.NEXT_PUBLIC_EMAIL}>`,
+    from: `"Pilih.in Vote (No Reply)" <${process.env.NEXT_PUBLIC_EMAIL}>`,
     to: email,
     subject: "Verifikasi Akun Kamu",
     html: `
