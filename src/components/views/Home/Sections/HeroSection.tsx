@@ -1,68 +1,100 @@
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import { ArrowRight, Users, Trophy, Shield } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { Vote, Users, Calendar } from "lucide-react";
 
 export default function HeroSection() {
   return (
-    <section className="relative py-28 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-card/50 to-background" />
-      <div className="relative">
-        <div className="max-w-4xl mx-auto text-center space-y-5 md:space-y-8">
-          <Badge variant="secondary" className="text-sm px-4 py-2">
-            🔥 Real-time Voting Platform
-          </Badge>
+    <section className="relative py-20 sm:py-28 md:py-36 overflow-hidden bg-gradient-to-br from-white via-orange-50/30 to-white">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
 
-          <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight">
-            Vote with <span className="text-primary">Confidence</span>
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          {/* Main heading */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+            Platform Voting Digital
             <br />
-            See Results <span className="text-primary">Instantly</span>
+            <span className="text-primary">Terpercaya</span>
           </h1>
 
-          <p className="text-sm md:text-xl text-muted-foreground text-pretty max-w-2xl mx-auto">
-            Join thousands of voters on Indonesia&apos;s most trusted voting platform. Transparent results, secure
-            point-based system, and real-time updates.
+          {/* Subtitle */}
+          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
+            Rasakan pengalaman voting digital yang aman dan transparan bersama Pilih.in Vote.
+            Platform kami memastikan setiap suara dihitung dengan adil, memberikan hasil
+            secara real-time serta analitik menyeluruh untuk pengambilan keputusan yang lebih baik.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="px-8 py-6" asChild>
-              <Link href="/event">
-                Start Voting Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+            <Button
+              size="lg"
+              className="px-8 h-12 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-lg shadow-primary/25"
+              asChild
+            >
+              <Link href="/event">Mulai Vote</Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-6 bg-transparent" asChild>
-              <Link href="/points">Buy Voting Points</Link>
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 h-12 border-2 border-primary text-primary hover:bg-primary/5 hover"
+              asChild
+            >
+              <Link href="/">Pelajari Lebih Lanjut</Link>
             </Button>
           </div>
 
-          <div className="grid px-4 md:px-0 grid-cols-1 md:grid-cols-3 gap-8 pt-12">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="h-6 w-6 text-primary" />
+          <Card className="mt-12 mx-auto max-w-5xl backdrop-blur-sm bg-white/70 border border-white/20 shadow-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/50">
+              {/* Total Votes */}
+              <div className="py-2 px-4 flex items-center gap-5 justify-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Vote className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground font-medium mb-1">
+                    Total Suara
+                  </p>
+                  <p className="text-lg md:text-2xl font-bold text-primary">
+                    1,234,567
+                  </p>
+                </div>
               </div>
-              <h3 className="font-semibold">50,000+ Active Voters</h3>
-              <p className="text-sm text-muted-foreground text-center">Join our growing community of engaged voters</p>
-            </div>
 
-            <div className="flex flex-col items-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Trophy className="h-6 w-6 text-primary" />
+              {/* Total Clients */}
+              <div className="py-2 px-4 flex items-center gap-5 justify-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground font-medium mb-1">
+                    Total Klien
+                  </p>
+                  <p className="text-lg md:text-2xl font-bold text-primary">
+                    500+
+                  </p>
+                </div>
               </div>
-              <h3 className="font-semibold">Real-time Results</h3>
-              <p className="text-sm text-muted-foreground text-center">Watch votes update instantly as they come in</p>
-            </div>
 
-            <div className="flex flex-col items-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Shield className="h-6 w-6 text-primary" />
+              {/* Total Events */}
+              <div className="py-2 px-4 flex items-center gap-5 justify-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground font-medium mb-1">
+                    Total Acara
+                  </p>
+                  <p className="text-lg md:text-2xl font-bold text-primary">
+                    1,000+
+                  </p>
+                </div>
               </div>
-              <h3 className="font-semibold">100% Secure</h3>
-              <p className="text-sm text-muted-foreground text-center">Advanced security measures protect every vote</p>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </section>
-  )
+  );
 }
