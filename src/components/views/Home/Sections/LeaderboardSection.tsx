@@ -13,9 +13,6 @@ import {
   ArrowRight,
   Star,
   Coins,
-  Crown,
-  Medal,
-  Award,
 } from "lucide-react";
 import Link from "next/link";
 import { useEvent } from "@/config/hooks/EventHook/useEvent";
@@ -37,7 +34,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 type CandidateWithVotes = ICandidate & {
   totalVotes: number;
@@ -188,14 +184,12 @@ export default function LeaderboardSection() {
     category: Category
   ) => {
     if (!isAuthenticated) {
-      // Redirect to login page
-      window.location.href = "/login";
+      toast.error("Silakan login untuk memberikan suara");
       return;
     }
 
     if (userPoints === 0) {
-      // Redirect to points page
-      window.location.href = "/points";
+      toast.error("Anda tidak memiliki poin untuk memberikan suara");
       return;
     }
 
@@ -254,16 +248,6 @@ export default function LeaderboardSection() {
     }
   };
 
-  const getVoteButtonText = () => {
-    if (!isAuthenticated) {
-      return "Login untuk Vote";
-    }
-    if (userPoints === 0) {
-      return "Beli Poin untuk Vote";
-    }
-    return "Vote Sekarang";
-  };
-
   const leaderboardEvents = getLeaderboardData();
 
   if (eventsLoading || categoriesLoading || candidatesLoading) {
@@ -286,7 +270,7 @@ export default function LeaderboardSection() {
               ))}
             </div>
           </div>
-
+          
           {/* Loading Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
@@ -316,6 +300,26 @@ export default function LeaderboardSection() {
               </Card>
             ))}
           </div>
+          
+          {/* Loading Table */}
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-40" />
+            <div className="border rounded-lg">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-6" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-2 w-32" />
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -333,9 +337,7 @@ export default function LeaderboardSection() {
             <span className="text-primary">Papan Peringkat</span> Acara
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Lihat peringkat langsung berdasarkan acara dan kategori. Pilih
-            acara, lalu kategori untuk melihat kandidat teratas dan
-            perkembangannya.
+            Lihat peringkat langsung berdasarkan acara dan kategori. Pilih acara, lalu kategori untuk melihat kandidat teratas dan perkembangannya.
           </p>
         </div>
 
@@ -412,17 +414,22 @@ export default function LeaderboardSection() {
                     </div>
 
                     {ev.categories.map((cat) => {
-                      const allCandidates =
-                        (
-                          cat as Category & {
-                            allCandidates?: CandidateWithVotes[];
-                          }
-                        ).allCandidates || cat.candidates;
+                      const allCandidates: CandidateWithVotes[] =
+                        (cat as any).allCandidates || cat.candidates;
                       const topCandidates = cat.candidates;
                       const remainingCandidates = allCandidates.slice(3);
 
                       return (
                         <TabsContent key={cat.id} value={cat.id}>
+                          {/* Total Votes Display */}
+                          <div className="bg-gradient-to-r from-amber-500/10 to-amber-400/5 border border-amber-400/20 rounded-lg p-4 mb-4">
+                            <div className="text-center">
+                              <p className="text-sm text-amber-600/70 font-medium">
+                                Total Suara : {cat.totalVotes.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+
                           {/* User Points Display */}
                           <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
                             <div className="flex items-center justify-between">
@@ -446,132 +453,80 @@ export default function LeaderboardSection() {
                               </div>
                               {userPoints === 0 && (
                                 <Button asChild size="sm">
-                                  <Link href="/points">
+                                  <Link href={isAuthenticated ? "/points" : "/login"}>
                                     <Star className="mr-2 h-4 w-4" />
-                                    Beli Poin
+                                    {isAuthenticated ? "Beli Poin" : "Login untuk beli point"}
                                   </Link>
                                 </Button>
                               )}
                             </div>
                           </div>
 
-                          {/* Top 3 Candidates in Enhanced Cards */}
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                            {topCandidates.map((candidate, index) => {
-                              const rankIcons = [
-                                <Crown
-                                  key="crown-icon"
-                                  className="w-6 h-6 text-yellow-500"
-                                />,
-                                <Award
-                                  key="award-icon"
-                                  className="w-6 h-6 text-gray-400"
-                                />,
-                                <Medal
-                                  key="medal-icon"
-                                  className="w-6 h-6 text-amber-600"
-                                />,
-                              ];
-
-                              const rankColors = [
-                                "from-yellow-400/20 to-yellow-600/10 border-yellow-300/30",
-                                "from-gray-400/20 to-gray-600/10 border-gray-300/30",
-                                "from-amber-600/20 to-amber-800/10 border-amber-500/30",
-                              ];
-
-                              const rankBadges = [
-                                "bg-yellow-500 text-yellow-950",
-                                "bg-gray-400 text-gray-950",
-                                "bg-amber-600 text-amber-50",
-                              ];
-
-                              return (
-                                <Card
-                                  key={candidate.id}
-                                  className={cn(
-                                    "relative overflow-hidden border-2 transition-all duration-300 hover:shadow-xl",
-                                    index === 0
-                                      ? "lg:scale-105 lg:-translate-y-2"
-                                      : "",
-                                    `bg-gradient-to-br ${rankColors[index]}`
-                                  )}
-                                >
-                                  {/* Rank Badge */}
-                                  <div className="absolute top-4 left-4 z-10">
-                                    <Badge
-                                      className={cn(
-                                        "px-3 py-1 font-bold text-sm",
-                                        rankBadges[index]
-                                      )}
-                                    >
-                                      <div className="flex items-center gap-1">
-                                        {rankIcons[index]}#{index + 1}
-                                      </div>
+                          {/* Top 3 Candidates in Cards */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            {topCandidates.map((candidate, index) => (
+                              <Card
+                                key={candidate.id}
+                                className="relative overflow-hidden hover:shadow-lg transition-shadow"
+                              >
+                                {index === 0 && candidate.percentage > 0 && (
+                                  <div className="absolute top-4 right-4">
+                                    <Badge className="bg-primary text-primary-foreground">
+                                      <Trophy className="w-3 h-3 mr-1" />
+                                      #1
                                     </Badge>
                                   </div>
-
-                                  {/* Vote Count - Transparent Overlay */}
-                                  <div className="absolute top-4 right-4 z-10">
-                                    <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-center border border-white/20">
-                                      <div className="text-white font-bold text-2xl leading-none">
-                                        {candidate.totalVotes.toLocaleString()}
-                                      </div>
-                                      <div className="text-white/80 text-xs leading-none mt-1">
-                                        Votes
-                                      </div>
+                                )}
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg text-balance leading-tight">
+                                    {candidate.name}
+                                  </CardTitle>
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                      <Users className="w-4 h-4" />
+                                      {cat.totalVotes.toLocaleString()} total
+                                      suara
                                     </div>
+                                    <div>peringkat {index + 1}</div>
+                                  </div>
+                                </CardHeader>
+
+                                <CardContent className="space-y-4">
+                                  <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className="font-medium">Persentase</span>
+                                      <span className="text-sm text-muted-foreground">
+                                        {candidate.percentage.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                    <Progress
+                                      value={candidate.percentage}
+                                      className="h-2"
+                                    />
                                   </div>
 
-                                  <CardHeader className="pb-3 pt-6">
-                                    <CardTitle className="text-xl text-balance leading-tight text-center">
-                                      {candidate.name}
-                                    </CardTitle>
-                                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                                      <div className="flex items-center gap-1">
-                                        <Users className="w-4 h-4" />
-                                        {cat.totalVotes.toLocaleString()} total
-                                        suara
-                                      </div>
-                                    </div>
-                                  </CardHeader>
-
-                                  <CardContent className="space-y-4">
-                                    {/* Progress Bar */}
-                                    <div>
-                                      <div className="flex justify-between items-center mb-2">
-                                        <span className="font-medium">
-                                          Persentase
-                                        </span>
-                                        <span className="text-sm font-bold text-muted-foreground">
-                                          {candidate.percentage.toFixed(1)}%
-                                        </span>
-                                      </div>
-                                      <Progress
-                                        value={candidate.percentage}
-                                        className="h-3"
-                                      />
-                                    </div>
-
-                                    {/* Vote Button */}
-                                    <Button
-                                      className={cn(
-                                        "w-full font-semibold transition-all duration-200",
-                                        !isAuthenticated || userPoints === 0
-                                          ? "bg-blue-600 hover:bg-blue-700"
-                                          : "bg-primary hover:bg-primary/90"
-                                      )}
-                                      size="lg"
-                                      onClick={() =>
-                                        handleVoteClick(candidate, cat)
+                                  <Button
+                                    className="w-full"
+                                    onClick={() => {
+                                      if (!isAuthenticated) {
+                                        window.location.href = '/login';
+                                      } else if (userPoints === 0) {
+                                        window.location.href = '/points';
+                                      } else {
+                                        handleVoteClick(candidate, cat);
                                       }
-                                    >
-                                      <Star className="mr-2 h-4 w-4" />
-                                      {getVoteButtonText()}
-                                    </Button>
-                                  </CardContent>
-                                </Card>
-                              );
-                            })}
+                                    }}
+                                  >
+                                    <Star className="mr-2 h-4 w-4" />
+                                    {!isAuthenticated
+                                      ? "Login untuk Vote"
+                                      : userPoints === 0
+                                      ? "Beli Point untuk Vote"
+                                      : "Vote Sekarang"}
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            ))}
                           </div>
 
                           {/* Remaining Candidates in Responsive Table */}
@@ -582,56 +537,48 @@ export default function LeaderboardSection() {
                               </h3>
 
                               {/* Desktop Table */}
-                              <div className="hidden md:block border rounded-lg overflow-hidden">
+                              <div className="hidden md:block border rounded-lg">
                                 {remainingCandidates.map(
-                                  (
-                                    candidate: CandidateWithVotes,
-                                    index: number
-                                  ) => (
+                                  (candidate: CandidateWithVotes, index: number) => (
                                     <div
                                       key={candidate.id}
                                       className="flex items-center justify-between p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors"
                                     >
                                       <div className="flex items-center gap-4">
-                                        <span className="font-medium text-muted-foreground w-8 text-center">
+                                        <span className="font-medium text-muted-foreground w-6">
                                           #{index + 4}
                                         </span>
                                         <span className="font-medium">
                                           {candidate.name}
                                         </span>
                                       </div>
-                                      <div className="flex items-center gap-6">
-                                        <div className="flex items-center gap-3">
-                                          <span className="text-sm text-muted-foreground min-w-[60px] text-right">
-                                            {candidate.totalVotes.toLocaleString()}{" "}
-                                            votes
-                                          </span>
-                                          <div className="w-32">
-                                            <Progress
-                                              value={candidate.percentage}
-                                              className="h-2"
-                                            />
-                                          </div>
-                                          <span className="text-sm font-medium text-muted-foreground w-12 text-right">
-                                            {candidate.percentage.toFixed(1)}%
-                                          </span>
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-32">
+                                          <Progress
+                                            value={candidate.percentage}
+                                            className="h-2"
+                                          />
                                         </div>
+                                        <span className="text-sm text-muted-foreground w-12 text-right">
+                                          {candidate.percentage.toFixed(1)}%
+                                        </span>
                                         <Button
                                           size="sm"
-                                          className={cn(
-                                            !isAuthenticated || userPoints === 0
-                                              ? "bg-blue-600 hover:bg-blue-700"
-                                              : ""
-                                          )}
-                                          onClick={() =>
-                                            handleVoteClick(candidate, cat)
-                                          }
+                                          onClick={() => {
+                                            if (!isAuthenticated) {
+                                              window.location.href = '/login';
+                                            } else if (userPoints === 0) {
+                                              window.location.href = '/points';
+                                            } else {
+                                              handleVoteClick(candidate, cat);
+                                            }
+                                          }}
                                         >
                                           <Star className="mr-2 h-3 w-3" />
                                           {!isAuthenticated
                                             ? "Login"
                                             : userPoints === 0
-                                            ? "Beli Poin"
+                                            ? "Beli Point"
                                             : "Vote"}
                                         </Button>
                                       </div>
@@ -641,12 +588,9 @@ export default function LeaderboardSection() {
                               </div>
 
                               {/* Mobile Cards */}
-                              <div className="md:hidden space-y-3">
+                              <div className="md:hidden space-y-4">
                                 {remainingCandidates.map(
-                                  (
-                                    candidate: CandidateWithVotes,
-                                    index: number
-                                  ) => (
+                                  (candidate: CandidateWithVotes, index: number) => (
                                     <Card key={candidate.id} className="p-4">
                                       <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
@@ -657,38 +601,37 @@ export default function LeaderboardSection() {
                                             {candidate.name}
                                           </span>
                                         </div>
-                                        <div className="text-right">
-                                          <div className="text-sm font-bold text-muted-foreground">
-                                            {candidate.totalVotes.toLocaleString()}{" "}
-                                            votes
-                                          </div>
-                                          <div className="text-xs text-muted-foreground">
-                                            {candidate.percentage.toFixed(1)}%
-                                          </div>
-                                        </div>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => {
+                                            if (!isAuthenticated) {
+                                              window.location.href = '/login';
+                                            } else if (userPoints === 0) {
+                                              window.location.href = '/points';
+                                            } else {
+                                              handleVoteClick(candidate, cat);
+                                            }
+                                          }}
+                                        >
+                                          <Star className="h-3 w-3" />
+                                          {!isAuthenticated
+                                            ? "Login"
+                                            : userPoints === 0
+                                            ? "Beli Point"
+                                            : "Vote"}
+                                        </Button>
                                       </div>
-                                      <div className="flex items-center gap-3 mb-3">
+                                      <div className="flex items-center gap-3">
                                         <div className="flex-1">
                                           <Progress
                                             value={candidate.percentage}
                                             className="h-2"
                                           />
                                         </div>
+                                        <span className="text-sm text-muted-foreground w-12 text-right">
+                                          {candidate.percentage.toFixed(1)}%
+                                        </span>
                                       </div>
-                                      <Button
-                                        className={cn(
-                                          "w-full",
-                                          !isAuthenticated || userPoints === 0
-                                            ? "bg-blue-600 hover:bg-blue-700"
-                                            : ""
-                                        )}
-                                        onClick={() =>
-                                          handleVoteClick(candidate, cat)
-                                        }
-                                      >
-                                        <Star className="mr-2 h-3 w-3" />
-                                        {getVoteButtonText()}
-                                      </Button>
                                     </Card>
                                   )
                                 )}
@@ -721,8 +664,7 @@ export default function LeaderboardSection() {
           <DialogHeader>
             <DialogTitle>Berikan Suara Anda</DialogTitle>
             <DialogDescription>
-              Berikan suara untuk <strong>{selectedCandidate?.name}</strong>.
-              Setiap poin sama dengan satu suara.
+              Berikan suara untuk <strong>{selectedCandidate?.name}</strong>. Setiap poin sama dengan satu suara.
             </DialogDescription>
           </DialogHeader>
 
