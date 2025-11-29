@@ -7,26 +7,26 @@ import { Route } from "next";
 const steps = [
   {
     icon: CreditCard,
-    title: "Buy Voting Points",
+    title: "Beli Poin Voting",
     description:
-      "Purchase voting points starting from IDR 5,000 for 5 points. Secure payment with multiple options.",
-    action: "Get Points",
+      "Beli poin voting mulai dari IDR 5.000 untuk 5 poin. Pembayaran aman dengan berbagai opsi.",
+    action: "Dapatkan Poin",
     href: "/points",
   },
   {
     icon: Vote,
-    title: "Choose & Vote",
+    title: "Pilih & Vote",
     description:
-      "Browse categories, select your favorite candidates, and cast your votes using your points.",
-    action: "Browse Categories",
+      "Jelajahi kategori, pilih kandidat favorit Anda, dan lakukan voting dengan menggunakan poin Anda.",
+    action: "Jelajahi Kategori",
     href: "/categories",
   },
   {
     icon: Trophy,
-    title: "See Results",
+    title: "Lihat Hasil",
     description:
-      "Watch real-time results update instantly. Track your favorite candidates' progress live.",
-    action: "View Leaderboard",
+      "Tonton hasil real-time yang diperbarui secara instan. Pantau perkembangan kandidat favorit Anda secara langsung.",
+    action: "Lihat Papan Peringkat",
     href: "#leaderboard",
   },
 ];
@@ -79,10 +79,10 @@ export default function HowToVoteSection() {
 
       <div className="text-center mt-12">
         <p className="text-sm text-muted-foreground mb-4">
-          Need help? Check our FAQ or contact support
+          Butuh bantuan? Lihat FAQ kami atau hubungi dukungan
         </p>
         <Button variant="ghost" asChild>
-          <Link href="/help">Get Help</Link>
+          <Link href="/help">Dapatkan Bantuan</Link>
         </Button>
       </div>
     </section>
