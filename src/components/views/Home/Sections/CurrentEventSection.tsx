@@ -113,7 +113,7 @@ export default function CurrentEventSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="overflow-hidden">
-              <div className="relative h-48">
+              <div className="relative aspect-[4/5]">
                 <Skeleton className="h-full w-full" />
                 <div className="absolute top-4 left-4">
                   <Skeleton className="h-6 w-20 rounded-full" />
@@ -152,15 +152,15 @@ export default function CurrentEventSection() {
   const LandscapeEventCard = ({ event }: { event: EventInfo }) => (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group">
       <div className="flex flex-col md:flex-row">
-        {/* Event Image */}
-        <div className="relative md:w-2/5 h-64 md:h-auto">
+        {/* Event Image - Rasio 4:5 */}
+        <div className="relative md:w-2/5 aspect-[4/5]">
           <Image
             src={event.image || "/placeholder-event.jpg"}
             alt={event.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r md:from-black/60 md:to-transparent" />
 
           {/* Status Badge */}
           <div className="absolute top-4 left-4">
@@ -179,15 +179,28 @@ export default function CurrentEventSection() {
               </Badge>
             )}
           </div>
+
+          {/* Event Info Overlay untuk mobile */}
+          <div className="absolute bottom-4 left-4 right-4 text-white md:hidden">
+            <CardTitle className="text-xl font-bold text-white mb-2 line-clamp-2">
+              {event.title}
+            </CardTitle>
+            <div className="flex items-center gap-2 text-sm text-white/90">
+              <div className="flex items-center gap-1">
+                <Trophy className="w-4 h-4" />
+                {event.categories} kategori
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Event Content */}
         <div className="md:w-3/5 p-6 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="hidden md:flex items-center gap-2 mb-2">
               {event.status === "live" ? (
                 <Badge className="bg-red-500 text-white border-red-600 animate-pulse">
-                  🔴 Langsung
+                  Sedang Berlangsung
                 </Badge>
               ) : event.status === "upcoming" ? (
                 <Badge variant="secondary">
@@ -200,7 +213,7 @@ export default function CurrentEventSection() {
                 </Badge>
               )}
             </div>
-            <CardTitle className="text-2xl font-bold mb-3 line-clamp-2">
+            <CardTitle className="hidden md:block text-2xl font-bold mb-3 line-clamp-2">
               {event.title}
             </CardTitle>
             <p className="text-muted-foreground mb-4 line-clamp-3">
@@ -209,7 +222,7 @@ export default function CurrentEventSection() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-muted-foreground mb-4">
               <div className="flex items-center gap-1">
                 <Trophy className="w-4 h-4" />
                 {event.categories} kategori
@@ -250,11 +263,11 @@ export default function CurrentEventSection() {
   }) => (
     <Card
       className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group ${
-        featured ? "md:col-span-2 lg:col-span-2" : ""
+        featured ? "md:col-span-2 lg:col-span-1" : ""
       }`}
     >
-      {/* Event Image */}
-      <div className={`relative ${featured ? "h-80" : "h-48"} overflow-hidden`}>
+      {/* Event Image - Rasio 4:5 */}
+      <div className="relative aspect-[4/5] overflow-hidden">
         <Image
           src={event.image || "/placeholder-event.jpg"}
           alt={event.title}
@@ -285,25 +298,25 @@ export default function CurrentEventSection() {
         <div className="absolute bottom-4 left-4 right-4 text-white">
           <CardTitle
             className={`${
-              featured ? "text-2xl md:text-3xl" : "text-xl"
+              featured ? "text-xl md:text-2xl" : "text-lg"
             } font-bold text-white mb-2 line-clamp-2`}
           >
             {event.title}
           </CardTitle>
-          <div className="flex items-center gap-4 text-sm text-white/90">
+          <div className="flex items-center gap-3 text-sm text-white/90">
             <div className="flex items-center gap-1">
               <Trophy className="w-4 h-4" />
               {event.categories} kategori
             </div>
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {event.endsAtLabel}
+              <Users className="w-4 h-4" />
+              {event.participants || 0}
             </div>
           </div>
         </div>
       </div>
 
-      <CardContent className="p-6">
+      <CardContent className="p-4 md:p-6">
         {/* Description */}
         <p
           className={`text-muted-foreground text-sm mb-4 ${
@@ -316,8 +329,8 @@ export default function CurrentEventSection() {
         {/* Additional Stats */}
         <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
           <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            {event.participants || 0} peserta
+            <Clock className="w-4 h-4" />
+            {event.endsAtLabel}
           </div>
           <div className="text-xs bg-muted px-2 py-1 rounded-full">
             {event.categories} kategori
@@ -366,7 +379,7 @@ export default function CurrentEventSection() {
 
       {currentEvents.length === 2 && (
         // Two Events - Side by Side on Desktop
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 max-w-6xl mx-auto">
           {currentEvents.map((event) => (
             <PortraitEventCard key={event.id} event={event} />
           ))}
@@ -374,14 +387,10 @@ export default function CurrentEventSection() {
       )}
 
       {currentEvents.length === 3 && (
-        // Three Events - Featured + Two Smaller
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {currentEvents.map((event, index) => (
-            <PortraitEventCard
-              key={event.id}
-              event={event}
-              featured={index === 0}
-            />
+        // Three Events - Equal Grid
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 max-w-7xl mx-auto">
+          {currentEvents.map((event) => (
+            <PortraitEventCard key={event.id} event={event} />
           ))}
         </div>
       )}
