@@ -321,9 +321,14 @@ export default function DetailCategoryView() {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-sm">Suara</span>
-                    <span className="text-sm text-muted-foreground">
-                      {percentage}%
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">
+                        {votes.toLocaleString()}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        ({percentage}%)
+                      </span>
+                    </div>
                   </div>
                   <Progress value={percentage} className="h-2" />
                 </div>
