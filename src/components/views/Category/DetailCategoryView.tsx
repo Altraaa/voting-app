@@ -110,17 +110,17 @@ export default function DetailCategoryView() {
 
   const handleVote = async () => {
     if (!selectedCandidate || !isAuthenticated) {
-      toast.error("Please login to vote");
+      toast.error("Silakan login untuk melakukan vote");
       return;
     }
 
     if (votePoints > userPoints) {
-      toast.error("Insufficient points");
+      toast.error("Poin tidak mencukupi");
       return;
     }
 
     if (votePoints < 1) {
-      toast.error("Minimum 1 point to vote");
+      toast.error("Minimal 1 poin untuk vote");
       return;
     }
 
@@ -130,14 +130,14 @@ export default function DetailCategoryView() {
         pointsUsed: votePoints,
       });
 
-      toast.success(`Successfully voted with ${votePoints} points!`);
+      toast.success(`Berhasil vote dengan ${votePoints} poin!`);
       setIsDialogOpen(false);
       setSelectedCandidate(null);
       setVotePoints(1);
       // Data akan di-refresh otomatis via useEffect
     } catch (error) {
       console.error("Error voting:", error);
-      toast.error("Failed to vote. Please try again.");
+      toast.error("Gagal melakukan vote. Silakan coba lagi.");
     }
   };
 
@@ -155,19 +155,19 @@ export default function DetailCategoryView() {
 
   if (isLoading) {
     return (
-      <div className="px-4 lg:px-20 py-28">
+      <div className="px-4 lg:px-8 py-20">
         <div className="animate-pulse space-y-8">
-          <div className="h-10 bg-muted rounded w-32"></div>
+          <div className="h-8 bg-muted rounded w-24"></div>
           <div className="text-center space-y-4">
-            <div className="h-12 bg-muted rounded w-3/4 mx-auto"></div>
-            <div className="h-6 bg-muted rounded w-1/2 mx-auto"></div>
+            <div className="h-10 bg-muted rounded w-3/4 mx-auto"></div>
+            <div className="h-5 bg-muted rounded w-1/2 mx-auto"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="space-y-4">
-                <div className="h-64 bg-muted rounded"></div>
-                <div className="h-6 bg-muted rounded w-3/4"></div>
-                <div className="h-4 bg-muted rounded w-full"></div>
+              <div key={i} className="space-y-3">
+                <div className="h-48 bg-muted rounded"></div>
+                <div className="h-5 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-full"></div>
               </div>
             ))}
           </div>
@@ -178,10 +178,10 @@ export default function DetailCategoryView() {
 
   if (!categoryData) {
     return (
-      <div className="px-4 lg:px-20 py-28 text-center">
-        <h1 className="text-2xl font-bold mb-4">Category Not Found</h1>
+      <div className="px-4 lg:px-8 py-20 text-center">
+        <h1 className="text-xl font-bold mb-4">Kategori Tidak Ditemukan</h1>
         <Button asChild>
-          <Link href={`/event/${eventId}/category`}>Back to Categories</Link>
+          <Link href={`/event/${eventId}/category`}>Kembali ke Kategori</Link>
         </Button>
       </div>
     );
@@ -195,85 +195,92 @@ export default function DetailCategoryView() {
   });
 
   return (
-    <div className="px-4 lg:px-20 py-28" key={refreshTrigger}>
+    <div className="px-4 lg:px-8 py-20" key={refreshTrigger}>
       {/* Back button */}
-      <div className="mb-8">
-        <Button variant="ghost" asChild>
+      <div className="mb-6">
+        <Button variant="ghost" asChild size="sm">
           <Link href={`/event/${eventId}/category`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Categories
+            Kembali ke Kategori
           </Link>
         </Button>
       </div>
 
-      {/* Category Header with Image */}
-      <Card className="mb-12 overflow-hidden">
-        <div className="relative h-80 md:h-96">
-          <Image
-            src={categoryData.photo_url || "/placeholder-category.jpg"}
-            alt={categoryData.name}
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      {/* Category Header - Layout yang lebih compact */}
+      <div className="mb-6">
+        <div className="flex flex-col lg:flex-row gap-6 items-center lg:items-start">
+          {/* Category Image - Ukuran lebih kecil dengan rasio 4:5 */}
+          <div className="w-full lg:w-1/3 max-w-xs mx-auto lg:mx-0">
+            <div className="relative aspect-[4/5] rounded-lg overflow-hidden border">
+              <Image
+                src={categoryData.photo_url || "/placeholder-category.jpg"}
+                alt={categoryData.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
 
-          {/* Category Info Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-            <div className="flex justify-center gap-2 mb-4">
-              <Badge className="bg-primary text-primary-foreground">
+          {/* Category Content - Lebih compact */}
+          <div className="w-full lg:w-2/3 text-center lg:text-left">
+            <div className="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-3 mb-4">
+              <Badge className="bg-primary text-primary-foreground text-sm">
                 <Trophy className="w-3 h-3 mr-1" />
-                {sortedCandidates.length} Candidates
+                {sortedCandidates.length} Kandidat
               </Badge>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Users className="w-4 h-4" />
+                {totalVotes.toLocaleString()} total suara
+              </div>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-balance text-center mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-balance mb-4">
               {categoryData.name}
             </h1>
 
-            <div className="flex items-center justify-center gap-8 text-sm">
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                {totalVotes.toLocaleString()} total votes
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* User Points Display */}
-      <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-6 mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Coins className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Your Voting Points
+            {categoryData.description && (
+              <p className="text-base text-muted-foreground max-w-2xl mx-auto lg:mx-0 mb-6">
+                {categoryData.description}
               </p>
-              <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-primary">
-                  {userPoints}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  points available
-                </span>
+            )}
+
+            {/* User Points Display - DIPINDAHKAN ke sini */}
+            <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Coins className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Poin Voting Anda
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-primary">
+                        {userPoints}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        poin tersedia
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {userPoints === 0 && (
+                  <Button asChild size="sm">
+                    <Link href="/points">
+                      <Star className="mr-2 h-4 w-4" />
+                      Beli Poin
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
-          {userPoints === 0 && (
-            <Button asChild>
-              <Link href="/points">
-                <Star className="mr-2 h-4 w-4" />
-                Buy Points
-              </Link>
-            </Button>
-          )}
         </div>
       </div>
 
       {/* Candidates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedCandidates.map((candidate, index) => {
           const votes = getCandidateVotes(candidate.votes);
           const percentage = parseFloat(getCandidatePercentage(votes));
@@ -283,7 +290,7 @@ export default function DetailCategoryView() {
               key={candidate.id}
               className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              {/* PERUBAHAN DI SINI: Container dengan rasio 4:5 dan object-contain */}
+              {/* Container dengan rasio 4:5 dan object-contain */}
               <div className="relative aspect-[4/5] bg-muted/30">
                 <Image
                   src={candidate.photo_url || "/placeholder-candidate.jpg"}
@@ -292,52 +299,53 @@ export default function DetailCategoryView() {
                   className="object-contain p-2"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-background/90 text-foreground font-bold">
+                <div className="absolute top-3 right-3">
+                  <Badge className="bg-background/90 text-foreground font-bold text-xs">
                     #{index + 1}
                   </Badge>
                 </div>
                 {index === 0 && votes > 0 && (
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-yellow-500 text-white">
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-yellow-500 text-white text-xs">
                       <Trophy className="w-3 h-3 mr-1" />
-                      Leading
+                      Terdepan
                     </Badge>
                   </div>
                 )}
               </div>
 
-              <CardHeader>
-                <CardTitle className="text-xl">{candidate.name}</CardTitle>
+              <CardHeader className="p-4">
+                <CardTitle className="text-lg">{candidate.name}</CardTitle>
                 {candidate.description && (
-                  <p className="text-sm text-muted-foreground text-pretty">
+                  <p className="text-sm text-muted-foreground text-pretty line-clamp-2">
                     {candidate.description}
                   </p>
                 )}
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="p-4 space-y-3">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">Votes</span>
+                    <span className="font-medium text-sm">Suara</span>
                     <span className="text-sm text-muted-foreground">
                       {percentage}%
                     </span>
                   </div>
-                  <Progress value={percentage} className="h-3" />
+                  <Progress value={percentage} className="h-2" />
                 </div>
 
                 <Button
                   className="w-full"
+                  size="sm"
                   disabled={userPoints === 0 || !isAuthenticated || authLoading}
                   onClick={() => handleVoteClick(candidate)}
                 >
                   <Star className="mr-2 h-4 w-4" />
                   {!isAuthenticated
-                    ? "Login to Vote"
+                    ? "Login untuk Vote"
                     : userPoints === 0
-                    ? "No Points"
-                    : "Vote Now"}
+                    ? "Tidak Ada Poin"
+                    : "Vote Sekarang"}
                 </Button>
               </CardContent>
             </Card>
@@ -349,19 +357,18 @@ export default function DetailCategoryView() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Cast Your Vote</DialogTitle>
+            <DialogTitle>Berikan Vote Anda</DialogTitle>
             <DialogDescription>
-              Vote for <strong>{selectedCandidate?.name}</strong>. Each point
-              equals one vote.
+              Vote untuk <strong>{selectedCandidate?.name}</strong>. Setiap poin
+              sama dengan satu suara.
             </DialogDescription>
           </DialogHeader>
 
           {selectedCandidate && (
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-2">
               {/* Candidate Info */}
-              <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                {/* PERUBAHAN DI SINI: Container dengan rasio 4:5 untuk dialog */}
-                <div className="relative w-20 h-25 flex-shrink-0">
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                <div className="relative w-16 h-20 flex-shrink-0">
                   <Image
                     src={
                       selectedCandidate.photo_url ||
@@ -373,16 +380,20 @@ export default function DetailCategoryView() {
                   />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold">{selectedCandidate.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Current: {selectedCandidate.currentPercentage}%
+                  <h4 className="font-semibold text-sm">
+                    {selectedCandidate.name}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    Saat ini: {selectedCandidate.currentPercentage}%
                   </p>
                 </div>
               </div>
 
               {/* Points Input */}
               <div className="space-y-2">
-                <Label htmlFor="points">How many points to use?</Label>
+                <Label htmlFor="points" className="text-sm">
+                  Berapa banyak poin yang akan digunakan?
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="points"
@@ -391,18 +402,19 @@ export default function DetailCategoryView() {
                     max={userPoints}
                     value={votePoints}
                     onChange={(e) => handlePointsChange(e.target.value)}
-                    className="flex-1"
+                    className="flex-1 text-sm"
                   />
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setVotePoints(userPoints)}
                     disabled={userPoints === 0}
                   >
-                    Max
+                    Maks
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Available: {userPoints} points • Using: {votePoints} points
+                  Tersedia: {userPoints} poin • Menggunakan: {votePoints} poin
                 </p>
               </div>
 
@@ -422,14 +434,18 @@ export default function DetailCategoryView() {
               </div>
 
               {/* Summary */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm">Points to use:</span>
-                  <span className="font-bold text-primary">{votePoints}</span>
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs">Poin yang akan digunakan:</span>
+                  <span className="font-bold text-primary text-sm">
+                    {votePoints}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Remaining points:</span>
-                  <span className="font-bold">{userPoints - votePoints}</span>
+                  <span className="text-xs">Sisa poin:</span>
+                  <span className="font-bold text-sm">
+                    {userPoints - votePoints}
+                  </span>
                 </div>
               </div>
             </div>
@@ -438,22 +454,24 @@ export default function DetailCategoryView() {
           <DialogFooter>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 setIsDialogOpen(false);
                 setSelectedCandidate(null);
               }}
             >
-              Cancel
+              Batal
             </Button>
             <Button
+              size="sm"
               disabled={
                 voteMutations.createMutation.isPending || votePoints < 1
               }
               onClick={handleVote}
             >
               {voteMutations.createMutation.isPending
-                ? "Voting..."
-                : `Confirm Vote (${votePoints} points)`}
+                ? "Memproses..."
+                : `Konfirmasi Vote (${votePoints} poin)`}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -461,12 +479,12 @@ export default function DetailCategoryView() {
 
       {/* Empty State */}
       {sortedCandidates.length === 0 && (
-        <div className="text-center py-12">
+        <div className="text-center py-8">
           <p className="text-muted-foreground mb-4">
-            No candidates available yet for this category.
+            Belum ada kandidat yang tersedia untuk kategori ini.
           </p>
-          <Button asChild variant="outline">
-            <Link href={`/event/${eventId}/category`}>Back to Categories</Link>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/event/${eventId}/category`}>Kembali ke Kategori</Link>
           </Button>
         </div>
       )}
