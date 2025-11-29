@@ -33,7 +33,7 @@ export function setAuthCookie(token: string, res: NextResponse) {
   res.cookies.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
@@ -41,6 +41,18 @@ export function setAuthCookie(token: string, res: NextResponse) {
 
 export function clearAuthCookie(res: NextResponse) {
   res.cookies.delete("session");
+}
+
+export function getTokenFromRequest(req: NextRequest): string | null {
+  const sessionCookie = req.cookies.get("session")?.value;
+  if (sessionCookie) return sessionCookie;
+
+  const authHeader = req.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return authHeader.substring(7);
+  }
+
+  return null;
 }
 
 export function requireAdmin(token: string) {
