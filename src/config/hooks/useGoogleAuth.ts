@@ -14,6 +14,9 @@ export const useGoogleAuth = () => {
       toast.success("Login with Google successful!");
 
       await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      await queryClient.refetchQueries({ queryKey: ["user-profile"] });
+
+      queryClient.setQueryData(["user-profile"], data);
 
       const userRole = data.role;
       if (userRole === "ADMIN") {
