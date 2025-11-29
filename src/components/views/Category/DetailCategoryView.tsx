@@ -238,12 +238,6 @@ export default function DetailCategoryView() {
               {categoryData.name}
             </h1>
 
-            {categoryData.description && (
-              <p className="text-base text-muted-foreground max-w-2xl mx-auto lg:mx-0 mb-6">
-                {categoryData.description}
-              </p>
-            )}
-
             {/* User Points Display - DIPINDAHKAN ke sini */}
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
               <div className="flex items-center justify-between">
