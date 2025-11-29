@@ -92,12 +92,12 @@ export default function PointsView() {
 
   const handlePurchasePoints = () => {
     if (!user) {
-      toast.error("Please login to purchase points");
+      toast.error("Silakan login untuk membeli poin");
       return;
     }
 
     if (points < 10) {
-      toast.error("Minimum purchase is 10 points");
+      toast.error("Pembelian minimum adalah 10 poin");
       return;
     }
 
@@ -132,25 +132,25 @@ export default function PointsView() {
     <div className="px-4 lg:px-20 py-28 bg-background">
       <div className="text-center space-y-4 mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-          Buy Voting <span className="text-primary">Points</span>
+          Beli <span className="text-primary">Poin</span> Voting
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Purchase voting points to participate in all categories. Secure
-          payment with multiple options available.
+          Beli poin voting untuk berpartisipasi di semua kategori. Pembayaran
+          aman dengan berbagai opsi tersedia.
         </p>
       </div>
 
       {/* Current Points Display */}
       <div className="bg-card rounded-lg p-6 mb-8 text-center border border-border max-w-2xl mx-auto lg:mx-0 lg:max-w-none">
         <p className="text-sm text-muted-foreground mb-2">
-          Your Current Balance
+          Saldo Saat Ini
         </p>
         <div className="flex items-center justify-center gap-2">
           <Star className="w-6 h-6 text-primary" />
           <span className="text-3xl font-bold text-primary">
             {user?.points || 0}
           </span>
-          <span className="text-lg text-muted-foreground">voting points</span>
+          <span className="text-lg text-muted-foreground">poin voting</span>
         </div>
       </div>
 
@@ -164,10 +164,10 @@ export default function PointsView() {
                 <Star className="w-6 h-6 text-primary" />
               </div>
               <CardTitle className="text-2xl text-card-foreground">
-                Custom Points Purchase
+                Pembelian Poin
               </CardTitle>
               <p className="text-muted-foreground">
-                Choose exactly how many points you need
+                Pilih jumlah poin yang Anda butuhkan
               </p>
             </CardHeader>
 
@@ -179,7 +179,7 @@ export default function PointsView() {
                     {points}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    voting points
+                    poin voting
                   </div>
                 </div>
 
@@ -194,8 +194,8 @@ export default function PointsView() {
                     className="w-full"
                   />
                   <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>10 points</span>
-                    <span>1000 points</span>
+                    <span>10 poin</span>
+                    <span>1000 poin</span>
                   </div>
                 </div>
 
@@ -253,10 +253,10 @@ export default function PointsView() {
               {/* Features */}
               <ul className="space-y-3 text-sm">
                 {[
-                  `${points} voting points`,
-                  "Valid for 30 days",
-                  "Basic support",
-                  "Instant delivery",
+                  `${points} poin voting`,
+                  "Berlaku selama 30 hari",
+                  "Dukungan dasar",
+                  "Pengiriman instan",
                 ].map((feature, index) => (
                   <li
                     key={index}
@@ -278,10 +278,10 @@ export default function PointsView() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
+                    Memproses...
                   </>
                 ) : (
-                  "Buy Now"
+                  "Beli Sekarang"
                 )}
               </Button>
             </CardContent>
@@ -292,19 +292,20 @@ export default function PointsView() {
         <div className="lg:w-1/2">
           <div className="bg-card rounded-lg p-8 border border-border h-full">
             <h2 className="text-2xl font-bold text-center mb-8 text-card-foreground">
-              Frequently Asked Questions
+              Pertanyaan yang Sering Ditanyakan
             </h2>
 
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold mb-3 text-card-foreground text-lg">
-                  How do voting points work?
+                  Bagaimana cara kerja poin voting?
                 </h3>
                 <p className="text-muted-foreground">
-                  Each vote costs 1 point. Points are deducted from your balance
-                  when you vote for candidates in any category. Purchase points
-                  in bulk to save time and ensure you never run out during
-                  important voting periods.
+                  Setiap voting memakan 1 poin. Poin akan dikurangi dari saldo
+                  Anda saat Anda voting untuk kandidat di kategori mana pun.
+                  Beli poin dalam jumlah besar untuk menghemat waktu dan
+                  memastikan Anda tidak kehabisan poin saat periode voting
+                  yang penting.
                 </p>
               </div>
 
@@ -312,12 +313,12 @@ export default function PointsView() {
 
               <div>
                 <h3 className="font-semibold mb-3 text-card-foreground text-lg">
-                  Do points expire?
+                  Apakah poin kedaluwarsa?
                 </h3>
                 <p className="text-muted-foreground">
-                  Yes, purchased points are valid for 30 days from the date of
-                  purchase. We recommend only purchasing what you plan to use
-                  within this period.
+                  Ya, poin yang dibeli berlaku selama 30 hari dari tanggal
+                  pembelian. Kami menyarankan hanya membeli apa yang Anda
+                  rencanakan untuk gunakan dalam periode ini.
                 </p>
               </div>
 
@@ -325,11 +326,12 @@ export default function PointsView() {
 
               <div>
                 <h3 className="font-semibold mb-3 text-card-foreground text-lg">
-                  Can I get a refund?
+                  Bisakah saya mendapatkan pengembalian dana?
                 </h3>
                 <p className="text-muted-foreground">
-                  Unused points can be refunded within 7 days of purchase.
-                  Contact our support team for assistance with refund requests.
+                  Poin yang tidak terpakai dapat dikembalikan dalam 7 hari setelah
+                  pembelian. Hubungi tim dukungan kami untuk bantuan dengan
+                  permintaan pengembalian dana.
                 </p>
               </div>
 
@@ -337,12 +339,12 @@ export default function PointsView() {
 
               <div>
                 <h3 className="font-semibold mb-3 text-card-foreground text-lg">
-                  Is payment secure?
+                  Apakah pembayaran aman?
                 </h3>
                 <p className="text-muted-foreground">
-                  Yes, all payments are processed through secure, encrypted
-                  channels with trusted payment providers. We never store your
-                  payment information on our servers.
+                  Ya, semua pembayaran diproses melalui saluran aman dan
+                  terenkripsi dengan penyedia pembayaran tepercaya. Kami tidak
+                  pernah menyimpan informasi pembayaran Anda di server kami.
                 </p>
               </div>
 
@@ -350,12 +352,12 @@ export default function PointsView() {
 
               <div>
                 <h3 className="font-semibold mb-3 text-card-foreground text-lg">
-                  What payment methods do you accept?
+                  Metode pembayaran apa yang Anda terima?
                 </h3>
                 <p className="text-muted-foreground">
-                  We accept various payment methods including credit/debit
-                  cards, bank transfers, and popular e-wallets. All transactions
-                  are processed securely.
+                  Kami menerima berbagai metode pembayaran termasuk kartu
+                  kredit/debit, transfer bank, dan e-wallet populer. Semua
+                  transaksi diproses dengan aman.
                 </p>
               </div>
             </div>
@@ -364,14 +366,14 @@ export default function PointsView() {
 
             <div className="text-center">
               <p className="text-muted-foreground mb-4">
-                Need help with your purchase? Our support team is here to assist
-                you.
+                Butuh bantuan dengan pembelian Anda? Tim dukungan kami siap
+                membantu Anda.
               </p>
               <Button
                 variant="outline"
                 className="border-border hover:bg-muted"
               >
-                Contact Support
+                Hubungi Dukungan
               </Button>
             </div>
           </div>

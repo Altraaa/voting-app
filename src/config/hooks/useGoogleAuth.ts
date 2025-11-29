@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AuthResponse } from "@/config/types/authType";
@@ -6,11 +6,14 @@ import { authRoute } from "@/routes/authRoute";
 
 export const useGoogleAuth = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation<AuthResponse, Error, string>({
     mutationFn: authRoute.googleAuth,
-    onSuccess: (data: AuthResponse) => {
+    onSuccess: async (data: AuthResponse) => {
       toast.success("Login with Google successful!");
+
+      await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
       const userRole = data.role;
       if (userRole === "ADMIN") {
