@@ -453,9 +453,15 @@ export default function LeaderboardSection() {
                               </div>
                               {userPoints === 0 && (
                                 <Button asChild size="sm">
-                                  <Link href={isAuthenticated ? "/points" : "/login"}>
+                                  <Link
+                                    href={
+                                      isAuthenticated ? "/points" : "/login"
+                                    }
+                                  >
                                     <Star className="mr-2 h-4 w-4" />
-                                    {isAuthenticated ? "Beli Poin" : "Login untuk beli point"}
+                                    {isAuthenticated
+                                      ? "Beli Poin"
+                                      : "Login untuk beli point"}
                                   </Link>
                                 </Button>
                               )}
@@ -484,8 +490,8 @@ export default function LeaderboardSection() {
                                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                     <div className="flex items-center gap-1">
                                       <Users className="w-4 h-4" />
-                                      {cat.totalVotes.toLocaleString()} total
-                                      suara
+                                      {candidate.totalVotes.toLocaleString()}{" "}
+                                      total suara
                                     </div>
                                     <div>peringkat {index + 1}</div>
                                   </div>
@@ -494,7 +500,9 @@ export default function LeaderboardSection() {
                                 <CardContent className="space-y-4">
                                   <div>
                                     <div className="flex justify-between items-center mb-2">
-                                      <span className="font-medium">Persentase</span>
+                                      <span className="font-medium">
+                                        Persentase
+                                      </span>
                                       <span className="text-sm text-muted-foreground">
                                         {candidate.percentage.toFixed(1)}%
                                       </span>
@@ -509,9 +517,9 @@ export default function LeaderboardSection() {
                                     className="w-full"
                                     onClick={() => {
                                       if (!isAuthenticated) {
-                                        window.location.href = '/login';
+                                        window.location.href = "/login";
                                       } else if (userPoints === 0) {
-                                        window.location.href = '/points';
+                                        window.location.href = "/points";
                                       } else {
                                         handleVoteClick(candidate, cat);
                                       }
@@ -539,7 +547,10 @@ export default function LeaderboardSection() {
                               {/* Desktop Table */}
                               <div className="hidden md:block border rounded-lg">
                                 {remainingCandidates.map(
-                                  (candidate: CandidateWithVotes, index: number) => (
+                                  (
+                                    candidate: CandidateWithVotes,
+                                    index: number
+                                  ) => (
                                     <div
                                       key={candidate.id}
                                       className="flex items-center justify-between p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors"
@@ -566,9 +577,9 @@ export default function LeaderboardSection() {
                                           size="sm"
                                           onClick={() => {
                                             if (!isAuthenticated) {
-                                              window.location.href = '/login';
+                                              window.location.href = "/login";
                                             } else if (userPoints === 0) {
-                                              window.location.href = '/points';
+                                              window.location.href = "/points";
                                             } else {
                                               handleVoteClick(candidate, cat);
                                             }
@@ -590,7 +601,10 @@ export default function LeaderboardSection() {
                               {/* Mobile Cards */}
                               <div className="md:hidden space-y-4">
                                 {remainingCandidates.map(
-                                  (candidate: CandidateWithVotes, index: number) => (
+                                  (
+                                    candidate: CandidateWithVotes,
+                                    index: number
+                                  ) => (
                                     <Card key={candidate.id} className="p-4">
                                       <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
@@ -605,9 +619,9 @@ export default function LeaderboardSection() {
                                           size="sm"
                                           onClick={() => {
                                             if (!isAuthenticated) {
-                                              window.location.href = '/login';
+                                              window.location.href = "/login";
                                             } else if (userPoints === 0) {
-                                              window.location.href = '/points';
+                                              window.location.href = "/points";
                                             } else {
                                               handleVoteClick(candidate, cat);
                                             }
