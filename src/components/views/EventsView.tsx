@@ -2,19 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import {
-  // Users,
-  CalendarClock,
-  Trophy,
-  ArrowRight,
-  // TrendingUp,
-  Users2Icon,
-} from "lucide-react";
+import { CalendarClock, Trophy, ArrowRight, Users2Icon } from "lucide-react";
 import { StatusEvent } from "@/generated/prisma";
 import { IEvent } from "@/config/models/EventModel";
 import { useEventQueries } from "@/config/hooks/EventHook/eventQueries";
@@ -57,6 +51,12 @@ const getEventStatusLabel = (event: IEvent): string => {
   }
 };
 
+// Fungsi untuk memotong teks dan menambahkan "..."
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+};
+
 export default function EventsView() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | Status>("all");
@@ -74,6 +74,7 @@ export default function EventsView() {
       id: event.id,
       title: event.name,
       description: event.description,
+      photo_url: event.photo_url, // Tambahkan photo_url
       status: mapStatus(event.status),
       endsAtLabel: getEventStatusLabel(event),
       participants: event.users?.length || 0,
@@ -164,6 +165,28 @@ export default function EventsView() {
             key={ev.id}
             className="overflow-hidden hover:shadow-lg transition-shadow"
           >
+            {/* Gambar Event dengan rasio 4:5 */}
+            <div className="relative w-full h-0 pb-[125%]">
+              {" "}
+              {/* Rasio 4:5 (5/4 = 1.25 = 125%) */}
+              {ev.photo_url ? (
+                <Image
+                  src={ev.photo_url}
+                  alt={ev.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <Trophy className="w-12 h-12 mx-auto text-primary/30 mb-2" />
+                    <p className="text-muted-foreground">No Image</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <CardHeader className="space-y-3">
               <div className="flex items-center gap-2">
                 {ev.status === "Live" ? (
@@ -173,7 +196,6 @@ export default function EventsView() {
                 ) : (
                   <Badge variant="secondary">{ev.status}</Badge>
                 )}
-                {/* Trending badge bisa diimplementasikan berdasarkan logic bisnis */}
                 <div className="inline-flex items-center gap-2 text-sm text-muted-foreground ml-auto">
                   <CalendarClock className="w-4 h-4" />
                   {ev.endsAtLabel}
@@ -184,8 +206,9 @@ export default function EventsView() {
                 {ev.title}
               </CardTitle>
 
+              {/* Deskripsi yang dipotong dengan "..." */}
               <p className="text-muted-foreground text-pretty">
-                {ev.description}
+                {truncateText(ev.description, 120)}
               </p>
 
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
