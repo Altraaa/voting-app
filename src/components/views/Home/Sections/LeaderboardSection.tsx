@@ -118,22 +118,19 @@ export default function LeaderboardSection() {
     }
 
     return events
+      .filter((event) => event.status !== "ended")
       .slice(0, 3)
       .map((event, index) => {
-        // Ambil kategori untuk event ini
         const eventCategories = categories.filter(
           (cat) => cat.eventId === event.id
         );
 
-        // Process setiap kategori dengan kandidatnya
         const processedCategories: Category[] = eventCategories
           .map((category) => {
-            // Ambil kandidat untuk kategori ini
             const categoryCandidates = candidates.filter(
               (candidate) => candidate.categoryId === category.id
             );
 
-            // Hitung total votes untuk kategori
             const categoryTotalVotes = categoryCandidates.reduce(
               (sum, candidate) => {
                 return sum + getCandidateVotes(candidate.votes);
@@ -141,7 +138,6 @@ export default function LeaderboardSection() {
               0
             );
 
-            // Process setiap kandidat dengan votes dan percentage
             const candidatesWithVotes: CandidateWithVotes[] = categoryCandidates
               .map((candidate) => {
                 const votes = getCandidateVotes(candidate.votes);
@@ -156,7 +152,7 @@ export default function LeaderboardSection() {
                   percentage: percentage,
                 };
               })
-              .sort((a, b) => b.totalVotes - a.totalVotes); // Urutkan berdasarkan votes tertinggi
+              .sort((a, b) => b.totalVotes - a.totalVotes);
 
             return {
               id: category.id,
@@ -270,7 +266,7 @@ export default function LeaderboardSection() {
               ))}
             </div>
           </div>
-          
+
           {/* Loading Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
@@ -300,13 +296,16 @@ export default function LeaderboardSection() {
               </Card>
             ))}
           </div>
-          
+
           {/* Loading Table */}
           <div className="space-y-4">
             <Skeleton className="h-6 w-40" />
             <div className="border rounded-lg">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between p-4 border-b">
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-4 border-b"
+                >
                   <div className="flex items-center gap-4">
                     <Skeleton className="h-4 w-6" />
                     <Skeleton className="h-4 w-32" />
@@ -337,7 +336,9 @@ export default function LeaderboardSection() {
             <span className="text-primary">Papan Peringkat</span> Acara
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Lihat peringkat langsung berdasarkan acara dan kategori. Pilih acara, lalu kategori untuk melihat kandidat teratas dan perkembangannya.
+            Lihat peringkat langsung berdasarkan acara dan kategori. Pilih
+            acara, lalu kategori untuk melihat kandidat teratas dan
+            perkembangannya.
           </p>
         </div>
 
@@ -678,7 +679,8 @@ export default function LeaderboardSection() {
           <DialogHeader>
             <DialogTitle>Berikan Suara Anda</DialogTitle>
             <DialogDescription>
-              Berikan suara untuk <strong>{selectedCandidate?.name}</strong>. Setiap poin sama dengan satu suara.
+              Berikan suara untuk <strong>{selectedCandidate?.name}</strong>.
+              Setiap poin sama dengan satu suara.
             </DialogDescription>
           </DialogHeader>
 
