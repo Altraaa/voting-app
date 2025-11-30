@@ -161,12 +161,15 @@ export default function CheckoutPage() {
     return baseAmount + fee;
   };
 
-  // Filter payment methods to only show NUSAPAY QRIS and SHOPEEPAY QRIS
+  // Filter payment methods to show NUSAPAY QRIS, SHOPEEPAY QRIS, OVO, and Shopee Pay
   const filteredPaymentMethods =
     paymentMethodsData?.data?.paymentFee?.filter(
       (method) =>
         method.paymentName.includes("NUSAPAY QRIS") ||
-        method.paymentName.includes("SHOPEEPAY QRIS")
+        method.paymentName.includes("SHOPEEPAY QRIS") ||
+        method.paymentName.includes("OVO") ||
+        (method.paymentName.includes("ShopeePay") &&
+          !method.paymentName.includes("QRIS"))
     ) || [];
 
   // Tampilkan loading state
@@ -184,12 +187,12 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive">Kesalahan</CardTitle>
           </CardHeader>
           <CardContent>
             <p>{error}</p>
             <Button onClick={() => router.push("/points")} className="mt-4">
-              Back to Points
+              Kembali ke Poin
             </Button>
           </CardContent>
         </Card>
@@ -203,11 +206,11 @@ export default function CheckoutPage() {
 
   const customPackage = {
     id: "custom",
-    name: "Custom Points Purchase",
+    name: "Pembelian Poin Kustom",
     points: pointsNum,
     price: amountNum,
     validityDays: 30,
-    description: `${pointsNum} voting points`,
+    description: `${pointsNum} poin voting`,
   };
 
   const selectedPackage = isCustomPurchase
@@ -220,12 +223,12 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive">Kesalahan</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Invalid package selected</p>
+            <p>Paket yang dipilih tidak valid</p>
             <Button onClick={() => router.push("/points")} className="mt-4">
-              Back to Points
+              Kembali ke Poin
             </Button>
           </CardContent>
         </Card>
@@ -237,26 +240,26 @@ export default function CheckoutPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Button variant="ghost" onClick={() => router.back()} className="mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Packages
+        Kembali ke Paket
       </Button>
 
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Order Summary */}
+        {/* Ringkasan Pesanan */}
         <Card>
           <CardHeader>
-            <CardTitle>Order Summary</CardTitle>
+            <CardTitle>Ringkasan Pesanan</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="font-semibold">{selectedPackage.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPackage.points} voting points
+                  {selectedPackage.points} poin voting
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Valid for {selectedPackage.validityDays} days
+                  Berlaku selama {selectedPackage.validityDays} hari
                 </p>
               </div>
               <div className="text-right">
@@ -274,7 +277,7 @@ export default function CheckoutPage() {
                     <span>{formatPrice(selectedPackage.price)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Payment Fee</span>
+                    <span>Biaya Pembayaran</span>
                     <span>
                       {formatPrice(calculateTotalFee(selectedPayment))}
                     </span>
@@ -301,15 +304,15 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
-        {/* Payment Details */}
+        {/* Detail Pembayaran */}
         <Card>
           <CardHeader>
-            <CardTitle>Payment Details</CardTitle>
+            <CardTitle>Detail Pembayaran</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Phone Number */}
+            {/* Nomor Telepon */}
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone">Nomor Telepon</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -319,13 +322,13 @@ export default function CheckoutPage() {
                 required
               />
               <p className="text-sm text-muted-foreground">
-                Required for payment confirmation
+                Diperlukan untuk konfirmasi pembayaran
               </p>
             </div>
 
-            {/* Payment Method */}
+            {/* Metode Pembayaran */}
             <div className="space-y-4">
-              <Label>Payment Method</Label>
+              <Label>Metode Pembayaran</Label>
 
               {loadingMethods ? (
                 <div className="flex justify-center py-8">
@@ -333,11 +336,11 @@ export default function CheckoutPage() {
                 </div>
               ) : methodsError ? (
                 <div className="text-center py-8 text-destructive">
-                  Failed to load payment methods
+                  Gagal memuat metode pembayaran
                 </div>
               ) : !filteredPaymentMethods.length ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>No payment methods available</p>
+                  <p>Tidak ada metode pembayaran yang tersedia</p>
                 </div>
               ) : (
                 <RadioGroup
@@ -395,8 +398,8 @@ export default function CheckoutPage() {
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {fee > 0
-                                  ? `Fee: ${formatPrice(fee)}`
-                                  : "No additional fee"}
+                                  ? `Biaya: ${formatPrice(fee)}`
+                                  : "Tanpa biaya tambahan"}
                               </div>
                             </Label>
                           </div>
@@ -408,7 +411,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Pay Button */}
+            {/* Tombol Bayar */}
             <Button
               onClick={handlePayment}
               disabled={!selectedPayment || isProcessing || loadingMethods}
@@ -418,12 +421,12 @@ export default function CheckoutPage() {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Processing...
+                  Memproses...
                 </>
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Pay{" "}
+                  Bayar{" "}
                   {selectedPayment
                     ? formatPrice(getTotalAmount(selectedPayment))
                     : formatPrice(selectedPackage.price)}
