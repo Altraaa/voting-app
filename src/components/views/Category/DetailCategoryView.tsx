@@ -26,6 +26,7 @@ import { useAuthUser } from "@/config/hooks/useAuthUser";
 import { IVotes } from "@/config/models/VotesModel";
 import { ICandidate } from "@/config/models/CandidateModel";
 import { useCandidates } from "@/config/hooks/CandidateHook/useCandidate";
+import { useEvent } from "@/config/hooks/EventHook/useEvent";
 
 export default function DetailCategoryView() {
   const params = useParams();
@@ -36,6 +37,7 @@ export default function DetailCategoryView() {
   const { mutations: voteMutations } = useVotes();
   const { user, isAuthenticated, isLoading: authLoading } = useAuthUser();
   const { queries: candidateQueries } = useCandidates();
+  const { queries: eventQueries } = useEvent();
 
   const {
     data: categoryData,
@@ -49,6 +51,10 @@ export default function DetailCategoryView() {
     isLoading: candidatesLoading,
     refetch: refetchCandidates,
   } = candidateQueries.useGetCandidatesByCategoryId(categoryId);
+
+  // Fetch event data by ID
+  const { data: eventData, isLoading: eventLoading } =
+    eventQueries.useGetEventById(eventId);
 
   const [selectedCandidate, setSelectedCandidate] = useState<{
     id: string;
@@ -94,6 +100,24 @@ export default function DetailCategoryView() {
   };
 
   const handleVoteClick = (candidate: ICandidate) => {
+    // Cek status event sebelum membuka dialog vote
+    if (eventData && eventData.status === "ended") {
+      toast.error("Event telah berakhir, voting tidak dapat dilakukan");
+      return;
+    }
+
+    // Jika belum login, arahkan ke halaman login
+    if (!isAuthenticated) {
+      window.location.href = "/login";
+      return;
+    }
+
+    // Jika sudah login tapi tidak memiliki poin, arahkan ke halaman beli poin
+    if (userPoints === 0) {
+      window.location.href = "/points";
+      return;
+    }
+
     const votes = getCandidateVotes(candidate.votes);
     const percentage = getCandidatePercentage(votes);
 
@@ -151,7 +175,7 @@ export default function DetailCategoryView() {
   };
 
   // Combined loading state
-  const isLoading = categoryLoading || candidatesLoading;
+  const isLoading = categoryLoading || candidatesLoading || eventLoading;
 
   if (isLoading) {
     return (
@@ -194,6 +218,9 @@ export default function DetailCategoryView() {
     return bVotes - aVotes;
   });
 
+  // Cek status event
+  const isEventEnded = eventData && eventData.status === "ended";
+
   return (
     <div className="px-4 lg:px-8 py-20" key={refreshTrigger}>
       {/* Back button */}
@@ -232,6 +259,19 @@ export default function DetailCategoryView() {
                 <Users className="w-4 h-4" />
                 {totalVotes.toLocaleString()} total suara
               </div>
+              {/* Tambahkan badge status event */}
+              {eventData && (
+                <Badge
+                  variant={
+                    eventData.status === "ended" ? "destructive" : "default"
+                  }
+                  className="text-sm"
+                >
+                  {eventData.status === "live" && "Sedang Berlangsung"}
+                  {eventData.status === "upcoming" && "Akan Datang"}
+                  {eventData.status === "ended" && "Telah Berakhir"}
+                </Badge>
+              )}
             </div>
 
             <h1 className="text-2xl md:text-3xl font-bold text-balance mb-4">
@@ -259,8 +299,16 @@ export default function DetailCategoryView() {
                     </div>
                   </div>
                 </div>
-                {userPoints === 0 && (
+                {/* Button Beli Poin / Login untuk beli poin */}
+                {userPoints === 0 ? (
                   <Button asChild size="sm">
+                    <Link href={isAuthenticated ? "/points" : "/login"}>
+                      <Star className="mr-2 h-4 w-4" />
+                      {isAuthenticated ? "Beli Poin" : "Login untuk beli poin"}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild size="sm" variant="outline">
                     <Link href="/points">
                       <Star className="mr-2 h-4 w-4" />
                       Beli Poin
@@ -336,14 +384,16 @@ export default function DetailCategoryView() {
                 <Button
                   className="w-full"
                   size="sm"
-                  disabled={userPoints === 0 || !isAuthenticated || authLoading}
+                  disabled={isEventEnded || authLoading}
                   onClick={() => handleVoteClick(candidate)}
                 >
                   <Star className="mr-2 h-4 w-4" />
                   {!isAuthenticated
                     ? "Login untuk Vote"
+                    : isEventEnded
+                    ? "Event Telah Berakhir"
                     : userPoints === 0
-                    ? "Tidak Ada Poin"
+                    ? "Beli point untuk vote"
                     : "Vote Sekarang"}
                 </Button>
               </CardContent>
@@ -464,7 +514,9 @@ export default function DetailCategoryView() {
             <Button
               size="sm"
               disabled={
-                voteMutations.createMutation.isPending || votePoints < 1
+                voteMutations.createMutation.isPending ||
+                votePoints < 1 ||
+                isEventEnded
               }
               onClick={handleVote}
             >
