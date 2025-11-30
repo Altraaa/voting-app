@@ -93,7 +93,15 @@ export default function EventsView() {
 
   const filtered = useMemo(() => {
     let list = [...events];
-    if (tab !== "all") list = list.filter((e) => e.status === tab);
+
+    // Filter berdasarkan tab yang dipilih
+    if (tab === "all") {
+      list = list.filter((e) => e.status !== "Ended");
+    } else {
+      list = list.filter((e) => e.status === tab);
+    }
+
+    // Filter berdasarkan query pencarian
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -102,6 +110,7 @@ export default function EventsView() {
           e.description.toLowerCase().includes(q)
       );
     }
+
     return list;
   }, [query, tab, events]);
 
@@ -261,7 +270,9 @@ export default function EventsView() {
 
       {filtered.length === 0 && (
         <div className="text-center py-20 text-muted-foreground">
-          No events match your filters.
+          {tab === "all"
+            ? "No active events found."
+            : `No ${tab} events match your filters.`}
         </div>
       )}
 
