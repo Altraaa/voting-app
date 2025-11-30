@@ -9,7 +9,7 @@ const steps = [
     icon: CreditCard,
     title: "Beli Poin Voting",
     description:
-      "Beli poin voting mulai dari IDR 5.000 untuk 5 poin. Pembayaran aman dengan berbagai opsi.",
+      "Beli poin voting mulai dari IDR 10.000 untuk 10 poin. Pembayaran aman dengan berbagai opsi.",
     action: "Dapatkan Poin",
     href: "/points",
   },
