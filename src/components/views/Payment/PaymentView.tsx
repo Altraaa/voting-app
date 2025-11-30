@@ -161,6 +161,14 @@ export default function CheckoutPage() {
     return baseAmount + fee;
   };
 
+  // Filter payment methods to only show NUSAPAY QRIS and SHOPEEPAY QRIS
+  const filteredPaymentMethods =
+    paymentMethodsData?.data?.paymentFee?.filter(
+      (method) =>
+        method.paymentName.includes("NUSAPAY QRIS") ||
+        method.paymentName.includes("SHOPEEPAY QRIS")
+    ) || [];
+
   // Tampilkan loading state
   if (isLoading) {
     return (
@@ -224,8 +232,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
-  const paymentMethods = paymentMethodsData?.data?.paymentFee || [];
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -307,7 +313,7 @@ export default function CheckoutPage() {
               <Input
                 id="phone"
                 type="tel"
-                placeholder="08123456789"
+                placeholder="Masukkan no telp"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 required
@@ -329,12 +335,9 @@ export default function CheckoutPage() {
                 <div className="text-center py-8 text-destructive">
                   Failed to load payment methods
                 </div>
-              ) : !paymentMethods.length ? (
+              ) : !filteredPaymentMethods.length ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No payment methods available</p>
-                  <p className="text-xs mt-2">
-                    Response: {JSON.stringify(paymentMethodsData)}
-                  </p>
                 </div>
               ) : (
                 <RadioGroup
@@ -345,7 +348,7 @@ export default function CheckoutPage() {
                   }}
                 >
                   <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2">
-                    {paymentMethods.map((method) => {
+                    {filteredPaymentMethods.map((method) => {
                       const fee = calculateTotalFee(method.paymentMethod);
                       return (
                         <div
@@ -405,23 +408,10 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* Debug Info */}
-            <div className="text-xs text-muted-foreground bg-gray-100 p-2 rounded">
-              <p>selectedPayment: {selectedPayment || "null"}</p>
-              <p>phoneNumber: {phoneNumber || "null"}</p>
-              <p>isProcessing: {isProcessing ? "true" : "false"}</p>
-              <p>loadingMethods: {loadingMethods ? "true" : "false"}</p>
-            </div>
-
             {/* Pay Button */}
             <Button
               onClick={handlePayment}
-              disabled={
-                !selectedPayment ||
-                !phoneNumber ||
-                isProcessing ||
-                loadingMethods
-              }
+              disabled={!selectedPayment || isProcessing || loadingMethods}
               className="w-full"
               size="lg"
             >
