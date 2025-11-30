@@ -163,14 +163,16 @@ export default function CheckoutPage() {
 
   // Filter payment methods to show NUSAPAY QRIS, SHOPEEPAY QRIS, OVO, and Shopee Pay
   const filteredPaymentMethods =
-    paymentMethodsData?.data?.paymentFee?.filter(
-      (method) =>
-        method.paymentName.includes("NUSAPAY QRIS") ||
-        method.paymentName.includes("SHOPEEPAY QRIS") ||
-        method.paymentName.includes("OVO") ||
-        (method.paymentName.includes("ShopeePay") &&
-          !method.paymentName.includes("QRIS"))
-    ) || [];
+    paymentMethodsData?.data?.paymentFee?.filter((method) => {
+      const name = method.paymentName.toLowerCase();
+
+      return (
+        (name.includes("shopee") && !name.includes("qris")) ||
+        name.includes("ovo") ||
+        name.includes("nusapay") ||
+        name.includes("qris")
+      );
+    }) || [];
 
   // Tampilkan loading state
   if (isLoading) {
