@@ -326,19 +326,6 @@ export default function PointsView() {
 
               <div>
                 <h3 className="font-semibold mb-3 text-card-foreground text-lg">
-                  Bisakah saya mendapatkan pengembalian dana?
-                </h3>
-                <p className="text-muted-foreground">
-                  Poin yang tidak terpakai dapat dikembalikan dalam 7 hari setelah
-                  pembelian. Hubungi tim dukungan kami untuk bantuan dengan
-                  permintaan pengembalian dana.
-                </p>
-              </div>
-
-              <Separator className="bg-border" />
-
-              <div>
-                <h3 className="font-semibold mb-3 text-card-foreground text-lg">
                   Apakah pembayaran aman?
                 </h3>
                 <p className="text-muted-foreground">
