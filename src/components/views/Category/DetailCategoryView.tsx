@@ -418,13 +418,14 @@ export default function DetailCategoryView() {
               {/* Candidate Info */}
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <div className="relative w-16 h-20 flex-shrink-0">
-                  <Image
+                  <img
                     src={
                       selectedCandidate.photo_url ||
                       "/placeholder-candidate.jpg"
                     }
                     alt={selectedCandidate.name}
                     className="object-contain rounded-md"
+
                   />
                 </div>
                 <div className="flex-1">
