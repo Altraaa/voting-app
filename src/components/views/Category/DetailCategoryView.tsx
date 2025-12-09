@@ -424,7 +424,6 @@ export default function DetailCategoryView() {
                       "/placeholder-candidate.jpg"
                     }
                     alt={selectedCandidate.name}
-                    fill
                     className="object-contain rounded-md"
                   />
                 </div>
