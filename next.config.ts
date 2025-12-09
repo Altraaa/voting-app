@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
     ],
     formats: ["image/webp", "image/avif"],
   },
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  unoptimized: true,
 };
 
 export default nextConfig;
