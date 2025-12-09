@@ -417,16 +417,16 @@ export default function DetailCategoryView() {
             <div className="space-y-4 py-2">
               {/* Candidate Info */}
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <div className="relative w-16 h-20 flex-shrink-0">
+                <div className="relative aspect-[4/5] bg-muted/30 overflow-hidden">
                   <Image
-                    src={
-                      selectedCandidate.photo_url ||
-                      "/placeholder-candidate.jpg"
-                    }
+                    key={selectedCandidate.photo_url} 
+                    src={selectedCandidate.photo_url || "/placeholder-candidate.jpg"}
                     alt={selectedCandidate.name}
                     fill
-                    className="object-contain rounded-md"
-                    
+                    className="object-contain p-2"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
+                    unoptimized={false} 
                   />
                 </div>
                 <div className="flex-1">
