@@ -158,7 +158,6 @@ export default function DetailCategoryView() {
       setIsDialogOpen(false);
       setSelectedCandidate(null);
       setVotePoints(1);
-      // Data akan di-refresh otomatis via useEffect
     } catch (error) {
       console.error("Error voting:", error);
       toast.error("Gagal melakukan vote. Silakan coba lagi.");
