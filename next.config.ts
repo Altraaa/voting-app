@@ -20,7 +20,6 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
-  unoptimized: true,
 };
 
 export default nextConfig;
