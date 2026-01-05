@@ -20,7 +20,7 @@ COPY . .
 COPY .env.production .env
 
 # ✅ TAMBAHKAN: Override NEXT_PUBLIC_API_URL secara explicit
-ARG NEXT_PUBLIC_API_URL=https://www.seraphic.id/api
+ARG NEXT_PUBLIC_API_URL=https://www.seraphic.id/api/
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # 🔍 DEBUG: Print semua NEXT_PUBLIC env
