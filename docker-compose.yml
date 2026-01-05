@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://www.seraphic.id/api 
+    
     container_name: pilih-in-frontend-1
 
     env_file:
@@ -13,6 +16,7 @@ services:
 
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://www.seraphic.id/api
 
     restart: unless-stopped
 
