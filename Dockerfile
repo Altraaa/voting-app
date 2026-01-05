@@ -15,9 +15,26 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+Oke, kalau .env.production butuh env lain, jangan dihapus!
+Tapi tambahkan juga explicit ARG dan ENV untuk NEXT_PUBLIC_API_URL supaya pasti ter-set:
+✅ Solusi: Keep .env.production + Add explicit env
+dockerfile# Stage 2: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# copy env for build-time
+# Copy env for build-time (untuk env lain yang dibutuhkan)
 COPY .env.production .env
+
+# ✅ TAMBAHKAN: Override NEXT_PUBLIC_API_URL secara explicit
+ARG NEXT_PUBLIC_API_URL=https://www.seraphic.id/api
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+# 🔍 DEBUG: Print semua NEXT_PUBLIC env
+RUN echo "=== Environment Check ===" && \
+    cat .env | grep NEXT_PUBLIC || echo "No NEXT_PUBLIC in .env" && \
+    echo "NEXT_PUBLIC_API_URL from ENV: ${NEXT_PUBLIC_API_URL}"
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
