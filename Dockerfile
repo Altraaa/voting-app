@@ -15,14 +15,6 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-Oke, kalau .env.production butuh env lain, jangan dihapus!
-Tapi tambahkan juga explicit ARG dan ENV untuk NEXT_PUBLIC_API_URL supaya pasti ter-set:
-✅ Solusi: Keep .env.production + Add explicit env
-dockerfile# Stage 2: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
 # Copy env for build-time (untuk env lain yang dibutuhkan)
 COPY .env.production .env
