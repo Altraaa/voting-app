@@ -16,6 +16,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# copy env for build-time
+COPY .env.production .env
+
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx prisma generate
