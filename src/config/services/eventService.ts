@@ -3,6 +3,9 @@ import { EventCreatePayload, EventUpdatePayload } from "../types/eventType";
 
 export const eventService = {
   async getAll() {
+    // First, automatically update any expired events
+    await this.checkAndUpdateExpiredEvents();
+    
     return prisma.event.findMany({
       select: {
         id: true,
@@ -74,9 +77,38 @@ export const eventService = {
   },
 
   async update(data: EventUpdatePayload) {
+    // Convert date strings to Date objects for Prisma
+    const updateData: Record<string, unknown> = { ...data };
+    
+    if (data.startDate) {
+      updateData.startDate = new Date(data.startDate);
+    }
+    if (data.endDate) {
+      updateData.endDate = new Date(data.endDate);
+    }
+
     return prisma.event.update({
       where: { id: data.id },
-      data,
+      data: updateData,
+    });
+  },
+
+  // Check and update events that have passed their end date
+  async checkAndUpdateExpiredEvents() {
+    const now = new Date();
+    
+    return prisma.event.updateMany({
+      where: {
+        endDate: {
+          lte: now,
+        },
+        status: {
+          in: ['live', 'upcoming'],
+        },
+      },
+      data: {
+        status: 'ended',
+      },
     });
   },
 
