@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
-  Search,
-  Plus,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  X,
+    Search,
+    Plus,
+    Filter,
+    MoreHorizontal,
+    Edit,
+    Trash2,
+    Eye,
+    X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,35 +18,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { IEvent } from "@/config/models/EventModel";
 import { toast } from "sonner";
@@ -55,11 +55,50 @@ import { useUploadMutations } from "@/config/hooks/UploadImageHook/uploadImageMu
 import { StatusEvent } from "@/generated/prisma";
 import { extractPathFromUrl } from "@/config/utils/extractUrl";
 
+// Helper function to format ISO date to datetime-local format
+const formatDateForInput = (dateString: string): string => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    // Format: YYYY-MM-DDTHH:mm
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch {
+    return "";
+  }
+};
+
 export default function AdminEventView() {
   const { queries, mutations } = useEvent();
   const { uploadSingleMutation, deleteSingleMutation } = useUploadMutations();
 
-  const { data: events = [], isLoading } = queries.useGetAllEvents();
+  const { data: events = [], isLoading, refetch } = queries.useGetAllEvents();
+
+  // Check and update expired events on component load
+  const checkExpiredEvents = useCallback(async () => {
+    try {
+      const response = await fetch("/api/event/check-expired", {
+        method: "POST",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.count > 0) {
+          // Refetch events if any were updated
+          refetch();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to check expired events:", error);
+    }
+  }, [refetch]);
+
+  useEffect(() => {
+    checkExpiredEvents();
+  }, [checkExpiredEvents]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -239,8 +278,8 @@ export default function AdminEventView() {
       description: event.description,
       photo_url: event.photo_url || "",
       status: event.status,
-      startDate: event.startDate,
-      endDate: event.endDate,
+      startDate: formatDateForInput(event.startDate),
+      endDate: formatDateForInput(event.endDate),
       isActive: event.isActive,
     });
     setImagePreview(event.photo_url || "");
