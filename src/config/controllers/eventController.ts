@@ -58,4 +58,20 @@ export const eventController = {
       );
     }
   },
+
+  async checkExpiredEvents() {
+    try {
+      const result = await eventService.checkAndUpdateExpiredEvents();
+      return NextResponse.json({ 
+        message: "Expired events updated", 
+        count: result.count 
+      });
+    } catch (error) {
+      console.error("Controller check expired error:", error);
+      return NextResponse.json(
+        { error: "Failed to check expired events" },
+        { status: 500 }
+      );
+    }
+  },
 };
