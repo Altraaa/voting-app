@@ -97,7 +97,33 @@ export const eventService = {
   async checkAndUpdateExpiredEvents() {
     const now = new Date();
     
-    return prisma.event.updateMany({
+    // Get all non-ended events to debug
+    const activeEvents = await prisma.event.findMany({
+      where: {
+        status: {
+          in: ['live', 'upcoming'],
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        endDate: true,
+        status: true,
+      },
+    });
+    
+    const debugInfo = {
+      currentTime: now.toISOString(),
+      currentTimeLocal: now.toString(),
+      activeEvents: activeEvents.map(e => ({
+        name: e.name,
+        endDate: e.endDate.toISOString(),
+        status: e.status,
+        isExpired: e.endDate <= now,
+      })),
+    };
+    
+    const result = await prisma.event.updateMany({
       where: {
         endDate: {
           lte: now,
@@ -110,6 +136,8 @@ export const eventService = {
         status: 'ended',
       },
     });
+    
+    return { count: result.count, debug: debugInfo };
   },
 
   async remove(id: string) {
