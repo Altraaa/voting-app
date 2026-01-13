@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Trophy,
-  TrendingUp,
-  Users,
-  ArrowRight,
-  Star,
-  Coins,
+    Trophy,
+    TrendingUp,
+    Users,
+    ArrowRight,
+    Star,
+    Coins,
 } from "lucide-react";
 import Link from "next/link";
 import { useEvent } from "@/config/hooks/EventHook/useEvent";
@@ -20,16 +20,17 @@ import { useCandidates } from "@/config/hooks/CandidateHook/useCandidate";
 import { useCategories } from "@/config/hooks/CategoryHook/useCategory";
 import { useVotes } from "@/config/hooks/VoteHook/useVote";
 import { useAuthUser } from "@/config/hooks/useAuthUser";
+import { useSettings } from "@/config/hooks/SettingsHook/useSettings";
 import { toast } from "sonner";
 import { IVotes } from "@/config/models/VotesModel";
 import { ICandidate } from "@/config/models/CandidateModel";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,9 @@ export default function LeaderboardSection() {
   const { queries: candidateQueries } = useCandidates();
   const { mutations: voteMutations } = useVotes();
   const { user, isAuthenticated } = useAuthUser();
+  const { queries: settingsQueries } = useSettings();
+  const { data: settings } = settingsQueries.useGetSettings();
+  const showTotalVotes = settings?.showTotalVotes ?? true;
 
   const [selectedCandidate, setSelectedCandidate] = useState<{
     id: string;
@@ -423,13 +427,15 @@ export default function LeaderboardSection() {
                       return (
                         <TabsContent key={cat.id} value={cat.id}>
                           {/* Total Votes Display */}
-                          <div className="bg-gradient-to-r from-amber-500/10 to-amber-400/5 border border-amber-400/20 rounded-lg p-4 mb-4">
-                            <div className="text-center">
-                              <p className="text-sm text-amber-600/70 font-medium">
-                                Total Suara : {cat.totalVotes.toLocaleString()}
-                              </p>
+                          {showTotalVotes && (
+                            <div className="bg-gradient-to-r from-amber-500/10 to-amber-400/5 border border-amber-400/20 rounded-lg p-4 mb-4">
+                              <div className="text-center">
+                                <p className="text-sm text-amber-600/70 font-medium">
+                                  Total Suara : {cat.totalVotes.toLocaleString()}
+                                </p>
+                              </div>
                             </div>
-                          </div>
+                          )}
 
                           {/* User Points Display */}
                           <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
@@ -489,11 +495,13 @@ export default function LeaderboardSection() {
                                     {candidate.name}
                                   </CardTitle>
                                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                      <Users className="w-4 h-4" />
-                                      {candidate.totalVotes.toLocaleString()}{" "}
-                                      total suara
-                                    </div>
+                                    {showTotalVotes && (
+                                      <div className="flex items-center gap-1">
+                                        <Users className="w-4 h-4" />
+                                        {candidate.totalVotes.toLocaleString()}{" "}
+                                        total suara
+                                      </div>
+                                    )}
                                     <div>peringkat {index + 1}</div>
                                   </div>
                                 </CardHeader>
