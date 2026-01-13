@@ -190,3 +190,9 @@ enum SupportType {
   PREMIUM
   VIP
 }
+
+model Settings {
+  id             String   @id @default("app-settings")
+  showTotalVotes Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+}
