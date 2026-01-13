@@ -8,12 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import { Users, ArrowLeft, Star, Trophy, Coins } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +27,7 @@ import { IVotes } from "@/config/models/VotesModel";
 import { ICandidate } from "@/config/models/CandidateModel";
 import { useCandidates } from "@/config/hooks/CandidateHook/useCandidate";
 import { useEvent } from "@/config/hooks/EventHook/useEvent";
+import { useSettings } from "@/config/hooks/SettingsHook/useSettings";
 
 export default function DetailCategoryView() {
   const params = useParams();
@@ -38,6 +39,9 @@ export default function DetailCategoryView() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuthUser();
   const { queries: candidateQueries } = useCandidates();
   const { queries: eventQueries } = useEvent();
+  const { queries: settingsQueries } = useSettings();
+  const { data: settings } = settingsQueries.useGetSettings();
+  const showTotalVotes = settings?.showTotalVotes ?? true;
 
   const {
     data: categoryData,
@@ -254,10 +258,12 @@ export default function DetailCategoryView() {
                 <Trophy className="w-3 h-3 mr-1" />
                 {sortedCandidates.length} Kandidat
               </Badge>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Users className="w-4 h-4" />
-                {totalVotes.toLocaleString()} total suara
-              </div>
+              {showTotalVotes && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  {totalVotes.toLocaleString()} total suara
+                </div>
+              )}
               {/* Tambahkan badge status event */}
               {eventData && (
                 <Badge
