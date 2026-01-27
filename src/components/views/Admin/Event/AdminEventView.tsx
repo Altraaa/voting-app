@@ -118,6 +118,7 @@ export default function AdminEventView() {
     startDate: string;
     endDate: string;
     isActive: boolean;
+    pointsPerVote: number;
   }>({
     name: "",
     description: "",
@@ -126,6 +127,7 @@ export default function AdminEventView() {
     startDate: "",
     endDate: "",
     isActive: true,
+    pointsPerVote: 1,
   });
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,6 +212,7 @@ export default function AdminEventView() {
         startDate: formData.startDate,
         endDate: formData.endDate,
         isActive: formData.isActive,
+        pointsPerVote: formData.pointsPerVote,
       });
 
       setIsCreateDialogOpen(false);
@@ -241,6 +244,7 @@ export default function AdminEventView() {
         startDate: formData.startDate,
         endDate: formData.endDate,
         isActive: formData.isActive,
+        pointsPerVote: formData.pointsPerVote,
       });
 
       if (shouldDeleteOldImage && selectedEvent.photo_url) {
@@ -281,6 +285,7 @@ export default function AdminEventView() {
       startDate: formatDateForInput(event.startDate),
       endDate: formatDateForInput(event.endDate),
       isActive: event.isActive,
+      pointsPerVote: event.pointsPerVote || 1,
     });
     setImagePreview(event.photo_url || "");
     setSelectedFile(null);
@@ -306,6 +311,7 @@ export default function AdminEventView() {
       startDate: "",
       endDate: "",
       isActive: true,
+      pointsPerVote: 1,
     });
     setSelectedFile(null);
     setImagePreview("");
@@ -629,6 +635,38 @@ export default function AdminEventView() {
               </Select>
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="create-points-per-vote" className="text-card-foreground">
+                Poin per Vote
+              </Label>
+              <Select
+                value={formData.pointsPerVote.toString()}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, pointsPerVote: parseInt(value) })
+                }
+              >
+                <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectValue placeholder="Pilih rasio poin" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem
+                    value="1"
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    1 Poin = 1 Vote
+                  </SelectItem>
+                  <SelectItem
+                    value="2"
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    2 Poin = 1 Vote
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Tentukan berapa poin yang dibutuhkan untuk 1 vote
+              </p>
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="create-image" className="text-card-foreground">
                 Event Image
               </Label>
@@ -811,6 +849,38 @@ export default function AdminEventView() {
                   </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-points-per-vote" className="text-card-foreground">
+                Poin per Vote
+              </Label>
+              <Select
+                value={formData.pointsPerVote.toString()}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, pointsPerVote: parseInt(value) })
+                }
+              >
+                <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectValue placeholder="Pilih rasio poin" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem
+                    value="1"
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    1 Poin = 1 Vote
+                  </SelectItem>
+                  <SelectItem
+                    value="2"
+                    className="text-card-foreground hover:bg-muted"
+                  >
+                    2 Poin = 1 Vote
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Tentukan berapa poin yang dibutuhkan untuk 1 vote
+              </p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-image" className="text-card-foreground">

@@ -72,6 +72,7 @@ export default function DetailCategoryView() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const userPoints = user?.points || 0;
+  const pointsPerVote = eventData?.pointsPerVote || 1;
 
   // Refetch data after successful vote
   useEffect(() => {
@@ -132,7 +133,7 @@ export default function DetailCategoryView() {
       currentVotes: votes,
       currentPercentage: percentage,
     });
-    setVotePoints(1);
+    setVotePoints(pointsPerVote);
     setIsDialogOpen(true);
   };
 
@@ -147,8 +148,13 @@ export default function DetailCategoryView() {
       return;
     }
 
-    if (votePoints < 1) {
-      toast.error("Minimal 1 poin untuk vote");
+    if (votePoints < pointsPerVote) {
+      toast.error(`Minimal ${pointsPerVote} poin untuk 1 vote`);
+      return;
+    }
+
+    if (votePoints % pointsPerVote !== 0) {
+      toast.error(`Poin harus kelipatan ${pointsPerVote}`);
       return;
     }
 
@@ -158,10 +164,11 @@ export default function DetailCategoryView() {
         pointsUsed: votePoints,
       });
 
-      toast.success(`Berhasil vote dengan ${votePoints} poin!`);
+      const votesReceived = votePoints / pointsPerVote;
+      toast.success(`Berhasil vote! ${votePoints} poin = ${votesReceived} suara`);
       setIsDialogOpen(false);
       setSelectedCandidate(null);
-      setVotePoints(1);
+      setVotePoints(pointsPerVote);
     } catch (error) {
       console.error("Error voting:", error);
       toast.error("Gagal melakukan vote. Silakan coba lagi.");
@@ -413,8 +420,10 @@ export default function DetailCategoryView() {
           <DialogHeader>
             <DialogTitle>Berikan Vote Anda</DialogTitle>
             <DialogDescription>
-              Vote untuk <strong>{selectedCandidate?.name}</strong>. Setiap poin
-              sama dengan satu suara.
+              Vote untuk <strong>{selectedCandidate?.name}</strong>.
+              {pointsPerVote === 1 
+                ? " Setiap 1 poin = 1 suara."
+                : ` Setiap ${pointsPerVote} poin = 1 suara.`}
             </DialogDescription>
           </DialogHeader>
 
@@ -453,8 +462,9 @@ export default function DetailCategoryView() {
                   <Input
                     id="points"
                     type="number"
-                    min={1}
+                    min={pointsPerVote}
                     max={userPoints}
+                    step={pointsPerVote}
                     value={votePoints}
                     onChange={(e) => handlePointsChange(e.target.value)}
                     className="flex-1 text-sm"
@@ -475,17 +485,20 @@ export default function DetailCategoryView() {
 
               {/* Quick Select Buttons */}
               <div className="grid grid-cols-4 gap-2">
-                {[1, 5, 10, 20].map((amount) => (
-                  <Button
-                    key={amount}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setVotePoints(Math.min(amount, userPoints))}
-                    disabled={amount > userPoints}
-                  >
-                    {amount}
-                  </Button>
-                ))}
+                {[1, 2, 5, 10].map((multiplier) => {
+                  const amount = multiplier * pointsPerVote;
+                  return (
+                    <Button
+                      key={multiplier}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVotePoints(Math.min(amount, userPoints - (userPoints % pointsPerVote)))}
+                      disabled={amount > userPoints}
+                    >
+                      {amount}p
+                    </Button>
+                  );
+                })}
               </div>
 
               {/* Summary */}
@@ -494,6 +507,12 @@ export default function DetailCategoryView() {
                   <span className="text-xs">Poin yang akan digunakan:</span>
                   <span className="font-bold text-primary text-sm">
                     {votePoints}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs">Suara yang diterima:</span>
+                  <span className="font-bold text-primary text-sm">
+                    {Math.floor(votePoints / pointsPerVote)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
