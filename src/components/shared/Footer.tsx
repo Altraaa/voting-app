@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Vote className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-primary">Seraphic</span>
+              <span className="text-xl font-bold text-primary">Pilih.in</span>
             </div>
             <p className="text-sm text-muted-foreground">
               The most trusted platform for real-time voting with transparent
@@ -50,14 +50,6 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Support</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/help"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Help Center
-                </Link>
-              </li>
               <li>
                 <Link
                   href="/contact"
@@ -103,7 +95,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Klik Vote. All rights reserved.</p>
+          <p>&copy; 2025 Pilih.in. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -1,4 +1,5 @@
 import { AuthResponse, LoginPayload } from "@/config/types/authType";
+import { otpPayload } from "@/config/types/otpType";
 import { RegisterPayload } from "@/config/types/registerType";
 import { ApiRequest } from "@/lib/api";
 
@@ -15,6 +16,25 @@ export const authRoute = {
       url: "auth/login",
       method: "POST",
       body: payload,
+    }),
+  googleAuth: (credential: string): Promise<AuthResponse> =>
+    ApiRequest({
+      url: "auth/google",
+      method: "POST",
+      body: { credential },
+    }),
+  verifyOtp: (payload: otpPayload): Promise<AuthResponse> =>
+    ApiRequest({
+      url: "auth/verify-otp",
+      method: "POST",
+      body: payload,
+    }),
+
+  resendOtp: (email: string): Promise<AuthResponse> =>
+    ApiRequest({
+      url: "auth/resend-otp",
+      method: "POST",
+      body: { email },
     }),
 
   logout: () =>

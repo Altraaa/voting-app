@@ -1,10 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { UsersCreatePayload, UsersUpdatePayload, UsersUpdateProfilePayload } from "../types/usersType";
+import {
+  UsersCreatePayload,
+  UsersUpdatePayload,
+  UsersUpdateProfilePayload,
+} from "../types/usersType";
 
 export const userService = {
   async getAll() {
     return prisma.user.findMany({
-      select: { id: true, firstName: true, lastName: true, email: true, name: true, points: true, role: true },
+      select: { id: true, email: true, name: true, points: true, role: true },
     });
   },
 

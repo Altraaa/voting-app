@@ -9,9 +9,15 @@ export const useLogin = () => {
 
   const mutation = useMutation<AuthResponse, Error, LoginPayload>({
     mutationFn: authRoute.login,
-    onSuccess: () => {
+    onSuccess: (data: AuthResponse) => {
       toast.success("Login successful!");
-      router.push("/");
+
+      const userRole = data.role;
+      if (userRole === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     },
     onError: (error) => {
       console.error("Login error:", error);

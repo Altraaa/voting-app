@@ -3,12 +3,19 @@ import { PackageHistoryCreatePayload } from "../types/packageHistoryType";
 
 export const packageHistoryService = {
   async getAll() {
-    return prisma.packageHistory.findMany({
+    const histories = await prisma.packageHistory.findMany({
       include: {
-        user: true,
-        package: true,
+        user: {
+          select: { email: true, name: true },
+        },
+        package: {
+          select: { name: true, price: true },
+        },
       },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return histories.map(({ createdAt, updatedAt, ...rest }) => rest);
   },
 
   async getByUserId(userId: string) {
@@ -24,7 +31,7 @@ export const packageHistoryService = {
     return prisma.packageHistory.create({
       data: {
         ...data,
-        isActive: new Date() < data.validUntil,
+        isActive: new Date() < new Date(data.validUntil),
       },
     });
   },

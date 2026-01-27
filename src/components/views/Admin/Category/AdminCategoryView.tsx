@@ -72,7 +72,6 @@ export default function AdminCategoryView() {
     null
   );
 
-  // State untuk upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -82,12 +81,10 @@ export default function AdminCategoryView() {
     eventId: "",
   });
 
-  // Handle image selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validasi
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
       toast.error("Format file tidak valid", {
@@ -105,7 +102,6 @@ export default function AdminCategoryView() {
 
     setSelectedFile(file);
 
-    // Preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -113,13 +109,11 @@ export default function AdminCategoryView() {
     reader.readAsDataURL(file);
   };
 
-  // Remove image preview
   const handleRemoveImage = () => {
     setSelectedFile(null);
     setImagePreview("");
   };
 
-  // Upload image handler
   const handleImageUpload = async (): Promise<string> => {
     if (!selectedFile) {
       return "";
@@ -142,7 +136,6 @@ export default function AdminCategoryView() {
     }
   };
 
-  // Delete image handler
   const handleImageDelete = async (photoUrl: string): Promise<void> => {
     const path = extractPathFromUrl(photoUrl);
     if (path) {
@@ -154,10 +147,8 @@ export default function AdminCategoryView() {
     }
   };
 
-  // Create Category Handler
   const handleCreate = async () => {
     try {
-      // Validasi required fields
       if (!formData.name || !formData.eventId) {
         toast.error("Data tidak lengkap", {
           description: "Nama kategori dan event harus diisi",
@@ -167,12 +158,10 @@ export default function AdminCategoryView() {
 
       let photoUrl = "";
 
-      // Upload image jika ada
       if (selectedFile) {
         photoUrl = await handleImageUpload();
       }
 
-      // Create category
       await mutations.createMutation.mutateAsync({
         name: formData.name,
         photo_url: photoUrl,
@@ -187,7 +176,6 @@ export default function AdminCategoryView() {
     }
   };
 
-  // Edit Category Handler
   const handleEdit = async () => {
     if (!selectedCategory) return;
 
@@ -195,14 +183,12 @@ export default function AdminCategoryView() {
       let photoUrl = formData.photo_url;
       let shouldDeleteOldImage = false;
 
-      // Jika ada file baru, upload dan tandai untuk hapus yang lama
       if (selectedFile) {
         const newPhotoUrl = await handleImageUpload();
         photoUrl = newPhotoUrl;
         shouldDeleteOldImage = true;
       }
 
-      // Update category
       await mutations.updateMutation.mutateAsync({
         id: selectedCategory.id,
         name: formData.name,
@@ -210,7 +196,6 @@ export default function AdminCategoryView() {
         eventId: formData.eventId,
       });
 
-      // Hapus gambar lama setelah update berhasil
       if (shouldDeleteOldImage && selectedCategory.photo_url) {
         await handleImageDelete(selectedCategory.photo_url);
       }
@@ -223,17 +208,14 @@ export default function AdminCategoryView() {
     }
   };
 
-  // Delete Category Handler
   const handleDelete = async () => {
     if (!selectedCategory) return;
 
     try {
-      // Hapus gambar jika ada
       if (selectedCategory.photo_url) {
         await handleImageDelete(selectedCategory.photo_url);
       }
 
-      // Hapus category
       await mutations.removeMutation.mutateAsync(selectedCategory.id);
 
       setIsDeleteDialogOpen(false);
@@ -281,163 +263,198 @@ export default function AdminCategoryView() {
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Get event name by ID untuk display di table
   const getEventNameById = (eventId: string) => {
     const event = events.find((event) => event.id === eventId);
     return event ? event.name : "Unknown Event";
   };
 
-  // Loading state
   if (categoriesLoading || eventsLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <p>Loading categories...</p>
+      <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading categories...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Category Management
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Organize events into categories
-            </p>
-          </div>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => {
-              resetForm();
-              setIsCreateDialogOpen(true);
-            }}
-            disabled={events.length === 0}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Category
-          </Button>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+            Category Management
+          </h1>
+          <p className="text-muted-foreground">
+            Organize events into categories
+          </p>
         </div>
-
-        {events.length === 0 && (
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800">
-              Tidak ada event yang tersedia. Silahkan buat event terlebih dahulu
-              sebelum membuat kategori.
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search categories..."
-              className="pl-10 bg-white border-gray-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-        </div>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
+          onClick={() => {
+            resetForm();
+            setIsCreateDialogOpen(true);
+          }}
+          disabled={events.length === 0}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Category
+        </Button>
       </div>
 
-      <Card className="border-gray-200">
+      {events.length === 0 && (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800">
+            Tidak ada event yang tersedia. Silahkan buat event terlebih dahulu
+            sebelum membuat kategori.
+          </p>
+        </div>
+      )}
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search categories..."
+            className="pl-10 bg-background border-border"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" className="border-border hover:bg-muted">
+          <Filter className="w-4 h-4 mr-2" />
+          <span className="hidden sm:inline">Filter</span>
+        </Button>
+      </div>
+
+      {/* Table Section */}
+      <Card className="border-border bg-card">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-medium text-gray-700">
-                  Image
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Category Name
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Event
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Candidates
-                </TableHead>
-                <TableHead className="font-medium text-gray-700 w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCategories.map((category) => (
-                <TableRow key={category.id} className="hover:bg-gray-50">
-                  <TableCell>
-                    <div className="w-12 h-12 rounded-lg overflow-hidden">
-                      <Image
-                        src={category.photo_url || "/placeholder.svg"}
-                        alt={category.name}
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="text-gray-600">
-                    {getEventNameById(category.eventId)}
-                  </TableCell>
-                  <TableCell className="text-gray-600">
-                    {category.candidates?.length || 0}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-8 h-8">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => openViewDialog(category)}
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openEditDialog(category)}
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => openDeleteDialog(category)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted hover:bg-muted">
+                  <TableHead className="font-medium text-card-foreground hidden sm:table-cell">
+                    Image
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground">
+                    Category Name
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden md:table-cell">
+                    Event
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground">
+                    Candidates
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground w-12">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredCategories.map((category) => (
+                  <TableRow
+                    key={category.id}
+                    className="hover:bg-muted/50 border-border"
+                  >
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden">
+                        <Image
+                          src={category.photo_url || "/placeholder.svg"}
+                          alt={category.name}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-card-foreground">
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{category.name}</span>
+                        <span className="text-sm text-muted-foreground sm:hidden">
+                          {getEventNameById(category.eventId)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
+                      {getEventNameById(category.eventId)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground font-medium">
+                      {category.candidates?.length || 0}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 hover:bg-muted"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-card border-border"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => openViewDialog(category)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openEditDialog(category)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-border" />
+                          <DropdownMenuItem
+                            className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                            onClick={() => openDeleteDialog(category)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredCategories.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">No categories found</div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* CREATE DIALOG */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Category</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Create New Category
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Add a new category to organize your events
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Category Name *</Label>
+              <Label htmlFor="create-name" className="text-card-foreground">
+                Category Name *
+              </Label>
               <Input
                 id="create-name"
                 value={formData.name}
@@ -445,43 +462,51 @@ export default function AdminCategoryView() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Enter category name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-event">Event *</Label>
+              <Label htmlFor="create-event" className="text-card-foreground">
+                Event *
+              </Label>
               <Select
                 value={formData.eventId}
                 onValueChange={(value) =>
                   setFormData({ ...formData, eventId: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Select an event" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {events.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
+                    <SelectItem
+                      key={event.id}
+                      value={event.id}
+                      className="text-card-foreground hover:bg-muted"
+                    >
                       {event.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {/* Image Upload Section */}
             <div className="grid gap-2">
-              <Label htmlFor="create-image">Category Image</Label>
-              <div className="flex items-center gap-4">
+              <Label htmlFor="create-image" className="text-card-foreground">
+                Category Image
+              </Label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Input
                   id="create-image"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageSelect}
-                  className="flex-1"
+                  className="flex-1 bg-background border-border text-foreground"
                   disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={imagePreview}
                         alt="Preview"
@@ -503,7 +528,9 @@ export default function AdminCategoryView() {
                 )}
               </div>
               {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
+                <p className="text-sm text-muted-foreground">
+                  Uploading image...
+                </p>
               )}
             </div>
           </div>
@@ -515,11 +542,12 @@ export default function AdminCategoryView() {
                 resetForm();
               }}
               disabled={mutations.createMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleCreate}
               disabled={
                 mutations.createMutation.isPending ||
@@ -538,14 +566,20 @@ export default function AdminCategoryView() {
 
       {/* EDIT DIALOG */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
-            <DialogDescription>Update category information</DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Edit Category
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update category information
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Category Name *</Label>
+              <Label htmlFor="edit-name" className="text-card-foreground">
+                Category Name *
+              </Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -553,22 +587,29 @@ export default function AdminCategoryView() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 placeholder="Enter category name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-event">Event *</Label>
+              <Label htmlFor="edit-event" className="text-card-foreground">
+                Event *
+              </Label>
               <Select
                 value={formData.eventId}
                 onValueChange={(value) =>
                   setFormData({ ...formData, eventId: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Select an event" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {events.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
+                    <SelectItem
+                      key={event.id}
+                      value={event.id}
+                      className="text-card-foreground hover:bg-muted"
+                    >
                       {event.name}
                     </SelectItem>
                   ))}
@@ -576,19 +617,21 @@ export default function AdminCategoryView() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-image">Category Image</Label>
-              <div className="flex items-center gap-4">
+              <Label htmlFor="edit-image" className="text-card-foreground">
+                Category Image
+              </Label>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Input
                   id="edit-image"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleImageSelect}
-                  className="flex-1"
+                  className="flex-1 bg-background border-border text-foreground"
                   disabled={uploadSingleMutation.isPending}
                 />
                 {imagePreview && (
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border border-border">
                       <Image
                         src={imagePreview}
                         alt="Preview"
@@ -610,7 +653,9 @@ export default function AdminCategoryView() {
                 )}
               </div>
               {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
+                <p className="text-sm text-muted-foreground">
+                  Uploading image...
+                </p>
               )}
             </div>
           </div>
@@ -619,11 +664,12 @@ export default function AdminCategoryView() {
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
               disabled={mutations.updateMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleEdit}
               disabled={
                 mutations.updateMutation.isPending ||
@@ -642,15 +688,17 @@ export default function AdminCategoryView() {
 
       {/* VIEW DIALOG */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Category Details</DialogTitle>
+            <DialogTitle className="text-card-foreground">
+              Category Details
+            </DialogTitle>
           </DialogHeader>
           {selectedCategory && (
             <div className="grid gap-6 py-4">
               {selectedCategory.photo_url && (
                 <div className="flex justify-center">
-                  <div className="w-48 h-48 rounded-lg overflow-hidden">
+                  <div className="w-48 h-48 rounded-lg overflow-hidden border border-border">
                     <Image
                       src={selectedCategory.photo_url}
                       alt={selectedCategory.name}
@@ -663,35 +711,37 @@ export default function AdminCategoryView() {
               )}
               <div className="grid gap-4">
                 <div>
-                  <Label className="text-gray-600">Category Name</Label>
-                  <p className="text-lg font-medium mt-1">
+                  <Label className="text-muted-foreground">Category Name</Label>
+                  <p className="text-lg font-medium mt-1 text-card-foreground">
                     {selectedCategory.name}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Event</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Event</Label>
+                    <p className="mt-1 text-card-foreground">
                       {getEventNameById(selectedCategory.eventId)}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Candidates</Label>
-                    <p className="text-2xl font-semibold mt-1">
+                    <Label className="text-muted-foreground">Candidates</Label>
+                    <p className="text-2xl font-semibold mt-1 text-card-foreground">
                       {selectedCategory.candidates?.length || 0}
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-gray-600">Created At</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">Created At</Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedCategory.created).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-gray-600">Last Updated</Label>
-                    <p className="mt-1">
+                    <Label className="text-muted-foreground">
+                      Last Updated
+                    </Label>
+                    <p className="mt-1 text-card-foreground">
                       {new Date(selectedCategory.updated).toLocaleDateString()}
                     </p>
                   </div>
@@ -703,6 +753,7 @@ export default function AdminCategoryView() {
             <Button
               variant="outline"
               onClick={() => setIsViewDialogOpen(false)}
+              className="border-border hover:bg-muted"
             >
               Close
             </Button>
@@ -712,10 +763,12 @@ export default function AdminCategoryView() {
 
       {/* DELETE CONFIRMATION DIALOG */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Delete Category
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Are you sure you want to delete &ldquo;{selectedCategory?.name}
               &rdquo;? This action cannot be undone.
             </DialogDescription>
@@ -725,6 +778,7 @@ export default function AdminCategoryView() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={mutations.removeMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>

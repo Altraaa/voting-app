@@ -20,7 +20,7 @@ export const userController = {
   },
 
   async create(req: Request, token: string | undefined) {
-    const decoded = await verifyToken(token || "");
+    const decoded = verifyToken(token || "");
     if (!decoded || decoded.role !== Role.ADMIN) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

@@ -4,30 +4,35 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  name       String
-  points     Int      @default(0)
-  created    DateTime @default(now())
-  updated    DateTime @updatedAt
-  role       Role     @default(USER)
-  firstName  String
-  lastName   String
-  newsLetter Boolean
-  phone      String
-  terms      Boolean
-  avatar_url String?
-  votes      Vote[]
-  password   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  packages   PackageHistory[]
-  events     EventMember[]
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  points          Int      @default(0)
+  created         DateTime @default(now())
+  updated         DateTime @updatedAt
+  role            Role     @default(USER)
+  firstName       String
+  lastName        String
+  newsLetter      Boolean
+  phone           String
+  isVerified      Boolean @default(false)
+  terms           Boolean
+  avatar_url      String?
+  votes           Vote[]
+  password        String? 
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  packages        PackageHistory[]
+  events          EventMember[]
+  PointVotes      PointVotes[]
+  OTPVerification OTPVerification[]
+  googleId        String?  @unique
+  provider        String? 
 }
 
 model Event {
@@ -96,33 +101,46 @@ model Package {
   earlyAccess     Boolean       @default(false)
   isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  PackageHistories    PackageHistory[]
+  updatedAt       DateTime      @updatedAt()
+  PackageHistories PackageHistory[]
+  PointVotes      PointVotes[]
 }
 
 model PointVotes {
-  id              String  @id @default(cuid())
+  id              String         @id @default(cuid())
   userId          String
-  packageId       String
+  packageId       String?        // Sudah benar, opsional
   points          Int
   amount          Int
+  paymentMethod   String
+  phoneNumber     String?         
   payment_status  PaymentStatus
-  createdAt       DateTime @default(now())
+  merchantOrderId String         @unique
+  reference       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id])
+  package         Package?       @relation(fields: [packageId], references: [id])
+  
+  // Tambahkan field untuk melacak pembelian custom
+  isCustom       Boolean?       @default(false)
 }
 
 model PackageHistory {
   id            String   @id @default(cuid())
   userId        String
-  packageId     String
+  packageId     String?  // Ubah menjadi opsional
   purchaseDate  DateTime @default(now())
   pointsReceived Int
   validUntil    DateTime
   isActive      Boolean  @default(true)
   user          User     @relation(fields: [userId], references: [id])
-  package       Package  @relation(fields: [packageId], references: [id])
+  package       Package? @relation(fields: [packageId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Hapus unique constraint yang membatasi packageId null
+  // Atau gunakan partial unique index
   @@unique([userId, packageId, purchaseDate])
 }
 
@@ -136,6 +154,17 @@ model EventMember {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, eventId])
+}
+
+model OTPVerification {
+  id          String   @id @default(cuid())
+  userId      String
+  otpCode     String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
 }
 
 enum Role {
@@ -160,4 +189,10 @@ enum SupportType {
   PRIORITY
   PREMIUM
   VIP
+}
+
+model Settings {
+  id             String   @id @default("app-settings")
+  showTotalVotes Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
 }

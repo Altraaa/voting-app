@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import {
   Search,
   Plus,
@@ -10,21 +8,13 @@ import {
   Edit,
   Trash2,
   Eye,
-  X,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -48,685 +38,779 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IEvent } from "@/config/models/EventModel";
-import { toast } from "sonner";
-import { useEvent } from "@/config/hooks/EventHook/useEvent";
-import { useUploadMutations } from "@/config/hooks/UploadImageHook/uploadImageMutation";
-import { StatusEvent } from "@/generated/prisma";
-import { extractPathFromUrl } from "@/config/utils/extractUrl";
+import { usePackage } from "@/config/hooks/PackageHook/usePackage";
+import { useDialogStore } from "@/config/stores/useDialogStores";
+import { usePackageFormStore } from "@/config/stores/usePackageStores";
+import { SupportType } from "@/generated/prisma";
 
-export default function AdminEventView() {
-  const { queries, mutations } = useEvent();
-  const { uploadSingleMutation, deleteSingleMutation } = useUploadMutations();
+export default function AdminPackageView() {
+  const { queries, mutations } = usePackage();
+  const { data: packagesData, isLoading } = queries.useGetAllPackages();
 
-  const { data: events = [], isLoading } = queries.useGetAllEvents();
+  const {
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    isViewDialogOpen,
+    selectedId,
+    openCreateDialog,
+    closeCreateDialog,
+    openEditDialog,
+    closeEditDialog,
+    openDeleteDialog,
+    closeDeleteDialog,
+    openViewDialog,
+    closeViewDialog,
+  } = useDialogStore();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<IEvent | null>(null);
+  const { formData, searchQuery, setFormData, setSearchQuery, resetForm } =
+    usePackageFormStore();
 
-  // State untuk upload - disederhanakan
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const packages = packagesData || [];
+  const selectedPackage = packages.find((pkg) => pkg.id === selectedId);
 
-  const [formData, setFormData] = useState<{
-    name: string;
-    description: string;
-    photo_url: string;
-    status: StatusEvent;
-    startDate: string;
-    endDate: string;
-    isActive: boolean;
-  }>({
-    name: "",
-    description: "",
-    photo_url: "",
-    status: StatusEvent.upcoming,
-    startDate: "",
-    endDate: "",
-    isActive: true,
-  });
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Format file tidak valid", {
-        description: "Hanya file JPG, PNG, dan WEBP yang diperbolehkan",
-      });
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("File terlalu besar", {
-        description: "Maksimal ukuran file adalah 2MB",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Remove image preview
-  const handleRemoveImage = () => {
-    setSelectedFile(null);
-    setImagePreview("");
-  };
-
-  // Upload image handler yang lebih sederhana
-  const handleImageUpload = async (): Promise<string> => {
-    if (!selectedFile) {
-      return "";
-    }
-
-    try {
-      const result = await uploadSingleMutation.mutateAsync({
-        file: selectedFile,
-        folder: "events",
-      });
-
-      if (result.success && result.url) {
-        return result.url;
-      } else {
-        throw new Error(result.error || "Upload failed");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      throw new Error("Gagal upload gambar");
-    }
-  };
-
-  // Delete image handler
-  const handleImageDelete = async (photoUrl: string): Promise<void> => {
-    const path = extractPathFromUrl(photoUrl);
-    if (path) {
-      try {
-        await deleteSingleMutation.mutateAsync({ path });
-      } catch (error) {
-        console.error("Delete image error:", error);
-      }
-    }
-  };
-
-  // Create Event Handler - disederhanakan
-  const handleCreate = async () => {
-    try {
-      let photoUrl = "";
-
-      if (selectedFile) {
-        photoUrl = await handleImageUpload();
-      }
-
-      await mutations.createMutation.mutateAsync({
-        name: formData.name,
-        description: formData.description,
-        photo_url: photoUrl,
-        status: formData.status,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        isActive: formData.isActive,
-      });
-
-      setIsCreateDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      console.error("Create event error:", error);
-    }
-  };
-
-  // Edit Event Handler - disederhanakan
-  const handleEdit = async () => {
-    if (!selectedEvent) return;
-
-    try {
-      let photoUrl = formData.photo_url;
-      let shouldDeleteOldImage = false;
-
-      // Jika ada file baru, upload dan tandai untuk hapus yang lama
-      if (selectedFile) {
-        const newPhotoUrl = await handleImageUpload();
-        photoUrl = newPhotoUrl;
-        shouldDeleteOldImage = true;
-      }
-
-      // Update event
-      await mutations.updateMutation.mutateAsync({
-        id: selectedEvent.id,
-        name: formData.name,
-        description: formData.description,
-        photo_url: photoUrl,
-        status: formData.status,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        isActive: formData.isActive,
-      });
-
-      // Hapus gambar lama setelah update berhasil
-      if (shouldDeleteOldImage && selectedEvent.photo_url) {
-        await handleImageDelete(selectedEvent.photo_url);
-      }
-
-      setIsEditDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      console.error("Update event error:", error);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedEvent) return;
-
-    try {
-      if (selectedEvent.photo_url) {
-        await handleImageDelete(selectedEvent.photo_url);
-      }
-
-      await mutations.removeMutation.mutateAsync(selectedEvent.id);
-
-      setIsDeleteDialogOpen(false);
-      setSelectedEvent(null);
-    } catch (error) {
-      console.error("Delete event error:", error);
-    }
-  };
-
-  const openEditDialog = (event: IEvent) => {
-    setSelectedEvent(event);
-    setFormData({
-      name: event.name,
-      description: event.description,
-      photo_url: event.photo_url || "",
-      status: event.status,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      isActive: event.isActive,
-    });
-    setImagePreview(event.photo_url || "");
-    setSelectedFile(null); // Reset selected file
-    setIsEditDialogOpen(true);
-  };
-
-  const openViewDialog = (event: IEvent) => {
-    setSelectedEvent(event);
-    setIsViewDialogOpen(true);
-  };
-
-  const openDeleteDialog = (event: IEvent) => {
-    setSelectedEvent(event);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      photo_url: "",
-      status: StatusEvent.upcoming,
-      startDate: "",
-      endDate: "",
-      isActive: true,
-    });
-    setSelectedFile(null);
-    setImagePreview("");
-    setSelectedEvent(null);
-  };
-
-  const filteredEvents = events.filter(
-    (event) =>
-      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const { data: selectedPackageDetail } = queries.useGetPackageById(
+    selectedId || ""
   );
 
-  // Format status untuk display
-  const getStatusDisplay = (status: StatusEvent) => {
-    switch (status) {
-      case StatusEvent.upcoming:
-        return { label: "Upcoming", class: "bg-blue-100 text-blue-700" };
-      case StatusEvent.live:
-        return { label: "Live", class: "bg-green-100 text-green-700" };
-      case StatusEvent.ended:
-        return { label: "Ended", class: "bg-gray-100 text-gray-700" };
-      default:
-        return { label: status, class: "bg-gray-100 text-gray-700" };
-    }
+  const handleCreate = () => {
+    mutations.createMutation.mutate(formData, {
+      onSuccess: () => {
+        closeCreateDialog();
+        resetForm();
+      },
+    });
   };
 
-  // Loading state
+  const handleEdit = () => {
+    if (!selectedId) return;
+    mutations.updateMutation.mutate(
+      {
+        id: selectedId,
+        ...formData,
+      },
+      {
+        onSuccess: () => {
+          closeEditDialog();
+          resetForm();
+        },
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!selectedId) return;
+    mutations.removeMutation.mutate(selectedId, {
+      onSuccess: () => {
+        closeDeleteDialog();
+      },
+    });
+  };
+
+  const handleOpenEditDialog = (pkgId: string) => {
+    const pkg = packages.find((p) => p.id === pkgId);
+    if (!pkg) return;
+
+    setFormData({
+      name: pkg.name,
+      description: pkg.description || "",
+      points: pkg.points,
+      price: pkg.price,
+      originalPrice: pkg.originalPrice || pkg.price,
+      validityDays: pkg.validityDays,
+      supportType: pkg.supportType,
+      bonusPercentage: pkg.bonusPercentage || 0,
+      earlyAccess: pkg.earlyAccess,
+    });
+    openEditDialog(pkgId);
+  };
+
+  const filteredPackages = packages.filter((pkg) =>
+    pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getStatusVariant = (isActive: boolean) => {
+    return isActive ? "default" : ("outline" as const);
+  };
+
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <p>Loading events...</p>
+      <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading packages...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Event Management
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Create and manage voting events
-            </p>
-          </div>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => {
-              resetForm();
-              setIsCreateDialogOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Event
-          </Button>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+            Package Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage voting point packages and pricing
+          </p>
         </div>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
+          onClick={() => {
+            resetForm();
+            openCreateDialog();
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Package
+        </Button>
+      </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search events..."
-              className="pl-10 bg-white border-gray-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search packages..."
+            className="pl-10 bg-background border-border"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" className="border-border hover:bg-muted">
+          <Filter className="w-4 h-4 mr-2" />
+          <span className="hidden sm:inline">Filter</span>
+        </Button>
+      </div>
+
+      {/* Cards Grid for Mobile, Table for Desktop */}
+      <div className="block lg:hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredPackages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              className="border-border bg-card hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Coins className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-card-foreground">
+                        {pkg.name}
+                      </h3>
+                      {pkg.earlyAccess && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-yellow-100 text-yellow-700 text-xs mt-1"
+                        >
+                          Early Access
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 h-7 hover:bg-muted"
+                      >
+                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-card border-border"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => openViewDialog(pkg.id)}
+                        className="text-card-foreground hover:bg-muted cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleOpenEditDialog(pkg.id)}
+                        className="text-card-foreground hover:bg-muted cursor-pointer"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-border" />
+                      <DropdownMenuItem
+                        className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                        onClick={() => openDeleteDialog(pkg.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  {pkg.description}
+                </p>
+
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Points
+                    </span>
+                    <span className="font-semibold text-primary">
+                      {pkg.points} pts
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Price</span>
+                    <span className="font-semibold text-card-foreground">
+                      Rp {pkg.price.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Support
+                    </span>
+                    <span className="text-sm font-medium text-card-foreground">
+                      {pkg.supportType}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-border">
+                  <Badge variant={getStatusVariant(pkg.isActive)}>
+                    {pkg.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Rp{" "}
+                    {Math.round(pkg.price / pkg.points).toLocaleString("id-ID")}
+                    /point
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
-      <Card className="border-gray-200">
+      {/* Table for Desktop */}
+      <Card className="border-border bg-card hidden lg:block">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-medium text-gray-700">
-                  Image
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Event Name
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Description
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Start Date
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  End Date
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">
-                  Status
-                </TableHead>
-                <TableHead className="font-medium text-gray-700 w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEvents.map((event) => {
-                const statusDisplay = getStatusDisplay(
-                  event.status as StatusEvent
-                );
-                return (
-                  <TableRow key={event.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="w-12 h-12 rounded-lg overflow-hidden">
-                        <Image
-                          src={event.photo_url || "/placeholder.svg"}
-                          alt={event.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted hover:bg-muted border-b border-border">
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Package
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Points
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Price
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Support Type
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Validity
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4">
+                    Status
+                  </th>
+                  <th className="font-medium text-card-foreground text-left p-4 w-12">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPackages.map((pkg) => (
+                  <tr
+                    key={pkg.id}
+                    className="hover:bg-muted/50 border-b border-border last:border-b-0"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Coins className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-card-foreground">
+                            {pkg.name}
+                          </span>
+                          <span className="text-sm text-muted-foreground line-clamp-1">
+                            {pkg.description}
+                          </span>
+                          {pkg.earlyAccess && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-yellow-100 text-yellow-700 text-xs mt-1 w-fit"
+                            >
+                              Early Access
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{event.name}</TableCell>
-                    <TableCell className="text-gray-600 max-w-xs truncate">
-                      {event.description}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {new Date(event.startDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {new Date(event.endDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={statusDisplay.class}
-                      >
-                        {statusDisplay.label}
+                    </td>
+                    <td className="p-4">
+                      <span className="font-semibold text-primary">
+                        {pkg.points}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-card-foreground">
+                          Rp {pkg.price.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Rp{" "}
+                          {Math.round(pkg.price / pkg.points).toLocaleString(
+                            "id-ID"
+                          )}
+                          /point
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-card-foreground">
+                        {pkg.supportType}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-card-foreground">
+                        {pkg.validityDays} days
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <Badge variant={getStatusVariant(pkg.isActive)}>
+                        {pkg.isActive ? "Active" : "Inactive"}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="w-8 h-8"
+                            className="w-8 h-8 hover:bg-muted"
                           >
-                            <MoreHorizontal className="w-4 h-4" />
+                            <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-card border-border"
+                        >
                           <DropdownMenuItem
-                            onClick={() => openViewDialog(event)}
+                            onClick={() => openViewDialog(pkg.id)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => openEditDialog(event)}
+                            onClick={() => handleOpenEditDialog(pkg.id)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator className="bg-border" />
                           <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => openDeleteDialog(event)}
+                            className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                            onClick={() => openDeleteDialog(pkg.id)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredPackages.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">No packages found</div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* CREATE DIALOG */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* Create Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={closeCreateDialog}>
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-            <DialogDescription>
-              Add a new voting event to the system
+            <DialogTitle className="text-card-foreground">
+              Create New Package
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Add a new voting points package
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="create-name">Event Name</Label>
+              <Label htmlFor="create-name" className="text-card-foreground">
+                Package Name
+              </Label>
               <Input
                 id="create-name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Enter event name"
+                onChange={(e) => setFormData({ name: e.target.value })}
+                placeholder="Enter package name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="create-description">Description</Label>
+              <Label
+                htmlFor="create-description"
+                className="text-card-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="create-description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter event description"
+                onChange={(e) => setFormData({ description: e.target.value })}
+                placeholder="Enter package description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="create-start-date">Start Date</Label>
+                <Label htmlFor="create-points" className="text-card-foreground">
+                  Voting Points
+                </Label>
                 <Input
-                  id="create-start-date"
-                  type="datetime-local"
-                  value={formData.startDate}
+                  id="create-points"
+                  type="number"
+                  value={formData.points}
                   onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
+                    setFormData({ points: Number(e.target.value) })
                   }
+                  placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="create-end-date">End Date</Label>
+                <Label htmlFor="create-price" className="text-card-foreground">
+                  Price (IDR)
+                </Label>
                 <Input
-                  id="create-end-date"
-                  type="datetime-local"
-                  value={formData.endDate}
+                  id="create-price"
+                  type="number"
+                  value={formData.price}
                   onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
+                    setFormData({ price: Number(e.target.value) })
                   }
+                  placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="create-status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: StatusEvent) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={StatusEvent.upcoming}>Upcoming</SelectItem>
-                  <SelectItem value={StatusEvent.live}>Live</SelectItem>
-                  <SelectItem value={StatusEvent.ended}>Ended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Image Upload Section */}
-            <div className="grid gap-2">
-              <Label htmlFor="create-image">Event Image</Label>
-              <div className="flex items-center gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label
+                  htmlFor="create-validity"
+                  className="text-card-foreground"
+                >
+                  Validity Days
+                </Label>
                 <Input
-                  id="create-image"
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleImageSelect}
-                  className="flex-1"
-                  disabled={uploadSingleMutation.isPending}
+                  id="create-validity"
+                  type="number"
+                  value={formData.validityDays}
+                  onChange={(e) =>
+                    setFormData({ validityDays: Number(e.target.value) })
+                  }
+                  placeholder="30"
+                  className="bg-background border-border text-foreground"
                 />
-                {imagePreview && (
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden">
-                      <Image
-                        src={imagePreview}
-                        alt="Preview"
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 w-6 h-6"
-                      onClick={handleRemoveImage}
-                      type="button"
+              </div>
+              <div className="grid gap-2">
+                <Label
+                  htmlFor="create-support"
+                  className="text-card-foreground"
+                >
+                  Support Type
+                </Label>
+                <Select
+                  value={formData.supportType}
+                  onValueChange={(value: SupportType) =>
+                    setFormData({ supportType: value })
+                  }
+                >
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select support type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem
+                      value={SupportType.BASIC}
+                      className="text-card-foreground hover:bg-muted"
                     >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                )}
+                      Basic
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.PRIORITY}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Priority
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.PREMIUM}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Premium
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.VIP}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      VIP
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
-              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="create-bonus" className="text-card-foreground">
+                  Bonus Percentage
+                </Label>
+                <Input
+                  id="create-bonus"
+                  type="number"
+                  value={formData.bonusPercentage}
+                  onChange={(e) =>
+                    setFormData({ bonusPercentage: Number(e.target.value) })
+                  }
+                  placeholder="0"
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label
+                  htmlFor="create-original"
+                  className="text-card-foreground"
+                >
+                  Original Price (IDR)
+                </Label>
+                <Input
+                  id="create-original"
+                  type="number"
+                  value={formData.originalPrice}
+                  onChange={(e) =>
+                    setFormData({ originalPrice: Number(e.target.value) })
+                  }
+                  placeholder="0"
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="create-early"
+                checked={formData.earlyAccess}
+                onChange={(e) => setFormData({ earlyAccess: e.target.checked })}
+                className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
+              />
+              <Label
+                htmlFor="create-early"
+                className="cursor-pointer text-card-foreground"
+              >
+                Mark as early access package
+              </Label>
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setIsCreateDialogOpen(false);
-                resetForm();
-              }}
-              disabled={mutations.createMutation.isPending}
+              onClick={closeCreateDialog}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleCreate}
-              disabled={
-                mutations.createMutation.isPending ||
-                uploadSingleMutation.isPending
-              }
+              disabled={mutations.createMutation.isPending}
             >
               {mutations.createMutation.isPending
                 ? "Creating..."
-                : "Create Event"}
+                : "Create Package"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* EDIT DIALOG - Sama seperti CREATE tapi dengan data yang sudah ada */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={closeEditDialog}>
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Event</DialogTitle>
-            <DialogDescription>Update event information</DialogDescription>
+            <DialogTitle className="text-card-foreground">
+              Edit Package
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update package information
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {/* Form fields sama seperti create dialog */}
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">Event Name</Label>
+              <Label htmlFor="edit-name" className="text-card-foreground">
+                Package Name
+              </Label>
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Enter event name"
+                onChange={(e) => setFormData({ name: e.target.value })}
+                placeholder="Enter package name"
+                className="bg-background border-border text-foreground"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label
+                htmlFor="edit-description"
+                className="text-card-foreground"
+              >
+                Description
+              </Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter event description"
+                onChange={(e) => setFormData({ description: e.target.value })}
+                placeholder="Enter package description"
                 rows={3}
+                className="bg-background border-border text-foreground"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="edit-start-date">Start Date</Label>
+                <Label htmlFor="edit-points" className="text-card-foreground">
+                  Voting Points
+                </Label>
                 <Input
-                  id="edit-start-date"
-                  type="datetime-local"
-                  value={formData.startDate}
+                  id="edit-points"
+                  type="number"
+                  value={formData.points}
                   onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
+                    setFormData({ points: Number(e.target.value) })
                   }
+                  placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-end-date">End Date</Label>
+                <Label htmlFor="edit-price" className="text-card-foreground">
+                  Price (IDR)
+                </Label>
                 <Input
-                  id="edit-end-date"
-                  type="datetime-local"
-                  value={formData.endDate}
+                  id="edit-price"
+                  type="number"
+                  value={formData.price}
                   onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
+                    setFormData({ price: Number(e.target.value) })
                   }
+                  placeholder="0"
+                  className="bg-background border-border text-foreground"
                 />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: StatusEvent) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={StatusEvent.upcoming}>Upcoming</SelectItem>
-                  <SelectItem value={StatusEvent.live}>Live</SelectItem>
-                  <SelectItem value={StatusEvent.ended}>Ended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-image">Event Image</Label>
-              <div className="flex items-center gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-validity" className="text-card-foreground">
+                  Validity Days
+                </Label>
                 <Input
-                  id="edit-image"
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleImageSelect}
-                  className="flex-1"
-                  disabled={uploadSingleMutation.isPending}
+                  id="edit-validity"
+                  type="number"
+                  value={formData.validityDays}
+                  onChange={(e) =>
+                    setFormData({ validityDays: Number(e.target.value) })
+                  }
+                  placeholder="30"
+                  className="bg-background border-border text-foreground"
                 />
-                {imagePreview && (
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden">
-                      <Image
-                        src={imagePreview}
-                        alt="Preview"
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 w-6 h-6"
-                      onClick={handleRemoveImage}
-                      type="button"
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-support" className="text-card-foreground">
+                  Support Type
+                </Label>
+                <Select
+                  value={formData.supportType}
+                  onValueChange={(value: SupportType) =>
+                    setFormData({ supportType: value })
+                  }
+                >
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select support type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem
+                      value={SupportType.BASIC}
+                      className="text-card-foreground hover:bg-muted"
                     >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                )}
+                      Basic
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.PRIORITY}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Priority
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.PREMIUM}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      Premium
+                    </SelectItem>
+                    <SelectItem
+                      value={SupportType.VIP}
+                      className="text-card-foreground hover:bg-muted"
+                    >
+                      VIP
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              {uploadSingleMutation.isPending && (
-                <p className="text-sm text-gray-500">Uploading image...</p>
-              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="edit-early"
+                checked={formData.earlyAccess}
+                onChange={(e) => setFormData({ earlyAccess: e.target.checked })}
+                className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
+              />
+              <Label
+                htmlFor="edit-early"
+                className="cursor-pointer text-card-foreground"
+              >
+                Mark as early access package
+              </Label>
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              disabled={mutations.updateMutation.isPending}
+              onClick={closeEditDialog}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleEdit}
-              disabled={
-                mutations.updateMutation.isPending ||
-                uploadSingleMutation.isPending
-              }
+              disabled={mutations.updateMutation.isPending}
             >
               {mutations.updateMutation.isPending
                 ? "Saving..."
@@ -736,92 +820,117 @@ export default function AdminEventView() {
         </DialogContent>
       </Dialog>
 
-      {/* VIEW DIALOG */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={closeViewDialog}>
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Event Details</DialogTitle>
+            <DialogTitle className="text-card-foreground">
+              Package Details
+            </DialogTitle>
           </DialogHeader>
-          {selectedEvent && (
+          {(selectedPackageDetail || selectedPackage) && (
             <div className="grid gap-6 py-4">
-              {selectedEvent.photo_url && (
-                <div className="flex justify-center">
-                  <div className="w-48 h-48 rounded-lg overflow-hidden">
-                    <Image
-                      src={selectedEvent.photo_url}
-                      alt={selectedEvent.name}
-                      width={192}
-                      height={192}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Coins className="w-8 h-8 text-primary" />
                 </div>
-              )}
+                <div>
+                  <h3 className="text-xl font-semibold text-card-foreground">
+                    {(selectedPackageDetail || selectedPackage)?.name}
+                  </h3>
+                  {(selectedPackageDetail || selectedPackage)?.earlyAccess && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-yellow-100 text-yellow-700 mt-1"
+                    >
+                      Early Access Package
+                    </Badge>
+                  )}
+                </div>
+              </div>
               <div className="grid gap-4">
                 <div>
-                  <Label className="text-gray-600">Event Name</Label>
-                  <p className="text-lg font-medium mt-1">
-                    {selectedEvent.name}
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="mt-1 text-card-foreground">
+                    {(selectedPackageDetail || selectedPackage)?.description}
                   </p>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">
+                      Voting Points
+                    </Label>
+                    <p className="text-2xl font-semibold text-primary mt-1">
+                      {(selectedPackageDetail || selectedPackage)?.points}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Price</Label>
+                    <p className="text-2xl font-semibold text-card-foreground mt-1">
+                      Rp{" "}
+                      {(
+                        selectedPackageDetail || selectedPackage
+                      )?.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">
+                      Support Type
+                    </Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
+                      {(selectedPackageDetail || selectedPackage)?.supportType}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Validity</Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
+                      {(selectedPackageDetail || selectedPackage)?.validityDays}{" "}
+                      days
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">
+                      Price per Point
+                    </Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
+                      Rp{" "}
+                      {Math.round(
+                        (selectedPackageDetail || selectedPackage)!.price /
+                          (selectedPackageDetail || selectedPackage)!.points
+                      ).toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Bonus</Label>
+                    <p className="text-xl font-semibold mt-1 text-card-foreground">
+                      {(selectedPackageDetail || selectedPackage)
+                        ?.bonusPercentage || 0}
+                      %
+                    </p>
+                  </div>
+                </div>
                 <div>
-                  <Label className="text-gray-600">Description</Label>
-                  <p className="mt-1">{selectedEvent.description}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Status</Label>
-                    <div className="mt-1">
+                  <Label className="text-muted-foreground">Status</Label>
+                  <div className="mt-1">
+                    {(selectedPackageDetail || selectedPackage)?.isActive ? (
                       <Badge
-                        variant="secondary"
-                        className={
-                          getStatusDisplay(selectedEvent.status as StatusEvent)
-                            .class
-                        }
+                        variant="default"
+                        className="bg-green-100 text-green-700"
                       >
-                        {
-                          getStatusDisplay(selectedEvent.status as StatusEvent)
-                            .label
-                        }
+                        Active
                       </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Active</Label>
-                    <p className="mt-1">
-                      {selectedEvent.isActive ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Start Date</Label>
-                    <p className="mt-1">
-                      {new Date(selectedEvent.startDate).toLocaleDateString()}{" "}
-                      at{" "}
-                      {new Date(selectedEvent.startDate).toLocaleTimeString()}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">End Date</Label>
-                    <p className="mt-1">
-                      {new Date(selectedEvent.endDate).toLocaleDateString()} at{" "}
-                      {new Date(selectedEvent.endDate).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-gray-600">Created At</Label>
-                    <p className="mt-1">
-                      {new Date(selectedEvent.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-gray-600">Last Updated</Label>
-                    <p className="mt-1">
-                      {new Date(selectedEvent.updatedAt).toLocaleDateString()}
-                    </p>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="bg-gray-100 text-gray-700"
+                      >
+                        Inactive
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -830,7 +939,8 @@ export default function AdminEventView() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsViewDialogOpen(false)}
+              onClick={closeViewDialog}
+              className="border-border hover:bg-muted"
             >
               Close
             </Button>
@@ -838,21 +948,24 @@ export default function AdminEventView() {
         </DialogContent>
       </Dialog>
 
-      {/* DELETE CONFIRMATION DIALOG */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={closeDeleteDialog}>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Delete Event</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete &ldquo;{selectedEvent?.name}
-              &rdquo;? This action cannot be undone.
+            <DialogTitle className="text-card-foreground">
+              Delete Package
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Are you sure you want to delete &ldquo;{selectedPackage?.name}
+              &ldquo;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
+              onClick={closeDeleteDialog}
               disabled={mutations.removeMutation.isPending}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>

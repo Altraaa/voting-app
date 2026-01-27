@@ -1,7 +1,4 @@
-"use client";
-
-import type React from "react";
-
+"use client";;
 import { useState } from "react";
 import {
   Shield,
@@ -38,8 +35,8 @@ const privacySections: PrivacySection[] = [
     title: "Introduction",
     icon: FileText,
     content: [
-      "Welcome to Click Vote. We are committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, store, and protect your information when you use our voting platform.",
-      "By using Click Vote services, you agree to the collection and use of information in accordance with this policy. If you do not agree with this policy, please do not use our services.",
+      "Welcome to Pilih.in. We are committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, store, and protect your information when you use our voting platform.",
+      "By using Pilih.in services, you agree to the collection and use of information in accordance with this policy. If you do not agree with this policy, please do not use our services.",
     ],
   },
   {
@@ -340,7 +337,7 @@ export default function PrivacyView() {
                         Email
                       </h4>
                       <p className="text-muted-foreground">
-                        seraphicvsl@gmail.com
+                        Pilih.invsl@gmail.com
                       </p>
                     </div>
                     <div>

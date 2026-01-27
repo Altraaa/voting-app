@@ -3,6 +3,9 @@ import { EventCreatePayload, EventUpdatePayload } from "../types/eventType";
 
 export const eventService = {
   async getAll() {
+    // First, automatically update any expired events
+    await this.checkAndUpdateExpiredEvents();
+    
     return prisma.event.findMany({
       select: {
         id: true,
@@ -74,10 +77,67 @@ export const eventService = {
   },
 
   async update(data: EventUpdatePayload) {
+    // Convert date strings to Date objects for Prisma
+    const updateData: Record<string, unknown> = { ...data };
+    
+    if (data.startDate) {
+      updateData.startDate = new Date(data.startDate);
+    }
+    if (data.endDate) {
+      updateData.endDate = new Date(data.endDate);
+    }
+
     return prisma.event.update({
       where: { id: data.id },
-      data,
+      data: updateData,
     });
+  },
+
+  // Check and update events that have passed their end date
+  async checkAndUpdateExpiredEvents() {
+    const now = new Date();
+    
+    // Get all non-ended events to debug
+    const activeEvents = await prisma.event.findMany({
+      where: {
+        status: {
+          in: ['live', 'upcoming'],
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        endDate: true,
+        status: true,
+      },
+    });
+    
+    const debugInfo = {
+      currentTime: now.toISOString(),
+      currentTimeLocal: now.toString(),
+      activeEvents: activeEvents.map(e => ({
+        name: e.name,
+        endDate: e.endDate.toISOString(),
+        status: e.status,
+        isExpired: e.endDate <= now,
+      })),
+    };
+    
+    const result = await prisma.event.updateMany({
+      where: {
+        endDate: {
+          lte: now,
+        },
+        status: {
+          in: ['live', 'upcoming'],
+        },
+      },
+      data: {
+        status: 'ended',
+      },
+    });
+    
+    return { count: result.count, debug: debugInfo };
   },
 
   async remove(id: string) {

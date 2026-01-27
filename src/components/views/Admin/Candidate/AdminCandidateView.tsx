@@ -304,169 +304,204 @@ export default function AdminCandidateView() {
   // Loading state
   if (candidatesLoading || categoriesLoading) {
     return (
-      <div className="p-8 flex items-center justify-center">
-        <p>Loading candidates...</p>
+      <div className="p-4 md:p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading candidates...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              Candidate Management
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage candidates participating in voting events
-            </p>
-          </div>
-          <Button
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={handleOpenCreateDialog}
-            disabled={categories.length === 0}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Candidate
-          </Button>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+            Candidate Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage candidates participating in voting events
+          </p>
         </div>
-
-        {categories.length === 0 && (
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800">
-              Tidak ada kategori yang tersedia. Silahkan buat kategori terlebih
-              dahulu sebelum membuat kandidat.
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search candidates..."
-              className="pl-10 bg-background border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" className="border-border hover:bg-muted">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-        </div>
+        <Button
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
+          onClick={handleOpenCreateDialog}
+          disabled={categories.length === 0}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Candidate
+        </Button>
       </div>
 
+      {categories.length === 0 && (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800">
+            Tidak ada kategori yang tersedia. Silahkan buat kategori terlebih
+            dahulu sebelum membuat kandidat.
+          </p>
+        </div>
+      )}
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search candidates..."
+            className="pl-10 bg-background border-border"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" className="border-border hover:bg-muted">
+          <Filter className="w-4 h-4 mr-2" />
+          <span className="hidden sm:inline">Filter</span>
+        </Button>
+      </div>
+
+      {/* Table Section */}
       <Card className="border-border bg-card">
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted hover:bg-muted">
-                <TableHead className="font-medium text-card-foreground">
-                  Candidate
-                </TableHead>
-                <TableHead className="font-medium text-card-foreground">
-                  Description
-                </TableHead>
-                <TableHead className="font-medium text-card-foreground">
-                  Event
-                </TableHead>
-                <TableHead className="font-medium text-card-foreground">
-                  Category
-                </TableHead>
-                <TableHead className="font-medium text-card-foreground">
-                  Votes
-                </TableHead>
-                <TableHead className="font-medium text-card-foreground w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCandidates.map((candidate) => (
-                <TableRow
-                  key={candidate.id}
-                  className="hover:bg-muted/50 border-border"
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10 border border-border">
-                        <AvatarImage
-                          src={candidate.photo_url || "/placeholder.svg"}
-                        />
-                        <AvatarFallback className="bg-secondary text-secondary-foreground">
-                          {candidate.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="font-medium text-card-foreground">
-                        {candidate.name}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground max-w-xs truncate">
-                    {candidate.description}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {getEventNameByCategoryId(candidate.categoryId)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {getCategoryNameById(candidate.categoryId)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground font-medium">
-                    {candidate.votes?.length || 0}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 hover:bg-muted"
-                        >
-                          <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-card border-border"
-                      >
-                        <DropdownMenuItem
-                          onClick={() => handleOpenViewDialog(candidate)}
-                          className="text-card-foreground hover:bg-muted cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleOpenEditDialog(candidate)}
-                          className="text-card-foreground hover:bg-muted cursor-pointer"
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-border" />
-                        <DropdownMenuItem
-                          className="text-destructive hover:bg-destructive/10 cursor-pointer"
-                          onClick={() => handleOpenDeleteDialog(candidate)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <CardContent className="px-4">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted hover:bg-muted">
+                  <TableHead className="font-medium text-card-foreground">
+                    No
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground">
+                    Candidate
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden lg:table-cell">
+                    Description
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden md:table-cell">
+                    Event
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground hidden sm:table-cell">
+                    Category
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground">
+                    Votes
+                  </TableHead>
+                  <TableHead className="font-medium text-card-foreground w-12">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredCandidates.map((candidate, index) => (
+                  <TableRow
+                    key={candidate.id}
+                    className="hover:bg-muted/50 border-border"
+                  >
+                    <TableCell className="text-muted-foreground text-center">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-10 h-10 border border-border">
+                          <AvatarImage
+                            src={candidate.photo_url || "/placeholder.svg"}
+                          />
+                          <AvatarFallback className="bg-secondary text-secondary-foreground">
+                            {candidate.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-card-foreground">
+                            {candidate.name}
+                          </span>
+                          <span className="text-sm text-muted-foreground lg:hidden">
+                            {candidate.description.length > 50
+                              ? `${candidate.description.substring(0, 50)}...`
+                              : candidate.description}
+                          </span>
+                          <div className="flex gap-2 mt-1 sm:hidden">
+                            <span className="text-xs text-muted-foreground">
+                              {getEventNameByCategoryId(candidate.categoryId)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              • {getCategoryNameById(candidate.categoryId)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground max-w-xs truncate hidden lg:table-cell">
+                      {candidate.description}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
+                      {getEventNameByCategoryId(candidate.categoryId)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden sm:table-cell">
+                      {getCategoryNameById(candidate.categoryId)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground font-medium">
+                      {candidate.votes?.length || 0}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 hover:bg-muted"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-card border-border"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => handleOpenViewDialog(candidate)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleOpenEditDialog(candidate)}
+                            className="text-card-foreground hover:bg-muted cursor-pointer"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-border" />
+                          <DropdownMenuItem
+                            className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                            onClick={() => handleOpenDeleteDialog(candidate)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredCandidates.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground">No candidates found</div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* CREATE DIALOG */}
       <Dialog open={isCreateDialogOpen} onOpenChange={handleCloseCreateDialog}>
-        <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-card-foreground">
               Add New Candidate
@@ -533,7 +568,7 @@ export default function AdminCandidateView() {
               <Label htmlFor="create-image" className="text-card-foreground">
                 Profile Photo
               </Label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Input
                   id="create-image"
                   type="file"
@@ -599,7 +634,7 @@ export default function AdminCandidateView() {
 
       {/* EDIT DIALOG */}
       <Dialog open={isEditDialogOpen} onOpenChange={handleCloseEditDialog}>
-        <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-card-foreground">
               Edit Candidate
@@ -665,7 +700,7 @@ export default function AdminCandidateView() {
               <Label htmlFor="edit-image" className="text-card-foreground">
                 Profile Photo
               </Label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Input
                   id="edit-image"
                   type="file"
@@ -731,7 +766,7 @@ export default function AdminCandidateView() {
 
       {/* VIEW DIALOG */}
       <Dialog open={isViewDialogOpen} onOpenChange={closeViewDialog}>
-        <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogContent className="max-w-2xl bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-card-foreground">
               Candidate Details
@@ -765,7 +800,7 @@ export default function AdminCandidateView() {
                     {selectedCandidate.description}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Event</Label>
                     <p className="mt-1 text-card-foreground">
@@ -785,7 +820,7 @@ export default function AdminCandidateView() {
                     {selectedCandidate.votes?.length || 0}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Created At</Label>
                     <p className="mt-1 text-card-foreground">

@@ -1,22 +1,36 @@
 import React from "react";
 import { Eye, EyeOff, Facebook } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { LoginFormProps } from "@/components/props/AuthProps";
+import { toast } from "sonner";
 
 const LoginForm: React.FC<LoginFormProps> = ({
   loginForm,
   showPassword,
   isLoading,
+  isGoogleLoading,
   onInputChange,
   onCheckboxChange,
   onTogglePassword,
   onSubmit,
+  onGoogleLoginSuccess,
 }) => {
+  const handleSocialLogin = (provider: string) => {
+    if (provider === "Google") {
+      // Google login sudah ditangani oleh komponen GoogleLogin
+      return;
+    }
+    toast.info("Segera Hadir", {
+      description: `Login dengan ${provider} akan segera tersedia`,
+      duration: 3000,
+    });
+  };
+
   return (
     <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center order-2 lg:order-2">
       <div className="mb-6 lg:mb-8">
@@ -110,22 +124,28 @@ const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex justify-center">
+          <div
+            className={`${
+              isGoogleLoading ? "opacity-50 pointer-events-none" : ""
+            }`}
+          >
+            <GoogleLogin
+              onSuccess={onGoogleLoginSuccess}
+              onError={() => {
+                toast.error("Google login failed");
+              }}
+            />
+          </div>
+        </div>
         <Button
           type="button"
           variant="outline"
           className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
           size="lg"
+          onClick={() => handleSocialLogin("Facebook")}
         >
-          <FcGoogle className="h-5 w-5" />
-          Google
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="transition-all duration-300 ease-in-out hover:-translate-y-0.5"
-          size="lg"
-        >
-          <Facebook />
+          <Facebook className="h-5 w-5 mr-2" />
           Facebook
         </Button>
       </div>

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Vote, CreditCard, Menu, X } from "lucide-react";
+import { Vote, CreditCard, Menu, X, LogIn } from "lucide-react";
 import { useState } from "react";
 import { useAuthUser } from "@/config/hooks/useAuthUser";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user } = useAuthUser();
+  const { user, isAuthenticated, isLoading } = useAuthUser();
   const userPoints = user?.points || 0;
 
   const toggleMenu = () => {
@@ -26,7 +26,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-2">
             <Vote className="h-8 w-8 text-primary" />
             <Link href="/" className="text-2xl font-bold text-primary">
-              Seraphic
+              Pilih.in
             </Link>
           </div>
 
@@ -44,25 +44,39 @@ export default function Navbar() {
               All Events
             </Link>
             <Link
-              href="/points"
+              href="/contact"
               className="text-sm font-medium text-foreground hover:text-primary transition-all duration-200 hover:scale-105"
             >
-              Buy Points
+              Contact Us
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
-              <CreditCard className="h-4 w-4" />
-              <span>Points: {userPoints}</span>
-            </div>
+            {isAuthenticated && (
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                <CreditCard className="h-4 w-4" />
+                <span>Points: {userPoints}</span>
+              </div>
+            )}
 
-            <Button
-              asChild
-              className="hidden md:flex rounded-full px-6 shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Link href="/points">Get Points</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                asChild
+                className="hidden md:flex rounded-full px-6 shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <Link href="/points">Get Points</Link>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                className="hidden md:flex rounded-full px-6 shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <Link href="/login">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Link>
+              </Button>
+            )}
 
             <Button
               variant="ghost"
@@ -105,27 +119,41 @@ export default function Navbar() {
               All Events
             </Link>
             <Link
-              href="/points"
+              href="/contact"
               className="text-sm font-medium text-foreground hover:text-primary transition-all duration-300 transform hover:translate-x-2 py-2"
               onClick={closeMenu}
             >
-              Buy Points
+              Contact Us
             </Link>
 
             <div className="pt-2 space-y-3">
-              <Button
-                asChild
-                className="w-full rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                <Link href="/points" onClick={closeMenu}>
-                  Get Points
-                </Link>
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    asChild
+                    className="w-full rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                  >
+                    <Link href="/points" onClick={closeMenu}>
+                      Get Points
+                    </Link>
+                  </Button>
 
-              <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground py-2 bg-muted/30 rounded-full transition-all duration-300 hover:bg-muted/50">
-                <CreditCard className="h-4 w-4" />
-                <span>Points: {userPoints}</span>
-              </div>
+                  <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground py-2 bg-muted/30 rounded-full transition-all duration-300 hover:bg-muted/50">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Points: {userPoints}</span>
+                  </div>
+                </>
+              ) : (
+                <Button
+                  asChild
+                  className="w-full rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  <Link href="/login" onClick={closeMenu}>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Login
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
