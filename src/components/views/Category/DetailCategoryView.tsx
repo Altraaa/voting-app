@@ -143,18 +143,20 @@ export default function DetailCategoryView() {
       return;
     }
 
-    if (votePoints > userPoints) {
-      toast.error("Poin tidak mencukupi");
-      return;
-    }
-
+    // Validasi jumlah poin minimal sesuai pointsPerVote
     if (votePoints < pointsPerVote) {
       toast.error(`Minimal ${pointsPerVote} poin untuk 1 vote`);
       return;
     }
 
+    // Validasi kelipatan poin sesuai pointsPerVote
     if (votePoints % pointsPerVote !== 0) {
       toast.error(`Poin harus kelipatan ${pointsPerVote}`);
+      return;
+    }
+
+    if (votePoints > userPoints) {
+      toast.error("Poin tidak mencukupi");
       return;
     }
 
@@ -164,6 +166,7 @@ export default function DetailCategoryView() {
         pointsUsed: votePoints,
       });
 
+      // Hitung jumlah suara berdasarkan pointsPerVote
       const votesReceived = votePoints / pointsPerVote;
       toast.success(`Berhasil vote! ${votePoints} poin = ${votesReceived} suara`);
       setIsDialogOpen(false);
@@ -175,6 +178,7 @@ export default function DetailCategoryView() {
     }
   };
 
+  // Update handlePointsChange
   const handlePointsChange = (value: string) => {
     const numValue = parseInt(value) || 0;
     if (numValue <= userPoints) {
@@ -375,6 +379,10 @@ export default function DetailCategoryView() {
                     {candidate.description}
                   </p>
                 )}
+                  <div className="text-xs text-muted-foreground bg-primary/5 p-2 rounded">
+                    <Coins className="w-3 h-3 inline mr-1" />
+                    {pointsPerVote} poin = 1 suara
+                  </div>
               </CardHeader>
 
               <CardContent className="p-4 space-y-3">
@@ -456,7 +464,10 @@ export default function DetailCategoryView() {
               {/* Points Input */}
               <div className="space-y-2">
                 <Label htmlFor="points" className="text-sm">
-                  Berapa banyak poin yang akan digunakan?
+                  Jumlah poin yang akan digunakan:
+                  <span className="text-xs text-muted-foreground ml-2">
+                    ({pointsPerVote} poin = 1 suara)
+                  </span>
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -472,12 +483,20 @@ export default function DetailCategoryView() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setVotePoints(userPoints)}
+                    onClick={() => {
+                      const maxPoints = Math.floor(userPoints / pointsPerVote) * pointsPerVote;
+                      setVotePoints(maxPoints || pointsPerVote);
+                    }}
                     disabled={userPoints === 0}
                   >
                     Maks
                   </Button>
                 </div>
+                {votePoints > 0 && votePoints % pointsPerVote !== 0 && (
+                  <p className="text-xs text-red-500">
+                    Poin harus k  elipatan {pointsPerVote}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Tersedia: {userPoints} poin • Menggunakan: {votePoints} poin
                 </p>
@@ -485,15 +504,19 @@ export default function DetailCategoryView() {
 
               {/* Quick Select Buttons */}
               <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 5, 10].map((multiplier) => {
+                {[1, 2, 3, 5].map((multiplier) => {
                   const amount = multiplier * pointsPerVote;
+                  const isDisabled = amount > userPoints || 
+                                    userPoints === 0 || 
+                                    (userPoints < pointsPerVote && amount > 0);
+                  
                   return (
                     <Button
                       key={multiplier}
                       variant="outline"
                       size="sm"
-                      onClick={() => setVotePoints(Math.min(amount, userPoints - (userPoints % pointsPerVote)))}
-                      disabled={amount > userPoints}
+                      onClick={() => setVotePoints(amount)}
+                      disabled={isDisabled}
                     >
                       {amount}p
                     </Button>

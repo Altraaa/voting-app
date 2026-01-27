@@ -634,36 +634,27 @@ export default function AdminEventView() {
                 </SelectContent>
               </Select>
             </div>
+{/* Di dalam form Create dan Edit Dialog */}
             <div className="grid gap-2">
               <Label htmlFor="create-points-per-vote" className="text-card-foreground">
                 Poin per Vote
               </Label>
-              <Select
-                value={formData.pointsPerVote.toString()}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, pointsPerVote: parseInt(value) })
+              <Input
+                id="create-points-per-vote"
+                type="number"
+                min="1"
+                step="1"
+                value={formData.pointsPerVote}
+                onChange={(e) => 
+                  setFormData({ 
+                    ...formData, 
+                    pointsPerVote: Math.max(1, parseInt(e.target.value) || 1) 
+                  })
                 }
-              >
-                <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Pilih rasio poin" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem
-                    value="1"
-                    className="text-card-foreground hover:bg-muted"
-                  >
-                    1 Poin = 1 Vote
-                  </SelectItem>
-                  <SelectItem
-                    value="2"
-                    className="text-card-foreground hover:bg-muted"
-                  >
-                    2 Poin = 1 Vote
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                className="bg-background border-border text-foreground"
+              />
               <p className="text-xs text-muted-foreground">
-                Tentukan berapa poin yang dibutuhkan untuk 1 vote
+                Jumlah poin yang dibutuhkan untuk 1 suara vote
               </p>
             </div>
             <div className="grid gap-2">
@@ -850,36 +841,27 @@ export default function AdminEventView() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Di dalam form Create dan Edit Dialog */}
             <div className="grid gap-2">
-              <Label htmlFor="edit-points-per-vote" className="text-card-foreground">
+              <Label htmlFor="create-points-per-vote" className="text-card-foreground">
                 Poin per Vote
               </Label>
-              <Select
-                value={formData.pointsPerVote.toString()}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, pointsPerVote: parseInt(value) })
+              <Input
+                id="create-points-per-vote"
+                type="number"
+                min="1"
+                step="1"
+                value={formData.pointsPerVote}
+                onChange={(e) => 
+                  setFormData({ 
+                    ...formData, 
+                    pointsPerVote: Math.max(1, parseInt(e.target.value) || 1) 
+                  })
                 }
-              >
-                <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Pilih rasio poin" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  <SelectItem
-                    value="1"
-                    className="text-card-foreground hover:bg-muted"
-                  >
-                    1 Poin = 1 Vote
-                  </SelectItem>
-                  <SelectItem
-                    value="2"
-                    className="text-card-foreground hover:bg-muted"
-                  >
-                    2 Poin = 1 Vote
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                className="bg-background border-border text-foreground"
+              />
               <p className="text-xs text-muted-foreground">
-                Tentukan berapa poin yang dibutuhkan untuk 1 vote
+                Jumlah poin yang dibutuhkan untuk 1 suara vote
               </p>
             </div>
             <div className="grid gap-2">
