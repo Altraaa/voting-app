@@ -72,12 +72,12 @@ export const eventService = {
       ...data,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
+      pointsPerVote: Math.max(1, data.pointsPerVote || 1), // Pastikan minimal 1
     };
     return prisma.event.create({ data: eventData });
   },
 
   async update(data: EventUpdatePayload) {
-    // Convert date strings to Date objects for Prisma
     const updateData: Record<string, unknown> = { ...data };
     
     if (data.startDate) {
@@ -85,6 +85,9 @@ export const eventService = {
     }
     if (data.endDate) {
       updateData.endDate = new Date(data.endDate);
+    }
+    if (data.pointsPerVote !== undefined) {
+      updateData.pointsPerVote = Math.max(1, data.pointsPerVote); // Validasi minimal 1
     }
 
     return prisma.event.update({

@@ -10,7 +10,7 @@ export interface IEvent {
   startDate: string;
   endDate: string;
   isActive: boolean;
-  pointsPerVote: number; // 1 = 1 point per vote, 2 = 2 points per vote
+  pointsPerVote: number;
   _count?: { candidates: number };
   categories: ICategories[];
   users: EventMember[];
