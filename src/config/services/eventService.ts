@@ -16,6 +16,7 @@ export const eventService = {
         startDate: true,
         endDate: true,
         isActive: true,
+        pointsPerVote: true, // TAMBAHKAN INI
         categories: {
           select: {
             id: true,
@@ -35,7 +36,11 @@ export const eventService = {
 
   async getAllSimple() {
     return prisma.event.findMany({
-      select: { id: true, name: true },
+      select: { 
+        id: true, 
+        name: true,
+        pointsPerVote: true, // TAMBAHKAN INI (optional)
+      },
     });
   },
 
@@ -51,6 +56,7 @@ export const eventService = {
         startDate: true,
         endDate: true,
         isActive: true,
+        pointsPerVote: true, // TAMBAHKAN INI
         categories: {
           select: {
             id: true,
@@ -112,6 +118,7 @@ export const eventService = {
         name: true,
         endDate: true,
         status: true,
+        pointsPerVote: true, // TAMBAHKAN INI (optional)
       },
     });
     
@@ -122,6 +129,7 @@ export const eventService = {
         name: e.name,
         endDate: e.endDate.toISOString(),
         status: e.status,
+        pointsPerVote: e.pointsPerVote,
         isExpired: e.endDate <= now,
       })),
     };
