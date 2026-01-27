@@ -4,7 +4,7 @@ import { UsersCreatePayload, UsersUpdatePayload, UsersUpdateProfilePayload } fro
 export const userService = {
   async getAll() {
     return prisma.user.findMany({
-      select: { id: true, email: true, name: true, points: true, role: true },
+      select: { id: true, firstName: true, lastName: true, email: true, name: true, points: true, role: true },
     });
   },
 
