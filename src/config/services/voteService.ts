@@ -33,4 +33,17 @@ export const voteService = {
       where: { id: userId },
     });
   },
+
+  async getCandidateWithEvent(candidateId: string) {
+    return prisma.candidate.findUnique({
+      where: { id: candidateId },
+      include: {
+        category: {
+          include: {
+            event: true,
+          },
+        },
+      },
+    });
+  },
 };
