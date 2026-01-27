@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
     Dialog,
     DialogContent,
@@ -15,7 +16,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, ArrowLeft, Star, Trophy, Coins } from "lucide-react";
+import { Users, ArrowLeft, Star, Trophy, Coins, Clock, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -74,6 +75,14 @@ export default function DetailCategoryView() {
   const userPoints = user?.points || 0;
   const pointsPerVote = eventData?.pointsPerVote || 1;
 
+  // Calculate max points that can be used (multiple of pointsPerVote)
+  const maxPoints = Math.floor(userPoints / pointsPerVote) * pointsPerVote;
+  const minPoints = pointsPerVote;
+  
+  // Calculate slider values
+  const sliderMax = Math.min(1000, maxPoints);
+  const sliderStep = pointsPerVote;
+
   // Refetch data after successful vote
   useEffect(() => {
     if (voteMutations.createMutation.isSuccess) {
@@ -87,16 +96,27 @@ export default function DetailCategoryView() {
     refetchCandidates,
   ]);
 
+  const getCandidateVotes = (votes: IVotes[]) => {
+    if (!votes || votes.length === 0) return 0;
+    
+    // Hitung total poin
+    const totalPoints = votes.reduce((sum, vote) => sum + vote.pointsUsed, 0);
+    
+    // Konversi ke suara berdasarkan pointsPerVote
+    return Math.floor(totalPoints / pointsPerVote);
+  };
+
+  // Fungsi untuk menghitung total poin (untuk display saja)
+  const getCandidatePoints = (votes: IVotes[]) => {
+    return votes?.reduce((sum, vote) => sum + vote.pointsUsed, 0) || 0;
+  };
+
   const getTotalVotes = () => {
     if (!candidatesData) return 0;
     return candidatesData.reduce((sum, candidate) => {
       const candidateVotes = getCandidateVotes(candidate.votes);
       return sum + candidateVotes;
     }, 0);
-  };
-
-  const getCandidateVotes = (votes: IVotes[]) => {
-    return votes?.reduce((sum, vote) => sum + vote.pointsUsed, 0) || 0;
   };
 
   const getCandidatePercentage = (votes: number) => {
@@ -106,7 +126,19 @@ export default function DetailCategoryView() {
 
   const handleVoteClick = (candidate: ICandidate) => {
     // Cek status event sebelum membuka dialog vote
-    if (eventData && eventData.status === "ended") {
+    if (!eventData) {
+      toast.error("Event data tidak ditemukan");
+      return;
+    }
+
+    // Cek jika event belum dimulai
+    if (eventData.status === "upcoming") {
+      toast.error("Event belum dimulai, voting belum dapat dilakukan");
+      return;
+    }
+
+    // Cek jika event sudah berakhir
+    if (eventData.status === "ended") {
       toast.error("Event telah berakhir, voting tidak dapat dilakukan");
       return;
     }
@@ -143,6 +175,22 @@ export default function DetailCategoryView() {
       return;
     }
 
+    // Validasi event status
+    if (!eventData) {
+      toast.error("Event data tidak ditemukan");
+      return;
+    }
+
+    if (eventData.status === "upcoming") {
+      toast.error("Event belum dimulai");
+      return;
+    }
+
+    if (eventData.status === "ended") {
+      toast.error("Event telah berakhir");
+      return;
+    }
+
     // Validasi jumlah poin minimal sesuai pointsPerVote
     if (votePoints < pointsPerVote) {
       toast.error(`Minimal ${pointsPerVote} poin untuk 1 vote`);
@@ -172,24 +220,57 @@ export default function DetailCategoryView() {
       setIsDialogOpen(false);
       setSelectedCandidate(null);
       setVotePoints(pointsPerVote);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error voting:", error);
-      toast.error("Gagal melakukan vote. Silakan coba lagi.");
+      // Tampilkan pesan error dari backend jika ada
+      if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error("Gagal melakukan vote. Silakan coba lagi.");
+      }
     }
   };
 
-  // Update handlePointsChange
   const handlePointsChange = (value: string) => {
     const numValue = parseInt(value) || 0;
-    if (numValue <= userPoints) {
-      setVotePoints(numValue);
+    
+    // Pastikan nilai adalah kelipatan pointsPerVote
+    const adjustedValue = Math.floor(numValue / pointsPerVote) * pointsPerVote;
+    
+    // Batasi antara minPoints dan maxPoints
+    if (adjustedValue <= maxPoints) {
+      setVotePoints(Math.max(minPoints, adjustedValue));
     } else {
-      setVotePoints(userPoints);
+      setVotePoints(maxPoints);
     }
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    const newValue = value[0];
+    // Pastikan nilai adalah kelipatan pointsPerVote
+    const adjustedValue = Math.floor(newValue / pointsPerVote) * pointsPerVote;
+    setVotePoints(Math.max(minPoints, adjustedValue));
   };
 
   // Combined loading state
-  const isLoading = categoryLoading || candidatesLoading || eventLoading;
+  const isLoading = categoryLoading || candidatesLoading || eventLoading || authLoading;
+
+  // Check event status for UI
+  const isEventUpcoming = eventData?.status === "upcoming";
+  const isEventLive = eventData?.status === "live";
+  const isEventEnded = eventData?.status === "ended";
+
+  // Format dates for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -225,15 +306,23 @@ export default function DetailCategoryView() {
     );
   }
 
+  if (!eventData) {
+    return (
+      <div className="px-4 lg:px-8 py-20 text-center">
+        <h1 className="text-xl font-bold mb-4">Event Tidak Ditemukan</h1>
+        <Button asChild>
+          <Link href={`/event/${eventId}/category`}>Kembali ke Kategori</Link>
+        </Button>
+      </div>
+    );
+  }
+
   const totalVotes = getTotalVotes();
   const sortedCandidates = [...(candidatesData || [])].sort((a, b) => {
     const aVotes = getCandidateVotes(a.votes);
     const bVotes = getCandidateVotes(b.votes);
     return bVotes - aVotes;
   });
-
-  // Cek status event
-  const isEventEnded = eventData && eventData.status === "ended";
 
   return (
     <div className="px-4 lg:px-8 py-20" key={refreshTrigger}>
@@ -275,26 +364,57 @@ export default function DetailCategoryView() {
                   {totalVotes.toLocaleString()} total suara
                 </div>
               )}
-              {/* Tambahkan badge status event */}
-              {eventData && (
-                <Badge
-                  variant={
-                    eventData.status === "ended" ? "destructive" : "default"
-                  }
-                  className="text-sm"
-                >
-                  {eventData.status === "live" && "Sedang Berlangsung"}
-                  {eventData.status === "upcoming" && "Akan Datang"}
-                  {eventData.status === "ended" && "Telah Berakhir"}
-                </Badge>
-              )}
+              {/* Status Event Badge */}
+              <Badge
+                variant={
+                  isEventUpcoming ? "secondary" :
+                  isEventLive ? "default" :
+                  "destructive"
+                }
+                className="text-sm"
+              >
+                {isEventUpcoming && (
+                  <>
+                    <Clock className="w-3 h-3 mr-1" />
+                    Akan Datang
+                  </>
+                )}
+                {isEventLive && (
+                  <>
+                    <Calendar className="w-3 h-3 mr-1" />
+                    Sedang Berlangsung
+                  </>
+                )}
+                {isEventEnded && (
+                  <>
+                    <Calendar className="w-3 h-3 mr-1" />
+                    Telah Berakhir
+                  </>
+                )}
+              </Badge>
             </div>
 
             <h1 className="text-2xl md:text-3xl font-bold text-balance mb-4">
               {categoryData.name}
             </h1>
 
-            {/* User Points Display - DIPINDAHKAN ke sini */}
+            {/* Event Schedule Info */}
+            <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Mulai:</span>
+                  <span className="text-sm">{formatDate(eventData.startDate)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Berakhir:</span>
+                  <span className="text-sm">{formatDate(eventData.endDate)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* User Points Display */}
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -336,6 +456,35 @@ export default function DetailCategoryView() {
           </div>
         </div>
       </div>
+
+      {/* Event Status Banner */}
+      {isEventUpcoming && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Clock className="w-5 h-5 text-yellow-600" />
+            <div>
+              <h3 className="font-medium text-yellow-800">Event Belum Dimulai</h3>
+              <p className="text-sm text-yellow-700">
+                Voting akan dibuka pada {formatDate(eventData.startDate)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isEventEnded && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5 text-red-600" />
+            <div>
+              <h3 className="font-medium text-red-800">Event Telah Berakhir</h3>
+              <p className="text-sm text-red-700">
+                Event berakhir pada {formatDate(eventData.endDate)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Candidates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -379,10 +528,10 @@ export default function DetailCategoryView() {
                     {candidate.description}
                   </p>
                 )}
-                  <div className="text-xs text-muted-foreground bg-primary/5 p-2 rounded">
-                    <Coins className="w-3 h-3 inline mr-1" />
-                    {pointsPerVote} poin = 1 suara
-                  </div>
+                <div className="text-xs text-muted-foreground bg-primary/5 p-2 rounded">
+                  <Coins className="w-3 h-3 inline mr-1" />
+                  {pointsPerVote} poin = 1 suara
+                </div>
               </CardHeader>
 
               <CardContent className="p-4 space-y-3">
@@ -404,16 +553,18 @@ export default function DetailCategoryView() {
                 <Button
                   className="w-full"
                   size="sm"
-                  disabled={isEventEnded || authLoading}
+                  disabled={isEventUpcoming || isEventEnded || authLoading || !isAuthenticated || userPoints === 0}
                   onClick={() => handleVoteClick(candidate)}
                 >
                   <Star className="mr-2 h-4 w-4" />
                   {!isAuthenticated
                     ? "Login untuk Vote"
+                    : isEventUpcoming
+                    ? "Event Belum Dimulai"
                     : isEventEnded
                     ? "Event Telah Berakhir"
                     : userPoints === 0
-                    ? "Beli point untuk vote"
+                    ? "Beli Poin untuk Vote"
                     : "Vote Sekarang"}
                 </Button>
               </CardContent>
@@ -437,6 +588,23 @@ export default function DetailCategoryView() {
 
           {selectedCandidate && (
             <div className="space-y-4 py-2">
+              {/* Event Status Warning */}
+              {isEventUpcoming && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-700">
+                    ⚠️ Event belum dimulai. Voting akan dibuka pada {formatDate(eventData.startDate)}
+                  </p>
+                </div>
+              )}
+
+              {isEventEnded && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">
+                    ❌ Event telah berakhir. Voting tidak dapat dilakukan.
+                  </p>
+                </div>
+              )}
+
               {/* Candidate Info */}
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <div className="relative aspect-[4/5] bg-muted/30 overflow-hidden">
@@ -461,54 +629,100 @@ export default function DetailCategoryView() {
                 </div>
               </div>
 
-              {/* Points Input */}
-              <div className="space-y-2">
-                <Label htmlFor="points" className="text-sm">
+              {/* Points Input dengan Slider */}
+              <div className="space-y-4">
+                <Label htmlFor="points-slider" className="text-sm">
                   Jumlah poin yang akan digunakan:
                   <span className="text-xs text-muted-foreground ml-2">
                     ({pointsPerVote} poin = 1 suara)
                   </span>
                 </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="points"
-                    type="number"
-                    min={pointsPerVote}
-                    max={userPoints}
-                    step={pointsPerVote}
-                    value={votePoints}
-                    onChange={(e) => handlePointsChange(e.target.value)}
-                    className="flex-1 text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const maxPoints = Math.floor(userPoints / pointsPerVote) * pointsPerVote;
-                      setVotePoints(maxPoints || pointsPerVote);
-                    }}
-                    disabled={userPoints === 0}
-                  >
-                    Maks
-                  </Button>
-                </div>
-                {votePoints > 0 && votePoints % pointsPerVote !== 0 && (
-                  <p className="text-xs text-red-500">
-                    Poin harus k  elipatan {pointsPerVote}
-                  </p>
+
+                {/* Slider untuk memilih poin */}
+                {maxPoints >= minPoints ? (
+                  <div className="space-y-2">
+                    <div className="pt-6 pb-2">
+                      <Slider
+                        id="points-slider"
+                        min={minPoints}
+                        max={sliderMax}
+                        step={sliderStep}
+                        value={[votePoints]}
+                        onValueChange={handleSliderChange}
+                        disabled={isEventUpcoming || isEventEnded || userPoints === 0}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        <span>{minPoints} poin</span>
+                        <span>{sliderMax} poin</span>
+                      </div>
+                    </div>
+                    
+                    {/* Display current value */}
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-primary">
+                        {votePoints} poin
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        = {Math.floor(votePoints / pointsPerVote)} suara
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">
+                      Anda tidak memiliki cukup poin untuk vote.
+                      Minimal dibutuhkan {pointsPerVote} poin.
+                    </p>
+                  </div>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  Tersedia: {userPoints} poin • Menggunakan: {votePoints} poin
-                </p>
+
+                {/* Input Number sebagai backup */}
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      id="points-input"
+                      type="number"
+                      min={minPoints}
+                      max={maxPoints}
+                      step={sliderStep}
+                      value={votePoints}
+                      onChange={(e) => handlePointsChange(e.target.value)}
+                      className="flex-1 text-sm"
+                      disabled={isEventUpcoming || isEventEnded || userPoints === 0}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVotePoints(maxPoints)}
+                      disabled={userPoints === 0 || isEventUpcoming || isEventEnded}
+                    >
+                      Maks
+                    </Button>
+                  </div>
+                  
+                  {/* Validasi kelipatan */}
+                  {votePoints > 0 && votePoints % pointsPerVote !== 0 && (
+                    <p className="text-xs text-red-500">
+                      Poin harus kelipatan {pointsPerVote}
+                    </p>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Tersedia: {userPoints} poin • Menggunakan: {votePoints} poin
+                  </p>
+                </div>
               </div>
 
               {/* Quick Select Buttons */}
               <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 3, 5].map((multiplier) => {
+                {[1, 2, 5, 10].map((multiplier) => {
                   const amount = multiplier * pointsPerVote;
-                  const isDisabled = amount > userPoints || 
+                  const isDisabled = amount > maxPoints || 
                                     userPoints === 0 || 
-                                    (userPoints < pointsPerVote && amount > 0);
+                                    (userPoints < pointsPerVote && amount > 0) ||
+                                    isEventUpcoming ||
+                                    isEventEnded;
                   
                   return (
                     <Button
@@ -564,7 +778,9 @@ export default function DetailCategoryView() {
               disabled={
                 voteMutations.createMutation.isPending ||
                 votePoints < 1 ||
-                isEventEnded
+                isEventUpcoming ||
+                isEventEnded ||
+                votePoints % pointsPerVote !== 0
               }
               onClick={handleVote}
             >
