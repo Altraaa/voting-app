@@ -388,7 +388,7 @@ export default function DetailCategoryView() {
                 {isEventEnded && (
                   <>
                     <Calendar className="w-3 h-3 mr-1" />
-                    Telah Berakhir
+                    Telah Berakhir   
                   </>
                 )}
               </Badge>
@@ -397,22 +397,6 @@ export default function DetailCategoryView() {
             <h1 className="text-2xl md:text-3xl font-bold text-balance mb-4">
               {categoryData.name}
             </h1>
-
-            {/* Event Schedule Info */}
-            <div className="mb-4 p-3 bg-muted/30 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Mulai:</span>
-                  <span className="text-sm">{formatDate(eventData.startDate)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Berakhir:</span>
-                  <span className="text-sm">{formatDate(eventData.endDate)}</span>
-                </div>
-              </div>
-            </div>
 
             {/* User Points Display */}
             <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-4">
