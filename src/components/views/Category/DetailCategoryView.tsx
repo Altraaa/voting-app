@@ -462,9 +462,6 @@ export default function DetailCategoryView() {
             <Calendar className="w-5 h-5 text-red-600" />
             <div>
               <h3 className="font-medium text-red-800">Event Telah Berakhir</h3>
-              <p className="text-sm text-red-700">
-                Event berakhir pada {formatDate(eventData.endDate)}
-              </p>
             </div>
           </div>
         </div>
