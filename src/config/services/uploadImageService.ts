@@ -19,7 +19,7 @@ export async function uploadImage(
       };
     }
 
-    const maxSize = 2 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return { success: false, error: "File size too large. Max 2MB." };
     }

@@ -112,9 +112,9 @@ export default function AdminCandidateView() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       toast.error("File terlalu besar", {
-        description: "Maksimal ukuran file adalah 2MB",
+        description: "Maksimal ukuran file adalah 5MB",
       });
       return;
     }
