@@ -99,6 +99,22 @@ export default function AdminCandidateView() {
 
   const { searchQuery, setSearchQuery } = useSearchStore();
 
+  const isValidYouTubeUrl = (url: string): boolean => {
+    if (!url) return true; // kosong diperbolehkan
+    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//;
+    return pattern.test(url);
+  };
+
+  // const getYouTubeEmbedUrl = (url: string) => {
+  //   const regExp =
+  //     /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  //   const match = url.match(regExp);
+  //   if (match && match[2].length === 11) {
+  //     return `https://www.youtube.com/embed/${match[2]}`;
+  //   }
+  //   return url; // fallback
+  // };
+
   // Handler functions
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -182,11 +198,17 @@ export default function AdminCandidateView() {
         photoUrl = await handleImageUpload();
       }
 
+      if (formData.video_url && !isValidYouTubeUrl(formData.video_url)) {
+        toast.error("URL YouTube tidak valid");
+        return;
+      }
+
       await mutations.createMutation.mutateAsync({
         name: formData.name,
         description: formData.description,
         photo_url: photoUrl,
         categoryId: formData.categoryId,
+        video_url: formData.video_url?.trim() || null,
       });
 
       closeCreateDialog();
@@ -216,6 +238,7 @@ export default function AdminCandidateView() {
         description: formData.description,
         photo_url: photoUrl,
         categoryId: formData.categoryId,
+        video_url: formData.video_url?.trim() || null,
       });
 
       if (shouldDeleteOldImage && selectedCandidate.photo_url) {
@@ -286,7 +309,9 @@ export default function AdminCandidateView() {
     (candidate) =>
       candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       candidate.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      candidate.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
+      candidate.category?.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()),
   );
 
   // Get category name by ID
@@ -603,6 +628,26 @@ export default function AdminCandidateView() {
                 </p>
               )}
             </div>
+            {/* Video URL Section - Create */}
+            <div className="grid gap-2">
+              <Label htmlFor="create-video" className="text-card-foreground">
+                Video URL (YouTube){" "}
+                <span className="text-xs text-muted-foreground">
+                  (opsional)
+                </span>
+              </Label>
+              <Input
+                id="create-video"
+                type="url"
+                value={formData.video_url || ""}
+                onChange={(e) => setFormData({ video_url: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="bg-background border-border text-foreground"
+              />
+              <p className="text-xs text-muted-foreground">
+                Masukkan link YouTube. Video akan ditampilkan di halaman publik.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -734,6 +779,26 @@ export default function AdminCandidateView() {
                   Uploading image...
                 </p>
               )}
+            </div>
+            {/* Video URL Section - Edit */}
+            <div className="grid gap-2">
+              <Label htmlFor="edit-video" className="text-card-foreground">
+                Video URL (YouTube){" "}
+                <span className="text-xs text-muted-foreground">
+                  (opsional)
+                </span>
+              </Label>
+              <Input
+                id="edit-video"
+                type="url"
+                value={formData.video_url || ""}
+                onChange={(e) => setFormData({ video_url: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="bg-background border-border text-foreground"
+              />
+              <p className="text-xs text-muted-foreground">
+                Masukkan link YouTube. Video akan ditampilkan di halaman publik.
+              </p>
             </div>
           </div>
           <DialogFooter>
