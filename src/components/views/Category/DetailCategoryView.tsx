@@ -40,6 +40,16 @@ const getYouTubeEmbedUrl = (url: string) => {
   return url;
 };
 
+const getYouTubeThumbnail = (url: string): string => {
+  const regExp =
+    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    return `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`;
+  }
+  return "/placeholder-candidate.jpg";
+};
+
 export default function DetailCategoryView() {
   const params = useParams();
   const categoryId = params.categoryId as string;
@@ -533,17 +543,41 @@ export default function DetailCategoryView() {
               {/* Container dengan rasio 4:5 dan object-contain */}
               <div className="relative aspect-[4/5] bg-muted/30">
                 <Image
-                  src={candidate.photo_url || "/placeholder-candidate.jpg"}
+                  src={
+                    candidate.photo_url ||
+                    (candidate.video_url
+                      ? getYouTubeThumbnail(candidate.video_url)
+                      : "/placeholder-candidate.jpg")
+                  }
                   alt={candidate.name}
                   fill
                   className="object-contain p-2"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
+                {/* Overlay play jika tidak ada foto tapi ada video */}
+                {!candidate.photo_url && candidate.video_url && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+                    onClick={() => {
+                      setSelectedVideoCandidate({
+                        name: candidate.name,
+                        videoUrl: candidate.video_url!,
+                      });
+                      setVideoDialogOpen(true);
+                    }}
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center">
+                      <span className="text-2xl">▶</span>
+                    </div>
+                  </div>
+                )}
+                {/* Badge nomor peringkat */}
                 <div className="absolute top-3 right-3">
                   <Badge className="bg-background/90 text-foreground font-bold text-xs">
                     #{index + 1}
                   </Badge>
                 </div>
+                {/* Badge terdepan */}
                 {index === 0 && votes > 0 && (
                   <div className="absolute top-3 left-3">
                     <Badge className="bg-yellow-500 text-white text-xs">
