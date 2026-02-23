@@ -69,6 +69,7 @@ model Candidate {
   name        String
   description String
   photo_url   String?
+  video_url   String?  // OPSIONAL (YouTube link)
   categoryId  String
   created     DateTime @default(now())
   updated     DateTime @updatedAt
