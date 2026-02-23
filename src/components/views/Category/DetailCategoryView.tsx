@@ -9,14 +9,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Users, ArrowLeft, Star, Trophy, Coins, Clock, Calendar } from "lucide-react";
+import {
+  Users,
+  ArrowLeft,
+  Star,
+  Trophy,
+  Coins,
+  Clock,
+  Calendar,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -45,7 +53,8 @@ const getYouTubeThumbnail = (url: string): string => {
     /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
   if (match && match[2].length === 11) {
-    return `https://img.youtube.com/vi/${match[2]}/maxresdefault.jpg`;
+    // hqdefault (480x360) selalu tersedia untuk semua video YouTube
+    return `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`;
   }
   return "/placeholder-candidate.jpg";
 };
@@ -103,7 +112,7 @@ export default function DetailCategoryView() {
   // Calculate max points that can be used (multiple of pointsPerVote)
   const maxPoints = Math.floor(userPoints / pointsPerVote) * pointsPerVote;
   const minPoints = pointsPerVote;
-  
+
   // Calculate slider values
   const sliderMax = Math.min(1000, maxPoints);
   const sliderStep = pointsPerVote;
@@ -123,10 +132,10 @@ export default function DetailCategoryView() {
 
   const getCandidateVotes = (votes: IVotes[]) => {
     if (!votes || votes.length === 0) return 0;
-    
+
     // Hitung total poin
     const totalPoints = votes.reduce((sum, vote) => sum + vote.pointsUsed, 0);
-    
+
     // Konversi ke suara berdasarkan pointsPerVote
     return Math.floor(totalPoints / pointsPerVote);
   };
@@ -241,7 +250,9 @@ export default function DetailCategoryView() {
 
       // Hitung jumlah suara berdasarkan pointsPerVote
       const votesReceived = votePoints / pointsPerVote;
-      toast.success(`Berhasil vote! ${votePoints} poin = ${votesReceived} suara`);
+      toast.success(
+        `Berhasil vote! ${votePoints} poin = ${votesReceived} suara`,
+      );
       setIsDialogOpen(false);
       setSelectedCandidate(null);
       setVotePoints(pointsPerVote);
@@ -258,10 +269,10 @@ export default function DetailCategoryView() {
 
   const handlePointsChange = (value: string) => {
     const numValue = parseInt(value) || 0;
-    
+
     // Pastikan nilai adalah kelipatan pointsPerVote
     const adjustedValue = Math.floor(numValue / pointsPerVote) * pointsPerVote;
-    
+
     // Batasi antara minPoints dan maxPoints
     if (adjustedValue <= maxPoints) {
       setVotePoints(Math.max(minPoints, adjustedValue));
@@ -278,7 +289,8 @@ export default function DetailCategoryView() {
   };
 
   // Combined loading state
-  const isLoading = categoryLoading || candidatesLoading || eventLoading || authLoading;
+  const isLoading =
+    categoryLoading || candidatesLoading || eventLoading || authLoading;
 
   // Check event status for UI
   const isEventUpcoming = eventData?.status === "upcoming";
@@ -542,7 +554,7 @@ export default function DetailCategoryView() {
             >
               {/* Container dengan rasio 4:5 dan object-contain */}
               <div
-                className="relative aspect-[4/5] bg-muted/30 cursor-pointer"
+                className={`relative ${candidate.video_url ? "aspect-video" : "aspect-[4/5]"} bg-muted/30 cursor-pointer`}
                 onClick={() => {
                   if (candidate.video_url) {
                     setSelectedVideoCandidate({
@@ -562,7 +574,7 @@ export default function DetailCategoryView() {
                   }
                   alt={candidate.name}
                   fill
-                  className="object-contain p-2"
+                  className={`${candidate.video_url ? "object-cover" : "object-contain p-2"}`}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 {/* Jika tidak ada foto tapi ada video, tampilkan overlay play */}
