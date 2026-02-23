@@ -6,6 +6,7 @@ export interface ICandidate {
   name: string;
   description: string;
   photo_url: string;
+  video_url?: string | null;
   categoryId: string;
   created: Date;
   updated: Date;
