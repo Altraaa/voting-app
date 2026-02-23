@@ -1,3 +1,4 @@
+// services/candidateService.ts
 import { prisma } from "@/lib/prisma";
 import {
   CandidatesCreatePayload,
@@ -12,6 +13,7 @@ export const candidateService = {
         name: true,
         description: true,
         photo_url: true,
+        video_url: true, // tambahkan
         categoryId: true,
         votes: {
           select: {
@@ -31,6 +33,7 @@ export const candidateService = {
         name: true,
         description: true,
         photo_url: true,
+        video_url: true, // tambahkan
         categoryId: true,
         votes: {
           select: {
@@ -50,6 +53,7 @@ export const candidateService = {
         name: true,
         description: true,
         photo_url: true,
+        video_url: true, // tambahkan
         votes: {
           select: {
             userId: true,
@@ -62,12 +66,19 @@ export const candidateService = {
 
   async create(data: CandidatesCreatePayload) {
     return prisma.candidate.create({
-      data,
+      data: {
+        name: data.name,
+        categoryId: data.categoryId,
+        description: data.description,
+        photo_url: data.photo_url,
+        video_url: data.video_url, // tambahkan (akan undefined jika tidak dikirim)
+      },
       select: {
         id: true,
         name: true,
         description: true,
         photo_url: true,
+        video_url: true, // tambahkan
         categoryId: true,
       },
     });
@@ -81,12 +92,14 @@ export const candidateService = {
         categoryId: data.categoryId,
         description: data.description,
         photo_url: data.photo_url,
+        video_url: data.video_url, // tambahkan
       },
       select: {
         id: true,
         name: true,
         description: true,
         photo_url: true,
+        video_url: true, // tambahkan
         categoryId: true,
       },
     });

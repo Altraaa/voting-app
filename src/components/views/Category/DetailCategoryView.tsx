@@ -30,6 +30,16 @@ import { useCandidates } from "@/config/hooks/CandidateHook/useCandidate";
 import { useEvent } from "@/config/hooks/EventHook/useEvent";
 import { useSettings } from "@/config/hooks/SettingsHook/useSettings";
 
+const getYouTubeEmbedUrl = (url: string) => {
+  const regExp =
+    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}`;
+  }
+  return url;
+};
+
 export default function DetailCategoryView() {
   const params = useParams();
   const categoryId = params.categoryId as string;
@@ -71,6 +81,11 @@ export default function DetailCategoryView() {
   const [votePoints, setVotePoints] = useState<number>(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [selectedVideoCandidate, setSelectedVideoCandidate] = useState<{
+    name: string;
+    videoUrl: string;
+  } | null>(null);
 
   const userPoints = user?.points || 0;
   const pointsPerVote = eventData?.pointsPerVote || 1;
@@ -107,9 +122,9 @@ export default function DetailCategoryView() {
   };
 
   // Fungsi untuk menghitung total poin (untuk display saja)
-  const getCandidatePoints = (votes: IVotes[]) => {
-    return votes?.reduce((sum, vote) => sum + vote.pointsUsed, 0) || 0;
-  };
+  // const getCandidatePoints = (votes: IVotes[]) => {
+  //   return votes?.reduce((sum, vote) => sum + vote.pointsUsed, 0) || 0;
+  // };
 
   const getTotalVotes = () => {
     if (!candidatesData) return 0;
@@ -324,6 +339,39 @@ export default function DetailCategoryView() {
     return bVotes - aVotes;
   });
 
+  const VideoDialog = ({
+    open,
+    onOpenChange,
+    videoUrl,
+    candidateName,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    videoUrl?: string;
+    candidateName?: string;
+  }) => {
+    const embedUrl = videoUrl ? getYouTubeEmbedUrl(videoUrl) : "";
+
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Video {candidateName}</DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video w-full">
+            <iframe
+              src={embedUrl}
+              title="YouTube video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="px-4 lg:px-8 py-20" key={refreshTrigger}>
       {/* Back button */}
@@ -367,9 +415,11 @@ export default function DetailCategoryView() {
               {/* Status Event Badge */}
               <Badge
                 variant={
-                  isEventUpcoming ? "secondary" :
-                  isEventLive ? "default" :
-                  "destructive"
+                  isEventUpcoming
+                    ? "secondary"
+                    : isEventLive
+                      ? "default"
+                      : "destructive"
                 }
                 className="text-sm"
               >
@@ -388,7 +438,7 @@ export default function DetailCategoryView() {
                 {isEventEnded && (
                   <>
                     <Calendar className="w-3 h-3 mr-1" />
-                    Telah Berakhir   
+                    Telah Berakhir
                   </>
                 )}
               </Badge>
@@ -447,7 +497,9 @@ export default function DetailCategoryView() {
           <div className="flex items-center gap-3">
             <Clock className="w-5 h-5 text-yellow-600" />
             <div>
-              <h3 className="font-medium text-yellow-800">Event Belum Dimulai</h3>
+              <h3 className="font-medium text-yellow-800">
+                Event Belum Dimulai
+              </h3>
               <p className="text-sm text-yellow-700">
                 Voting akan dibuka pada {formatDate(eventData.startDate)}
               </p>
@@ -529,24 +581,47 @@ export default function DetailCategoryView() {
                     </div>
                   </div>
                   <Progress value={percentage} className="h-2" />
+                  {candidate.video_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        setSelectedVideoCandidate({
+                          name: candidate.name,
+                          videoUrl: candidate.video_url!,
+                        });
+                        setVideoDialogOpen(true);
+                      }}
+                    >
+                      <span className="mr-2">🎬</span>
+                      Tonton Video
+                    </Button>
+                  )}
                 </div>
 
                 <Button
                   className="w-full"
                   size="sm"
-                  disabled={isEventUpcoming || isEventEnded || authLoading || !isAuthenticated || userPoints === 0}
+                  disabled={
+                    isEventUpcoming ||
+                    isEventEnded ||
+                    authLoading ||
+                    !isAuthenticated ||
+                    userPoints === 0
+                  }
                   onClick={() => handleVoteClick(candidate)}
                 >
                   <Star className="mr-2 h-4 w-4" />
                   {!isAuthenticated
                     ? "Login untuk Vote"
                     : isEventUpcoming
-                    ? "Event Belum Dimulai"
-                    : isEventEnded
-                    ? "Event Telah Berakhir"
-                    : userPoints === 0
-                    ? "Beli Poin untuk Vote"
-                    : "Vote Sekarang"}
+                      ? "Event Belum Dimulai"
+                      : isEventEnded
+                        ? "Event Telah Berakhir"
+                        : userPoints === 0
+                          ? "Beli Poin untuk Vote"
+                          : "Vote Sekarang"}
                 </Button>
               </CardContent>
             </Card>
@@ -561,7 +636,7 @@ export default function DetailCategoryView() {
             <DialogTitle>Berikan Vote Anda</DialogTitle>
             <DialogDescription>
               Vote untuk <strong>{selectedCandidate?.name}</strong>.
-              {pointsPerVote === 1 
+              {pointsPerVote === 1
                 ? " Setiap 1 poin = 1 suara."
                 : ` Setiap ${pointsPerVote} poin = 1 suara.`}
             </DialogDescription>
@@ -573,7 +648,8 @@ export default function DetailCategoryView() {
               {isEventUpcoming && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-700">
-                    ⚠️ Event belum dimulai. Voting akan dibuka pada {formatDate(eventData.startDate)}
+                    ⚠️ Event belum dimulai. Voting akan dibuka pada{" "}
+                    {formatDate(eventData.startDate)}
                   </p>
                 </div>
               )}
@@ -590,14 +666,17 @@ export default function DetailCategoryView() {
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <div className="relative aspect-[4/5] bg-muted/30 overflow-hidden">
                   <Image
-                    key={selectedCandidate.photo_url} 
-                    src={selectedCandidate.photo_url || "/placeholder-candidate.jpg"}
+                    key={selectedCandidate.photo_url}
+                    src={
+                      selectedCandidate.photo_url ||
+                      "/placeholder-candidate.jpg"
+                    }
                     alt={selectedCandidate.name}
                     fill
                     className="object-contain p-2"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     priority
-                    unoptimized={false} 
+                    unoptimized={false}
                   />
                 </div>
                 <div className="flex-1">
@@ -630,7 +709,9 @@ export default function DetailCategoryView() {
                         step={sliderStep}
                         value={[votePoints]}
                         onValueChange={handleSliderChange}
-                        disabled={isEventUpcoming || isEventEnded || userPoints === 0}
+                        disabled={
+                          isEventUpcoming || isEventEnded || userPoints === 0
+                        }
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-muted-foreground mt-2">
@@ -638,7 +719,7 @@ export default function DetailCategoryView() {
                         <span>{sliderMax} poin</span>
                       </div>
                     </div>
-                    
+
                     {/* Display current value */}
                     <div className="text-center">
                       <div className="text-2xl font-bold text-primary">
@@ -652,8 +733,8 @@ export default function DetailCategoryView() {
                 ) : (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-700">
-                      Anda tidak memiliki cukup poin untuk vote.
-                      Minimal dibutuhkan {pointsPerVote} poin.
+                      Anda tidak memiliki cukup poin untuk vote. Minimal
+                      dibutuhkan {pointsPerVote} poin.
                     </p>
                   </div>
                 )}
@@ -670,25 +751,29 @@ export default function DetailCategoryView() {
                       value={votePoints}
                       onChange={(e) => handlePointsChange(e.target.value)}
                       className="flex-1 text-sm"
-                      disabled={isEventUpcoming || isEventEnded || userPoints === 0}
+                      disabled={
+                        isEventUpcoming || isEventEnded || userPoints === 0
+                      }
                     />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setVotePoints(maxPoints)}
-                      disabled={userPoints === 0 || isEventUpcoming || isEventEnded}
+                      disabled={
+                        userPoints === 0 || isEventUpcoming || isEventEnded
+                      }
                     >
                       Maks
                     </Button>
                   </div>
-                  
+
                   {/* Validasi kelipatan */}
                   {votePoints > 0 && votePoints % pointsPerVote !== 0 && (
                     <p className="text-xs text-red-500">
                       Poin harus kelipatan {pointsPerVote}
                     </p>
                   )}
-                  
+
                   <p className="text-xs text-muted-foreground">
                     Tersedia: {userPoints} poin • Menggunakan: {votePoints} poin
                   </p>
@@ -699,12 +784,13 @@ export default function DetailCategoryView() {
               <div className="grid grid-cols-4 gap-2">
                 {[1, 2, 5, 10].map((multiplier) => {
                   const amount = multiplier * pointsPerVote;
-                  const isDisabled = amount > maxPoints || 
-                                    userPoints === 0 || 
-                                    (userPoints < pointsPerVote && amount > 0) ||
-                                    isEventUpcoming ||
-                                    isEventEnded;
-                  
+                  const isDisabled =
+                    amount > maxPoints ||
+                    userPoints === 0 ||
+                    (userPoints < pointsPerVote && amount > 0) ||
+                    isEventUpcoming ||
+                    isEventEnded;
+
                   return (
                     <Button
                       key={multiplier}
@@ -784,6 +870,12 @@ export default function DetailCategoryView() {
           </Button>
         </div>
       )}
+      <VideoDialog
+        open={videoDialogOpen}
+        onOpenChange={setVideoDialogOpen}
+        videoUrl={selectedVideoCandidate?.videoUrl}
+        candidateName={selectedVideoCandidate?.name}
+      />
     </div>
   );
 }

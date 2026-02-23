@@ -1,3 +1,4 @@
+// store/useCandidateFormStore.ts
 import { create } from "zustand";
 import { CandidatesCreatePayload } from "../types/candidatesType";
 import { CandidateFormState } from "../types/StateType/candidateStateType";
@@ -7,6 +8,7 @@ const initialFormData: CandidatesCreatePayload = {
   description: "",
   photo_url: "",
   categoryId: "",
+  video_url: "", // tambahkan field video_url
 };
 
 export const useCandidateFormStore = create<CandidateFormState>((set) => ({
@@ -21,9 +23,7 @@ export const useCandidateFormStore = create<CandidateFormState>((set) => ({
     })),
 
   setSelectedFile: (file) => set({ selectedFile: file }),
-
   setImagePreview: (preview) => set({ imagePreview: preview }),
-
   setSelectedCandidate: (candidate) => set({ selectedCandidate: candidate }),
 
   resetForm: () =>
@@ -42,6 +42,7 @@ export const useCandidateFormStore = create<CandidateFormState>((set) => ({
         description: candidate.description,
         photo_url: candidate.photo_url || "",
         categoryId: candidate.categoryId,
+        video_url: candidate.video_url || "", // ambil video_url dari candidate
       },
       imagePreview: candidate.photo_url || "",
       selectedFile: null,
