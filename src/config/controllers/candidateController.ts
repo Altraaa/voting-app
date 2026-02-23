@@ -25,7 +25,7 @@ export const candidateController = {
       await req.json();
 
     // Validasi field wajib
-    if (!name || !categoryId || !description || !photo_url) {
+    if (!name || !categoryId || !description) {
       return NextResponse.json(
         {
           error:
