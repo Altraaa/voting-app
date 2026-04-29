@@ -1,9 +1,36 @@
 import { UploadResult } from "@/config/types/uploadType";
-import { supabase } from "@/lib/supabase/client";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryUploadResult } from "../models/CloudinaryModel";
 
-/**
- * Upload file to local filesystem
- */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+async function fileToBuffer(file: File): Promise<Buffer> {
+  const arrayBuffer = await file.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+function uploadToCloudinary(
+  buffer: Buffer,
+  options: Record<string, unknown>,
+): Promise<CloudinaryUploadResult> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      options,
+      (error, result) => {
+        if (error || !result)
+          return reject(error ?? new Error("Upload failed"));
+        resolve(result as CloudinaryUploadResult);
+      },
+    );
+    stream.end(buffer);
+  });
+}
+
 export async function uploadImage(
   file: File,
   folder?: string
@@ -11,6 +38,7 @@ export async function uploadImage(
   try {
     if (!file) return { success: false, error: "No file provided" };
 
+    // ── Validasi tipe file ──
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
       return {
@@ -19,32 +47,48 @@ export async function uploadImage(
       };
     }
 
+    // ── Validasi ukuran (5 MB) ──
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      return { success: false, error: "File size too large. Max 2MB." };
+      return { success: false, error: "File size too large. Max 5MB." };
     }
 
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 9);
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${timestamp}-${randomString}.${fileExt}`;
+    const buffer = await fileToBuffer(file);
+    const uploadOptions = {
+      folder: folder ?? "uploads",
+      resource_type: "image" as const,
 
-    const filePath = `${folder ? `${folder}/` : ""}${fileName}`;
+      // Simpan original (eager = generate transformed version sekaligus saat upload)
+      eager: [
+        {
+          quality: "auto:good",
+          fetch_format: "auto",
+          width: 1920,
+          crop: "limit",
+          flags: "progressive",
+        },
+      ],
+      eager_async: false, // generate eager sekarang, bukan lazy
 
-    const { data, error } = await supabase.storage
-      .from("photos")
-      .upload(filePath, file);
+      // Transformation default yang diterapkan ke URL yang dikembalikan
+      transformation: [
+        { quality: "auto:good" },
+        { fetch_format: "auto" },
+        { width: 1920, crop: "limit" },
+        { flags: "progressive" },
+      ],
+    };
 
-    if (error) throw error;
+    const result = await uploadToCloudinary(buffer, uploadOptions);
 
-    const { data: publicData } = supabase.storage
-      .from("photos")
-      .getPublicUrl(filePath);
-
+    /**
+     * URL yang dikembalikan sudah include transformasi (compressed + resized + CDN).
+     * `path` = public_id Cloudinary, dipakai untuk delete.
+     */
     return {
       success: true,
-      url: publicData.publicUrl,
-      path: filePath,
+      url: result.secure_url,
+      path: result.public_id, // ← ini yang dipakai deleteImage
     };
   } catch (error) {
     console.error("Upload error:", error);
@@ -55,29 +99,16 @@ export async function uploadImage(
   }
 }
 
-/**
- * Delete file from local filesystem
- */
 export async function deleteImage(filePath: string): Promise<boolean> {
   try {
-    const { error } = await supabase.storage.from("photos").remove([filePath]);
-
-    if (error) throw error;
-    return true;
+    const result = await cloudinary.uploader.destroy(filePath, {
+      resource_type: "image",
+    });
+ 
+    // result.result === "ok" berarti sukses, "not found" berarti file tidak ada
+    return result.result === "ok";
   } catch (error) {
     console.error("Delete error:", error);
     return false;
-  }
-}
-
-/**
- * Extract path from URL
- */
-export function extractPathFromUrl(url: string): string | null {
-  try {
-    const match = url.match(/\/object\/public\/photos\/(.+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  } catch {
-    return null;
-  }
+  }  
 }
