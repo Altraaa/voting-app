@@ -5,7 +5,7 @@ import { PointVotesRoute } from "@/routes/pointVotesRoute";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/config/utils/ErrorHandler";
 import {
-  PointVotesCreatePayload,
+  PointVotesPurchasePayload,
   DuitkuCallbackPayload,
   PointVotesCreateResponse,
 } from "@/config/types/pointVotesType";
@@ -23,7 +23,7 @@ export const usePointVotesMutations = () => {
 
   const createMutation = useApiMutation<
     PointVotesCreateResponse,
-    PointVotesCreatePayload
+    PointVotesPurchasePayload
   >((data) => PointVotesRoute.create(data), {
     onSuccess: (response) => {
       if (response.success && response.data) {

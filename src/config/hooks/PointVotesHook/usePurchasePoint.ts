@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { usePointVotes } from "./usePointVotes";
-import { PointVotesCreatePayload } from "@/config/types/pointVotesType";
+import {
+  DuitkuCallbackPayload,
+  PointVotesPurchasePayload,
+} from "@/config/types/pointVotesType";
 import { PaymentInitiate } from "@/config/types/dutikuType";
 
 export const usePurchasePoints = () => {
   const { mutations } = usePointVotes();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const purchasePoints = async (purchaseData: PointVotesCreatePayload) => {
+  const purchasePoints = async (purchaseData: PointVotesPurchasePayload) => {
     try {
       setIsProcessing(true);
       const result = await mutations.createMutation.mutateAsync(purchaseData);
@@ -33,7 +36,7 @@ export const usePurchasePoints = () => {
   };
 
   const purchaseAndPay = async (
-    purchaseData: PointVotesCreatePayload,
+    purchaseData: PointVotesPurchasePayload,
     paymentMethod: string
   ) => {
     try {
@@ -55,7 +58,7 @@ export const usePurchasePoints = () => {
     }
   };
 
-  const handlePaymentCallback = async (callbackData: any) => {
+  const handlePaymentCallback = async (callbackData: DuitkuCallbackPayload) => {
     try {
       const result = await mutations.paymentCallbackMutation.mutateAsync(
         callbackData

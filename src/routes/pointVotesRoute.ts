@@ -1,6 +1,6 @@
 import { IPointVotes } from "@/config/models/PointVotesModel";
 import { PaymentInitiate } from "@/config/types/dutikuType";
-import { DuitkuCallbackPayload, PointVotesCreatePayload, PointVotesCreateResponse } from "@/config/types/pointVotesType";
+import { DuitkuCallbackPayload, PointVotesPurchasePayload, PointVotesCreateResponse } from "@/config/types/pointVotesType";
 import { ApiRequest } from "@/lib/api";
 
 export const PointVotesRoute = {
@@ -22,7 +22,7 @@ export const PointVotesRoute = {
       method: "GET",
     }),
 
-  create: (data: PointVotesCreatePayload): Promise<PointVotesCreateResponse> =>
+  create: (data: PointVotesPurchasePayload): Promise<PointVotesCreateResponse> =>
     ApiRequest({
       url: "points/votes",
       method: "POST",

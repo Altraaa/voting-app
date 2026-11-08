@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuthUser } from "@/config/hooks/useAuthUser";
 import { usePackage } from "@/config/hooks/PackageHook/usePackage";
 import { usePaymentMethods } from "@/config/hooks/usePaymentMethods";
-import { PaymentStatus } from "@/generated/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,6 @@ import { Loader2, ArrowLeft, CheckCircle, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { usePurchasePoints } from "@/config/hooks/PointVotesHook/usePurchasePoint";
 import Image from "next/image";
-import { generateMerchantOrderId } from "@/config/utils/merchant";
 import type { Route } from "next";
 
 export default function CheckoutPage() {
@@ -122,19 +120,11 @@ export default function CheckoutPage() {
     }
 
     try {
-      const merchantOrderId = generateMerchantOrderId(user.id);
-
-      console.log("Generated merchantOrderId:", merchantOrderId);
-      console.log("Length:", merchantOrderId.length);
-
+      // userId, harga, dan merchantOrderId ditentukan oleh server.
       const paymentResponse = await purchaseAndPay(
         {
-          userId: user.id,
           packageId: isCustomPurchase ? undefined : packageId!,
-          points: parseInt(points || "0"),
-          amount: parseInt(amount || "0"),
-          payment_status: PaymentStatus.pending,
-          merchantOrderId: merchantOrderId,
+          points: isCustomPurchase ? parseInt(points || "0") : undefined,
           paymentMethod: selectedPayment,
           phoneNumber: phoneNumber,
         },
@@ -144,9 +134,9 @@ export default function CheckoutPage() {
       if (paymentResponse.data.paymentUrl) {
         window.location.href = paymentResponse.data.paymentUrl;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Payment error:", error);
-      toast.error(error.message || "Payment failed");
+      toast.error(error instanceof Error ? error.message : "Payment failed");
     }
   };
 

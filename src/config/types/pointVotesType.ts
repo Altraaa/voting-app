@@ -12,7 +12,22 @@ export type PointVotesBasePayload = {
   phoneNumber?: string;
 };
 
-export type PointVotesCreatePayload = PointVotesBasePayload;
+// Dipakai server untuk menyimpan transaksi. points, amount, userId dan
+// merchantOrderId dihitung/di-generate di server, status selalu "pending".
+export type PointVotesCreatePayload = Omit<
+  PointVotesBasePayload,
+  "payment_status"
+>;
+
+// Payload yang dikirim client ke POST /api/points/votes.
+// Harga TIDAK dikirim: server menghitungnya dari packageId (tabel Package)
+// atau dari points (custom, Rp 1.000/poin). userId diambil dari session.
+export type PointVotesPurchasePayload = {
+  packageId?: string;
+  points?: number;
+  paymentMethod: string;
+  phoneNumber: string;
+};
 
 export type PointVotesUpdatePayload = Partial<PointVotesBasePayload> & {
   id: string;

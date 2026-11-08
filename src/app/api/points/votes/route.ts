@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { pointVotesController } from "@/config/controllers/pointVotesController";
 
 export async function GET() {
@@ -5,5 +6,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  return pointVotesController.create(req);
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+  return pointVotesController.create(req, token);
 }
