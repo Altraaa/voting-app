@@ -4,7 +4,35 @@ import {
   PointVotesUpdatePayload,
   DuitkuCallbackPayload,
 } from "../types/pointVotesType";
-import { PaymentStatus } from "@/generated/prisma";
+import { PaymentStatus, Prisma } from "@/generated/prisma";
+
+// Client transaksi (`tx`) atau client global; keduanya punya delegate yang sama.
+type DbClient = Prisma.TransactionClient;
+
+const pointVoteInclude = {
+  user: {
+    select: {
+      id: true,
+      email: true,
+      points: true,
+    },
+  },
+  package: {
+    select: {
+      id: true,
+      name: true,
+      points: true,
+    },
+  },
+} satisfies Prisma.PointVotesInclude;
+
+/** Error callback yang membawa HTTP status untuk dikembalikan ke Duitku. */
+export class PaymentCallbackError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = "PaymentCallbackError";
+  }
+}
 
 export const pointVotesService = {
   async getAll() {
@@ -156,52 +184,86 @@ export const pointVotesService = {
     });
   },
 
+  /**
+   * Idempotent: callback yang sama boleh datang berkali-kali (retry Duitku,
+   * replay manual), tetapi poin hanya ditambahkan sekali. Update status
+   * dilakukan secara kondisional (`payment_status != success`) di dalam
+   * transaksi, sehingga dua callback yang datang bersamaan pun hanya satu
+   * yang mendapat `count === 1`.
+   */
   async handleDuitkuCallback(callbackData: DuitkuCallbackPayload) {
+    const { merchantOrderId } = callbackData;
+
     try {
-      const pointVote = await this.getByMerchantOrderId(
-        callbackData.merchantOrderId
-      );
+      return await prisma.$transaction(async (tx) => {
+        const pointVote = await tx.pointVotes.findUnique({
+          where: { merchantOrderId },
+          include: pointVoteInclude,
+        });
 
-      if (!pointVote) {
-        throw new Error("Transaction not found");
-      }
+        if (!pointVote) {
+          throw new PaymentCallbackError("Transaction not found", 404);
+        }
 
-      let paymentStatus: PaymentStatus;
-      switch (callbackData.resultCode) {
-        case "00":
-          paymentStatus = PaymentStatus.success;
-          break;
-        case "01":
-          paymentStatus = PaymentStatus.pending;
-          break;
-        default:
-          paymentStatus = PaymentStatus.failed;
-      }
+        if (pointVote.payment_status === PaymentStatus.success) {
+          console.log(
+            `[Duitku callback] ${merchantOrderId} sudah success, diabaikan`
+          );
+          return pointVote;
+        }
 
-      const updatedPointVote = await this.updatePaymentStatus(
-        callbackData.merchantOrderId,
-        paymentStatus
-      );
+        if (Number(callbackData.amount) !== pointVote.amount) {
+          console.error(
+            `[Duitku callback] Amount tidak cocok untuk ${merchantOrderId}: ` +
+              `callback=${callbackData.amount}, db=${pointVote.amount}`
+          );
+          throw new PaymentCallbackError("Amount mismatch", 400);
+        }
 
-      if (paymentStatus === PaymentStatus.success) {
-        await this.addPointsToUser(pointVote.userId, pointVote.points);
+        let paymentStatus: PaymentStatus;
+        switch (callbackData.resultCode) {
+          case "00":
+            paymentStatus = PaymentStatus.success;
+            break;
+          case "01":
+            paymentStatus = PaymentStatus.pending;
+            break;
+          default:
+            paymentStatus = PaymentStatus.failed;
+        }
 
-        await this.createPackageHistory(
-          pointVote.userId,
-          pointVote.packageId,
-          pointVote.points
-        );
-      }
+        const { count } = await tx.pointVotes.updateMany({
+          where: {
+            merchantOrderId,
+            payment_status: { not: PaymentStatus.success },
+          },
+          data: { payment_status: paymentStatus },
+        });
 
-      return updatedPointVote;
+        if (count === 1 && paymentStatus === PaymentStatus.success) {
+          await this.addPointsToUser(pointVote.userId, pointVote.points, tx);
+
+          await this.createPackageHistory(
+            pointVote.userId,
+            pointVote.packageId,
+            pointVote.points,
+            tx
+          );
+        }
+
+        return tx.pointVotes.findUnique({
+          where: { merchantOrderId },
+          include: pointVoteInclude,
+        });
+      });
     } catch (error) {
       console.error("Error handling duitku callback:", error);
       throw error;
     }
   },
 
-  async addPointsToUser(userId: string, points: number) {
-    return prisma.user.update({
+  async addPointsToUser(userId: string, points: number, db: DbClient = prisma) {
+    return db.user.update({
       where: { id: userId },
       data: {
         points: {
@@ -214,13 +276,14 @@ export const pointVotesService = {
   async createPackageHistory(
     userId: string,
     packageId: string | null | undefined,
-    pointsReceived: number
+    pointsReceived: number,
+    db: DbClient = prisma
   ) {
     if (!packageId) {
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + 30);
 
-      return prisma.packageHistory.create({
+      return db.packageHistory.create({
         data: {
           userId,
           packageId: null,
@@ -231,7 +294,7 @@ export const pointVotesService = {
       });
     }
 
-    const packageData = await prisma.package.findUnique({
+    const packageData = await db.package.findUnique({
       where: { id: packageId },
     });
 
@@ -242,7 +305,7 @@ export const pointVotesService = {
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + packageData.validityDays);
 
-    return prisma.packageHistory.create({
+    return db.packageHistory.create({
       data: {
         userId,
         packageId,

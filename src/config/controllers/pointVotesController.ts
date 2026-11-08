@@ -2,11 +2,20 @@ import { NextResponse } from "next/server";
 import { pointVotesService } from "../services/pointVotesService";
 import prisma from "@/lib/prisma";
 import { DuitkuService } from "@/lib/duitku";
-import { DuitkuCallbackPayload } from "../types/pointVotesType";
+import { verifyToken } from "@/lib/auth";
+import { generateMerchantOrderId } from "@/lib/merchant";
+import {
+  DuitkuCallbackPayload,
+  PointVotesPurchasePayload,
+} from "../types/pointVotesType";
 import {
   validateDuitkuPaymentData,
   sanitizeCustomerVaName,
 } from "@/config/constants/duitkuConstraints";
+
+// Harga pembelian poin custom (harus sama dengan BuyPointsView).
+const MIN_CUSTOM_POINTS = 10;
+const PRICE_PER_CUSTOM_POINT = 1000;
 
 export const pointVotesController = {
   async getAll() {
@@ -62,18 +71,20 @@ export const pointVotesController = {
     }
   },
 
-  async create(req: Request) {
+  async create(req: Request, token: string | undefined) {
     try {
-      const data = await req.json();
+      // userId SELALU dari session, bukan dari body.
+      const decoded = verifyToken(token || "");
+      if (!decoded?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const userId: string = decoded.id;
+
+      const data: Partial<PointVotesPurchasePayload> = await req.json();
       console.log("=== CREATE POINT VOTE ===");
       console.log("Request data:", JSON.stringify(data, null, 2));
 
-      const requiredFields = [
-        "userId",
-        "amount",
-        "merchantOrderId",
-        "phoneNumber",
-      ];
+      const requiredFields = ["phoneNumber", "paymentMethod"] as const;
       const missingFields = requiredFields.filter((field) => !data[field]);
 
       if (missingFields.length > 0) {
@@ -87,27 +98,64 @@ export const pointVotesController = {
         );
       }
 
-      if (data.merchantOrderId.length > 50) {
-        return NextResponse.json(
-          { error: "merchantOrderId must be 50 characters or less" },
-          { status: 400 }
-        );
-      }
+      const phoneNumber = String(data.phoneNumber);
+      const paymentMethod = String(data.paymentMethod);
 
-      if (!/^(\+62|62|0)[0-9]{9,12}$/.test(data.phoneNumber)) {
+      if (!/^(\+62|62|0)[0-9]{9,12}$/.test(phoneNumber)) {
         return NextResponse.json(
           { error: "Invalid phone number format. Use format: 08123456789" },
           { status: 400 }
         );
       }
 
-      const sanitizedData = {
-        ...data,
-        packageId: data.packageId || null,
-        isCustom: !data.packageId,
-      };
+      // Harga dihitung ulang di server; amount dari client diabaikan.
+      let points: number;
+      let amount: number;
+      let packageId: string | undefined;
 
-      const pointVote = await pointVotesService.create(sanitizedData);
+      if (data.packageId) {
+        const packageData = await prisma.package.findUnique({
+          where: { id: String(data.packageId) },
+          select: { id: true, points: true, price: true },
+        });
+
+        if (!packageData) {
+          return NextResponse.json(
+            { error: "Invalid package selected" },
+            { status: 400 }
+          );
+        }
+
+        packageId = packageData.id;
+        points = packageData.points;
+        amount = packageData.price;
+      } else {
+        const customPoints = Number(data.points);
+
+        if (!Number.isInteger(customPoints) || customPoints < MIN_CUSTOM_POINTS) {
+          return NextResponse.json(
+            {
+              error: `Invalid points. Minimum purchase is ${MIN_CUSTOM_POINTS} points`,
+            },
+            { status: 400 }
+          );
+        }
+
+        points = customPoints;
+        amount = customPoints * PRICE_PER_CUSTOM_POINT;
+      }
+
+      const merchantOrderId = generateMerchantOrderId(userId);
+
+      const pointVote = await pointVotesService.create({
+        userId,
+        packageId,
+        points,
+        amount,
+        merchantOrderId,
+        paymentMethod,
+        phoneNumber,
+      });
       console.log("Point vote created:", JSON.stringify(pointVote, null, 2));
 
       return NextResponse.json(

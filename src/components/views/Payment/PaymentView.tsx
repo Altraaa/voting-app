@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuthUser } from "@/config/hooks/useAuthUser";
 import { usePackage } from "@/config/hooks/PackageHook/usePackage";
 import { usePaymentMethods } from "@/config/hooks/usePaymentMethods";
-import { PaymentStatus } from "@/generated/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,13 +14,24 @@ import { Loader2, ArrowLeft, CheckCircle, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { usePurchasePoints } from "@/config/hooks/PointVotesHook/usePurchasePoint";
 import Image from "next/image";
-import { generateMerchantOrderId } from "@/config/utils/merchant";
+import type { Route } from "next";
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuthUser();
   const { purchaseAndPay, isProcessing } = usePurchasePoints();
+
+  // Duitku bisa me-redirect ke /payment?merchantOrderId=...&resultCode=...
+  // (returnUrl lama). Itu bukan request checkout, jadi teruskan ke halaman
+  // sukses dan jangan jalankan validasi points/amount.
+  const isPaymentReturn = !!searchParams.get("merchantOrderId");
+
+  useEffect(() => {
+    if (isPaymentReturn) {
+      router.replace(`/payment/success?${searchParams.toString()}` as Route);
+    }
+  }, [isPaymentReturn, router, searchParams]);
 
   const packageId = searchParams.get("packageId");
   const amount = searchParams.get("amount");
@@ -32,6 +42,16 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // useState hanya membaca nilai awal (saat itu user belum ter-load),
+  // jadi isi nomor telepon dari profil setelah user tersedia — tanpa
+  // menimpa input yang sudah diketik user.
+  const userPhone = user?.phone;
+  useEffect(() => {
+    if (userPhone) {
+      setPhoneNumber((current) => current || userPhone);
+    }
+  }, [userPhone]);
+
   const { queries: packageQueries } = usePackage();
   const { data: packages = [] } = packageQueries.useGetAllPackages();
 
@@ -39,6 +59,8 @@ export default function CheckoutPage() {
 
   // Validasi parameter URL
   useEffect(() => {
+    if (isPaymentReturn) return;
+
     const validateParams = () => {
       try {
         const pointsNum = points ? parseInt(points) : 0;
@@ -70,7 +92,7 @@ export default function CheckoutPage() {
     };
 
     validateParams();
-  }, [packageId, points, amount, isCustomPurchase]);
+  }, [packageId, points, amount, isCustomPurchase, isPaymentReturn]);
 
   const {
     data: paymentMethodsData,
@@ -108,19 +130,11 @@ export default function CheckoutPage() {
     }
 
     try {
-      const merchantOrderId = generateMerchantOrderId(user.id);
-
-      console.log("Generated merchantOrderId:", merchantOrderId);
-      console.log("Length:", merchantOrderId.length);
-
+      // userId, harga, dan merchantOrderId ditentukan oleh server.
       const paymentResponse = await purchaseAndPay(
         {
-          userId: user.id,
           packageId: isCustomPurchase ? undefined : packageId!,
-          points: parseInt(points || "0"),
-          amount: parseInt(amount || "0"),
-          payment_status: PaymentStatus.pending,
-          merchantOrderId: merchantOrderId,
+          points: isCustomPurchase ? parseInt(points || "0") : undefined,
           paymentMethod: selectedPayment,
           phoneNumber: phoneNumber,
         },
@@ -130,9 +144,9 @@ export default function CheckoutPage() {
       if (paymentResponse.data.paymentUrl) {
         window.location.href = paymentResponse.data.paymentUrl;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Payment error:", error);
-      toast.error(error.message || "Payment failed");
+      toast.error(error instanceof Error ? error.message : "Payment failed");
     }
   };
 
@@ -173,6 +187,16 @@ export default function CheckoutPage() {
         name.includes("qris")
       );
     }) || [];
+
+  // Sedang diteruskan ke /payment/success
+  if (isPaymentReturn) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Memverifikasi pembayaran...</span>
+      </div>
+    );
+  }
 
   // Tampilkan loading state
   if (isLoading) {

@@ -1,4 +1,7 @@
-import { pointVotesService } from "@/config/services/pointVotesService";
+import {
+  pointVotesService,
+  PaymentCallbackError,
+} from "@/config/services/pointVotesService";
 import { DuitkuCallbackPayload } from "@/config/types/pointVotesType";
 import { DuitkuService } from "@/lib/duitku";
 
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
       DuitkuService.validateCallbackSignature(callbackData);
     if (!isValidSignature) {
       console.error("❌ Invalid signature from Duitku callback");
-      return new Response("INVALID_SIGNATURE");
+      return new Response("INVALID_SIGNATURE", { status: 400 });
     }
 
     const result = await pointVotesService.handleDuitkuCallback(callbackData);
@@ -43,6 +46,11 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("=== DUITKU CALLBACK ERROR ===");
     console.error(error);
+
+    if (error instanceof PaymentCallbackError && error.status === 400) {
+      return new Response("INVALID_AMOUNT", { status: 400 });
+    }
+
     return new Response("ERROR");
   }
 }

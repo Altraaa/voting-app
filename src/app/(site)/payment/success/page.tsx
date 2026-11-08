@@ -12,7 +12,7 @@ export default function PaymentSuccessPage() {
         </div>
       }
     >
-      <PaymentSuccess />;
+      <PaymentSuccess />
     </Suspense>
   );
 }

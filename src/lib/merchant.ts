@@ -1,3 +1,6 @@
+// Server-only: merchantOrderId dibuat di API (pointVotesController.create),
+// tidak lagi dibuat oleh client.
+
 /**
  * Generate a unique merchant order ID
  * Max length: 50 characters (Duitku requirement)

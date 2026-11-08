@@ -5,6 +5,25 @@ import { createToken, setAuthCookie } from "@/lib/auth";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// verifyIdToken mengambil sertifikat Google lewat jaringan; tanpa batas waktu
+// request bisa menggantung bila server tidak bisa menjangkau googleapis.com.
+const GOOGLE_VERIFY_TIMEOUT_MS = 10_000;
+
+class GoogleVerifyTimeoutError extends Error {
+  constructor() {
+    super(`Google verifyIdToken timed out after ${GOOGLE_VERIFY_TIMEOUT_MS}ms`);
+    this.name = "GoogleVerifyTimeoutError";
+  }
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new GoogleVerifyTimeoutError()), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { credential } = await req.json();
@@ -16,10 +35,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    const ticket = await withTimeout(
+      client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      }),
+      GOOGLE_VERIFY_TIMEOUT_MS
+    );
 
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {
@@ -84,6 +106,17 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Google auth error:", error);
+
+    if (error instanceof GoogleVerifyTimeoutError) {
+      return NextResponse.json(
+        {
+          error:
+            "Server tidak dapat menghubungi Google untuk verifikasi login. Silakan coba lagi beberapa saat lagi.",
+        },
+        { status: 504 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
