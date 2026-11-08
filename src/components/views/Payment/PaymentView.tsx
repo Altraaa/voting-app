@@ -42,6 +42,16 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // useState hanya membaca nilai awal (saat itu user belum ter-load),
+  // jadi isi nomor telepon dari profil setelah user tersedia — tanpa
+  // menimpa input yang sudah diketik user.
+  const userPhone = user?.phone;
+  useEffect(() => {
+    if (userPhone) {
+      setPhoneNumber((current) => current || userPhone);
+    }
+  }, [userPhone]);
+
   const { queries: packageQueries } = usePackage();
   const { data: packages = [] } = packageQueries.useGetAllPackages();
 

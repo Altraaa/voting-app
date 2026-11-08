@@ -22,6 +22,34 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MailCheck } from "lucide-react";
 
+// Beberapa in-app browser / WebView memblokir storage dan melempar error
+// saat localStorage diakses. Gagal menyimpan email tidak boleh membuat crash.
+const UNVERIFIED_EMAIL_KEY = "unverifiedEmail";
+
+const safeStorage = {
+  get(key: string): string | null {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key: string, value: string) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // storage tidak tersedia, abaikan
+    }
+  },
+  remove(key: string) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // storage tidak tersedia, abaikan
+    }
+  },
+};
+
 const RegisterView = () => {
   const { registerForm, setRegisterForm } = useAuthStore();
   const {
@@ -45,7 +73,7 @@ const RegisterView = () => {
 
   // Check for unverified account in localStorage on component mount
   useEffect(() => {
-    const savedUnverifiedEmail = localStorage.getItem("unverifiedEmail");
+    const savedUnverifiedEmail = safeStorage.get(UNVERIFIED_EMAIL_KEY);
     if (savedUnverifiedEmail) {
       setUnverifiedEmail(savedUnverifiedEmail);
       setShowVerificationBanner(true);
@@ -56,7 +84,7 @@ const RegisterView = () => {
   // Save unverified email to localStorage when detected
   useEffect(() => {
     if (isUnverifiedAccount && registerForm.email) {
-      localStorage.setItem("unverifiedEmail", registerForm.email);
+      safeStorage.set(UNVERIFIED_EMAIL_KEY, registerForm.email);
       setUnverifiedEmail(registerForm.email);
     }
   }, [isUnverifiedAccount, registerForm.email]);
@@ -64,7 +92,7 @@ const RegisterView = () => {
   // Clear localStorage when verification is successful
   useEffect(() => {
     if (!isUnverifiedAccount) {
-      localStorage.removeItem("unverifiedEmail");
+      safeStorage.remove(UNVERIFIED_EMAIL_KEY);
     }
   }, [isUnverifiedAccount]);
 
