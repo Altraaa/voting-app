@@ -16,12 +16,24 @@ import { toast } from "sonner";
 import { usePurchasePoints } from "@/config/hooks/PointVotesHook/usePurchasePoint";
 import Image from "next/image";
 import { generateMerchantOrderId } from "@/config/utils/merchant";
+import type { Route } from "next";
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuthUser();
   const { purchaseAndPay, isProcessing } = usePurchasePoints();
+
+  // Duitku bisa me-redirect ke /payment?merchantOrderId=...&resultCode=...
+  // (returnUrl lama). Itu bukan request checkout, jadi teruskan ke halaman
+  // sukses dan jangan jalankan validasi points/amount.
+  const isPaymentReturn = !!searchParams.get("merchantOrderId");
+
+  useEffect(() => {
+    if (isPaymentReturn) {
+      router.replace(`/payment/success?${searchParams.toString()}` as Route);
+    }
+  }, [isPaymentReturn, router, searchParams]);
 
   const packageId = searchParams.get("packageId");
   const amount = searchParams.get("amount");
@@ -39,6 +51,8 @@ export default function CheckoutPage() {
 
   // Validasi parameter URL
   useEffect(() => {
+    if (isPaymentReturn) return;
+
     const validateParams = () => {
       try {
         const pointsNum = points ? parseInt(points) : 0;
@@ -70,7 +84,7 @@ export default function CheckoutPage() {
     };
 
     validateParams();
-  }, [packageId, points, amount, isCustomPurchase]);
+  }, [packageId, points, amount, isCustomPurchase, isPaymentReturn]);
 
   const {
     data: paymentMethodsData,
@@ -173,6 +187,16 @@ export default function CheckoutPage() {
         name.includes("qris")
       );
     }) || [];
+
+  // Sedang diteruskan ke /payment/success
+  if (isPaymentReturn) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Memverifikasi pembayaran...</span>
+      </div>
+    );
+  }
 
   // Tampilkan loading state
   if (isLoading) {

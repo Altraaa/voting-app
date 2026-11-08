@@ -97,11 +97,26 @@ export class DuitkuService {
     const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
     const apiKey = process.env.DUITKU_API_KEY!;
     const callbackUrl = process.env.DUITKU_CALLBACK_URL!;
-    const returnUrl = process.env.DUITKU_RETURN_URL!;
     const baseUrl = process.env.DUITKU_BASE_URL!;
+
+    // Duitku me-redirect user ke returnUrl dengan query
+    // ?merchantOrderId=...&resultCode=...&reference=..., jadi harus mengarah
+    // ke halaman sukses, bukan ke halaman checkout (/payment).
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+    const returnUrl =
+      process.env.DUITKU_RETURN_URL ||
+      (appUrl ? `${appUrl}/payment/success` : "");
 
     if (!merchantCode || !apiKey || !callbackUrl || !returnUrl || !baseUrl) {
       throw new Error("Missing required environment variables for Duitku");
+    }
+
+    if (!returnUrl.replace(/\/+$/, "").endsWith("/payment/success")) {
+      console.warn(
+        `[Duitku] returnUrl "${returnUrl}" tidak berakhiran /payment/success. ` +
+          "User akan diarahkan ke halaman yang salah setelah membayar. " +
+          "Periksa DUITKU_RETURN_URL di .env."
+      );
     }
 
     const signature = this.generateTransactionSignature(
