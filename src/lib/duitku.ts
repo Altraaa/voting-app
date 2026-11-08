@@ -5,6 +5,7 @@ import {
   DuitkuPaymentMethodRequest,
   DuitkuPaymentMethodResponse,
 } from "@/config/types/dutikuType";
+import { DuitkuCallbackPayload } from "@/config/types/pointVotesType";
 import crypto from "crypto";
 
 export class DuitkuService {
@@ -216,7 +217,12 @@ export class DuitkuService {
     }
   }
 
-  static validateCallbackSignature(callbackData: any): boolean {
+  static validateCallbackSignature(
+    callbackData: Pick<
+      DuitkuCallbackPayload,
+      "amount" | "merchantOrderId" | "signature"
+    >
+  ): boolean {
     const merchantCode = process.env.DUITKU_MERCHANT_CODE!;
     const apiKey = process.env.DUITKU_API_KEY!;
     const { amount, merchantOrderId } = callbackData;
