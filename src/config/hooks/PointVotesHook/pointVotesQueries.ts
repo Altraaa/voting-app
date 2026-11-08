@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query";
 import { POINT_VOTES_QUERY_KEYS } from "./pointVotesQueryKey";
 import { PointVotesRoute } from "@/routes/pointVotesRoute";
 import { useApiQuery } from "@/config/constants/useApiQuery";
@@ -23,13 +24,20 @@ export const usePointVotesQueries = {
       }
     ),
   
-  useGetPointVoteMerchantOrderId: (merchantOrderId: string) =>
+  useGetPointVoteMerchantOrderId: (
+    merchantOrderId: string,
+    options?: Pick<
+      UseQueryOptions<IPointVotes, unknown>,
+      "refetchInterval" | "refetchIntervalInBackground"
+    >
+  ) =>
     useApiQuery<IPointVotes>(
       POINT_VOTES_QUERY_KEYS.detail(merchantOrderId),
       () => PointVotesRoute.getByMerchantOrderId(merchantOrderId),
       {
         enabled: !!merchantOrderId,
-        staleTime: 2 * 60 * 1000, 
+        staleTime: 2 * 60 * 1000,
+        ...options,
       }
   )
 };
